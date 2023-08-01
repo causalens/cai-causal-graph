@@ -1,0 +1,39 @@
+## Description and Motivation
+<!--- Describe your changes, and the motivation behind them, in detail -->
+
+## Additional Context
+<!--- Why is this change required? What problem does it solve? -->
+<!--- If it fixes an open issue, please link to the issue here (e.g. Jira). -->
+
+## How Has This Been Tested?
+<!--- Please describe in detail how you tested your changes. -->
+<!--- Include details of your testing environment, and the tests you ran to -->
+<!--- see how your change affects other areas of the code, etc. -->
+
+## Types of changes
+<!--- What types of changes does your code introduce? Put an `x` in all the boxes that apply: -->
+- [ ] Bug fix (non-breaking change which fixes an issue)
+- [ ] New feature (non-breaking change which adds functionality)
+- [ ] Improvement (non-breaking change which improves functionality)
+- [ ] Breaking change (fix or feature that would cause existing functionality to change)
+- [ ] Refactor (moving code around, general refactoring improvements)
+- [ ] Documentation (documentation)
+
+
+## PR Checklist:
+<!--- Go over all the following points, and put an `x` in all the boxes that apply. -->
+
+- [ ] I have reviewed my own PR? (review the PR as you are reviewing someone else's PR)
+- [ ] I have implemented all requirements? (see JIRA, project documentation)
+- [ ] I am affecting someone else's work? If so: I have added those people as reviewers?
+- [ ] I have added comments to all the bits that are hard to follow
+- [ ] At a bare minimum, I tested this manually
+- [ ] I have added unit test(s)
+- [ ] Is this a bugfix? If so have I added a regression test?
+- [ ] Does this PR satisfy the [one PR, one concern](https://medium.com/@fagnerbrack/one-pull-request-one-concern-e84a27dfe9f1) rule?
+- [ ] If needed, documentation has been added/updated?
+- [ ] I have updated the appropriate changelog with a line for my changes
+- [ ] If this PR breaks reproducibility, have I added a note in the changelog explaining the break in reproducibility
+      and its extent?
+
+## Screenshots (if appropriate):

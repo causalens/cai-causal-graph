@@ -1,0 +1,68 @@
+name: MAIN-CHECKS
+
+on:
+  push:
+    branches:
+      # Runs when merging to main branch or previous/next release branch (usually the next/ or release/X.Y.z branches)
+      - main
+      - release/*
+      - next/*
+  workflow_dispatch:
+
+jobs:
+  build-and-tests:
+    runs-on: ${{ matrix.os }}  # This is defined by the strategy below
+    strategy:
+      # The strategy allows to automatically test different os and python version combinations
+      fail-fast: true  # The MAIN checks should also fail fast not to waste GitHub minutes
+      matrix:
+        # For reproducibility, we define ubuntu-20.04 rather than ubuntu-latest. There is no need for macos tests.
+        os: [ ubuntu-20.04 ]
+        # MAIN-CHECKS do not have to check for all supported python distributions, as DEPENDENCIES-CHECK should.
+        python-version: [ '3.8', '3.11' ]   # This should be the default supported python distribution.
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # 0 fetches all history, apparently needed for push:
+      - name: Set up python
+        uses: actions/setup-python@v4
+        with:
+          architecture: x64  # Default architecture most systems operate on
+          python-version: ${{ matrix.python-version }}  # This is defined by the strategy above
+      - name: Load cached venv
+        # Cache local .venv, the packages downloaded by poetry into custom cache .pypoetry and ~/.local (poetry itself)
+        uses: actions/cache@v3
+        with:
+          path: |
+            .venv
+            .pypoetry
+            ~/.local
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            venv-${{ runner.os }}-
+      - name: Set up python build dependencies
+        # Because we are going to build a wheel later, update pip, wheel and setuptools
+        run: make install-build-deps
+      - name: Install and configure poetry
+        uses: snok/install-poetry@v1
+        with:
+          installer-parallel: true
+          version: 1.2.2  # This should be a specific micro version for reproducibility
+      - name: Set poetry cache
+        # To have a consistent cache directory between different os (linux/macosx)
+        run: poetry config cache-dir .pypoetry
+      # Now set up the virtualenv and run the regular tests, this is needed as `main` might've already changed
+      # and although tests in the PR-CHECKS are passing, unless `main` was merged, the incompatibility of changes
+      # would not be flagged. No need to do format or docs coverage, but type checking is useful.
+      - name: Poetry update lock and install virtual environment
+        run: make update-install
+      - name: Run type checking
+        # This is required as could've been invalidated by other merges to main since branching out
+        run: make lint
+      - name: Build package check
+        # We check that bdist and sdist can build, as if not this would fail the release cycle
+        # No need to set up the virtual environment first, as toml build-system.requires sets environment for build
+        run: make build-all
+      - name: Run package tests
+        run: make test

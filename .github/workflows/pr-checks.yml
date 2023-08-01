@@ -1,0 +1,59 @@
+name: PR-CHECKS
+
+on:
+  pull_request:
+
+jobs:
+  run-pr-checks:
+    env:
+    runs-on: ${{ matrix.os }}  # This is defined by the strategy below
+    strategy:
+      # The strategy allows to automatically test different os and python version combinations
+      fail-fast: true  # The PR checks should fail fast not to waste GitHub minutes
+      matrix:
+        # For reproducibility, we define ubuntu-20.04 rather than ubuntu-latest. PR-CHECKS should only test default.
+        os: [ ubuntu-20.04 ]
+        # PR-CHECKS should only test default python distribution.
+        python-version: [ '3.11' ]
+    steps:
+      - name: Checkout current branch
+        # Required to fetch all changes in the current PR
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2  # 2 fetches previous commit, apparently ok for pull_request:
+      - name: Set up python
+        uses: actions/setup-python@v4
+        with:
+          architecture: x64  # Default architecture most systems operate on
+          python-version: ${{ matrix.python-version }}  # This is defined by the strategy above
+      - name: Load cached venv
+        # Cache local .venv, the packages downloaded by poetry into custom cache .pypoetry and ~/.local (poetry itself)
+        uses: actions/cache@v3
+        with:
+          path: |
+            .venv
+            .pypoetry
+            ~/.local
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            venv-${{ runner.os }}-
+      - name: Install and configure poetry
+        uses: snok/install-poetry@v1
+        with:
+          installer-parallel: true
+          version: 1.2.2  # This should be a specific micro version for reproducibility
+      - name: Set poetry cache
+        # To have a consistent cache directory between different os (linux/macosx)
+        run: poetry config cache-dir .pypoetry
+      - name: Poetry update lock and install virtual environment
+        run: make update-install
+      - name: Run code format checks
+        run: make format-check
+      - name: Run type checking
+        run: make lint
+      - name: Run interrogate documentation coverage check
+        run: make interrogate
+      - name: Compile and remove originals
+        run: make prepare
+      - name: Run package tests
+        run: make test

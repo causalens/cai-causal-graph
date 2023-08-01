@@ -1,0 +1,49 @@
+name: POST-RELEASE
+# The post-release test checks if one can pip install the just released package in a clean virtual environment.
+
+on:
+  repository_dispatch:
+    types: [post-release]
+
+jobs:
+  test-pip-install:
+    env:
+      # Need to provide package and module name as we are not relaying on the repository here at all
+      PACKAGE: 'cai-causal-graph'
+      MODULE: 'cai_causal_graph'
+    runs-on: ${{ matrix.os }}  # This is defined by the strategy below
+    strategy:
+      fail-fast: false  # Should not fail fast as we want to have a full picture which distributions are affected
+      matrix:
+        # It is again enough to only test on linux, as mac osx is only used by developers.
+        os: [ ubuntu-20.04 ]
+        # All the python versions the package should be tested for clean pip installation from bdist or sdist (based on availability)
+        python-version: [ '3.8', '3.9', '3.10', '3.11' ]   # Order here does not matter if we do not fail-fast above.
+    steps:
+      - name: Get package version
+        # This is the version that has just got release, as this workflow is triggered by the release workflow
+        # This is not always the "latest" version, therefore we depend on the payload, not the latest on PyPI
+        run: echo ${{ github.event.client_payload.version }}
+      - name: Set up python
+        uses: actions/setup-python@v4
+        with:
+          architecture: x64  # Default architecture most systems operate on
+          python-version: ${{ matrix.python-version }}  # This is defined by the strategy above
+      - name: Test package pip installation
+        env:
+          # These credentials are needed to fetch the package and its dependencies from PyPI
+          VERSION: '${{ github.event.client_payload.version }}'
+        run: |
+          # Create and enter an empty temporary directory so that there is no conflict between local module and package
+          mkdir tmp && cd tmp
+          # Print things out for easier debugging
+          python -V
+          which python
+          which pip
+          pip list
+          # These are the python build dependencies
+          pip install -U pip wheel setuptools
+          pip install $PACKAGE==$VERSION
+          # We test the installation is successful by importing the module, this will flag most, but not all, issues
+          echo "Importing $MODULE..."
+          python -c "import $MODULE"

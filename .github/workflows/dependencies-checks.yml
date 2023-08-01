@@ -1,0 +1,86 @@
+name: DEPENDENCIES-CHECKS
+# The role of dependencies checks is to run on schedule and rebuild the environment with the latest available
+# dependencies. This way, if either internal or external (3rd party like networkx) dependency break the functionality
+# we will be notified quickly. These checks should also test other supported python distributions, to minimise
+# resources utilisation the PR-/MAIN-CHECKS will only run on default python distribution.
+# The default cadence of this test is once a week. For more sensitive packages, this can be upped to twice a week or daily.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1,4"  # Run dependencies-checks twice a week (Monday & Thursday at 06:00 (am) UTC time).
+  workflow_dispatch:
+
+jobs:
+  build-and-tests:
+    runs-on: ${{ matrix.os }}  # This is defined by the strategy below.
+    strategy:
+      # The strategy allows to automatically test different os and python version combinations.
+      fail-fast: false  # The dependencies checks should NOT fail fast, we want to know which os and pyX.Y is affected.
+      matrix:
+        # For reproducibility, we define ubuntu-20.04 rather than ubuntu-latest. There is no need for macos tests.
+        os: [ ubuntu-20.04 ]
+        # Add other python distributions as required (should match the package python requirements).
+        # This is to highlight any issues that would occur during `release`/`post-release` workflows.
+        python-version: [ '3.8', '3.9', '3.10', '3.11' ]  # Order here does not matter if we do not fail-fast above.
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2  # 2 - should only fetch head which should be quicker
+      - name: Set up python
+        uses: actions/setup-python@v4
+        with:
+          architecture: x64  # Default architecture most systems operate on
+          python-version: ${{ matrix.python-version }}  # This is defined by the strategy above
+      - name: Load cached venv
+        # Cache local .venv, the packages downloaded by poetry into custom cache .pypoetry and ~/.local (poetry itself)
+        uses: actions/cache@v3
+        with:
+          path: |
+            .venv
+            .pypoetry
+            ~/.local
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            venv-${{ runner.os }}-
+      - name: Set up python build dependencies
+        # Making sure latest pip and wheel are installed.
+        run: make install-build-deps
+      - name: Install and configure poetry
+        uses: snok/install-poetry@v1
+        with:
+          installer-parallel: true
+          version: 1.2.2  # This should be a specific micro version for reproducibility.
+      - name: Set poetry cache
+        # To have a consistent cache directory between different os (linux/macosx)
+        run: poetry config cache-dir .pypoetry
+      - name: Poetry update lock and install virtual environment
+        # We run update of the lock, before setting up the virtual environment, as dependencies checks are specifically
+        # designed to test the latest internal/external dependencies to flag issues.
+        run: |
+          make update-install
+      - name: Run package tests
+        # We run the package tests, as release-acceptance-tests are only designed to run over release critical
+        # functionality. The package (unit)tests should be more comprehensive.
+        run: make test
+      - name: Push message to Causal AI channel if the run fails
+        uses: 8398a7/action-slack@v3
+        env:
+          SLACK_WEBHOOK_URL: '${{ secrets.SLACK_CAI_TEAM_CHANNEL_WEBHOOK }}'
+          # In case of a failure, post the message to the Causal AI Team Slack channel
+        if: failure()
+        with:
+          status: custom
+          custom_payload: |
+            {
+              username: 'action-slack',
+              blocks: [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "${{ github.event.repository.name }} (${{ runner.os }}-py${{ matrix.python-version }}) dependency test failed :space_invader:"
+                  }
+                }
+              ]
+            }

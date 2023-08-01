@@ -1,0 +1,70 @@
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core>=1.0.0", "setuptools>=45", "setuptools_scm[toml]>=6.2", "wheel>=0.34.0, <1.0.0"]
+
+[tool.blue]
+line-length = 120
+
+[tool.interrogate]
+color = true
+exclude = ["setup.py", "docs", "build", "tests"]
+fail-under = 100.0
+generate-badge = "./docs"
+ignore-init-method = false
+ignore-init-module = true
+ignore-magic = true
+ignore-module = true
+ignore-nested-classes = true
+ignore-nested-functions = true
+ignore-private = true
+ignore-property-decorators = true
+ignore-regex = []
+ignore-semiprivate = true
+ignore-setters = true
+omit-covered-files = true
+quiet = false
+verbose = 2
+whitelist-regex = []
+
+[tool.isort]
+line_length = 120
+profile = "black"
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+
+[tool.mypy]
+plugins = "numpy.typing.mypy_plugin"
+files = 'cai_causal_graph/**/*.py'
+check_untyped_defs = true
+ignore_missing_imports = true
+pretty = true
+cache_dir = '/dev/null'
+
+[tool.poetry]
+name = "cai-causal-graph"
+version = "0.1.0.dev1"
+description = "A Causal AI package for causal graphs."
+license = "Apache-2.0"
+authors = ["causaLens <opensource@causalens.com>"]
+readme = "README.md"
+homepage = "https://causalgraph.causalens.com/"
+repository = "https://github.com/causalens/cai-causal-graph"
+documentation = "https://causalgraph.causalens.com/"
+packages = [{include = "cai_causal_graph"}]
+
+[tool.poetry.dependencies]
+networkx = ">=3.0.0, <4.0.0"
+numpy = "^1.18.0"
+pandas = ">=1.0.0, <3.0.0"
+python = ">=3.8.0, <3.12.0"
+
+[tool.poetry.dev-dependencies]
+blue = ">=0.9.1, <1.0.0"
+interrogate = ">=1.5.0, <2.0.0"
+isort = ">=5.10.1, <6.0.0"
+markdown = ">=3.4.0, <4.0.0"
+mdformat-gfm = ">=0.3.5, <1.0.0"
+mypy = ">=0.812.0, <1.0.0"
+nbmake =  ">=1.3.0, <1.4.0"
+pytest = ">=7.2.0, <8.0.0"
+setuptools = ">=45"
+

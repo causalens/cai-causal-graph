@@ -1,0 +1,234 @@
+name: RELEASE
+
+on:
+  push:
+    tags:
+      - v*  # Will only run this workflow for tags starting with v, e.g. v2.0.0...
+
+jobs:
+  package-and-publish:
+    env:
+      # These env variables are needed to publish docs to causaLens artifactory and to publish code to PyPI
+      POETRY_HTTP_BASIC_CAUSALENS_PASSWORD: '${{ secrets.JF_PASSWORD }}'
+      POETRY_HTTP_BASIC_CAUSALENS_USERNAME: '${{ secrets.JF_USERNAME }}'
+      PYPI_TOKEN: '${{ secrets.PYPI_TOKEN }}'
+      REF: '${{ github.ref }}'
+    runs-on: ${{ matrix.os }}  # This is defined by the strategy below
+    strategy:
+      matrix:
+        # It is again enough to only test on linux, as mac osx is only used by developers, and they can build from sdist.
+        os: [ ubuntu-20.04 ]  # Best to use reversed order (the most risky first)
+        # Should only build wheels for default python distribution at the moment.
+        python-version: [ '3.11' ]
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v3
+        with:
+          # Use a PAT with admin privileges, so we can push to main the changes to changelog, lock and toml.
+          # https://github.community/t/how-to-push-to-protected-branches-in-a-github-action/16101/34
+          token: ${{ secrets.GH_ACTIONS_KEY }}
+          fetch-depth: 0  # 0 fetches all history, apparently needed for push:
+      - name: Extract branch name
+        # This is required for pushing the changes to version, lock and changelog to the correct branch.
+        id: extract_branch
+        shell: bash
+        run: |
+          echo "ref" $REF
+          raw=$(git branch -r --contains $REF | grep -v '\->')
+          echo "raw" $raw
+          processed=$(echo $raw | awk '{print $1;}')
+          echo "processed" $processed
+          echo "branch=${processed/origin\/}" >> $GITHUB_OUTPUT
+          echo "HEAD:${{ steps.extract_branch.outputs.branch }}" | tr -d '[:space:]'
+      - name: Extract tags (versions)
+        # Extract current and tag versions so that we can do version bump in the right places.
+        id: extract_tag
+        shell: bash
+        run: |
+          VERSION=$(grep 'version =' ./pyproject.toml | sed 's/version[[:space:]]=[[:space:]]//' | sed 's/"//g')
+          echo "current_version=$VERSION" >> $GITHUB_OUTPUT
+          echo 'Current tag (version):' ${VERSION}
+          NEW_TAG=${REF##*/}
+          echo "new_version=${NEW_TAG:1}" >> $GITHUB_OUTPUT
+          echo 'New tag (release version):' ${NEW_TAG:1}
+      - name: Detect not the same tag
+        if: steps.extract_tag.outputs.new_version == steps.extract_tag.outputs.current_version
+        run: exit 1
+      - name: Detect if a development release
+        # In case of development releases like a#, b#, rc#, .dev#, certain steps are omitted.
+        env:
+          NEW_VERSION: ${{ steps.extract_tag.outputs.new_version }}
+        id: check_devel
+        shell: bash
+        run: |
+          if [[ $NEW_VERSION =~ ^[0-9.]+$ ]]
+            then
+              echo 'true' && echo "is_not_devel='true'" >> $GITHUB_OUTPUT
+            else
+              echo 'false' && echo "is_not_devel='false'" >> $GITHUB_OUTPUT
+          fi
+      - name: Setup git config
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+      - name: Set up python
+        uses: actions/setup-python@v4
+        with:
+          architecture: x64  # Default architecture most systems operate on
+          python-version: ${{ matrix.python-version }}  # This is defined by the strategy above
+      - name: Load cached venv
+        # Cache local .venv, the packages downloaded by poetry into custom cache .pypoetry and ~/.local (poetry itself)
+        uses: actions/cache@v3
+        with:
+          path: |
+            .venv
+            .pypoetry
+            ~/.local
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            venv-${{ runner.os }}-
+      - name: Install and configure poetry
+        uses: snok/install-poetry@v1
+        with:
+          installer-parallel: true
+          version: 1.2.2  # This should be a specific micro version for reproducibility
+      - name: Set poetry cache
+        # To have a consistent cache directory between different os (linux/macosx)
+        run: poetry config cache-dir .pypoetry
+      - name: Set up python build dependencies
+        # Because we are going to build a wheel later, update pip, wheel and setuptools
+        run: make install-build-deps
+      - name: Update package version from tag
+        # The recipe is slightly different for linux
+        env:
+          CURRENT_VERSION: ${{ steps.extract_tag.outputs.current_version }}
+          NEW_VERSION: ${{ steps.extract_tag.outputs.new_version }}
+        run: make set-package-version-linux
+      - name: Update changelog version from tag - if not a development release
+        # The recipe is slightly different for linux
+        env:
+          NEW_VERSION: ${{ steps.extract_tag.outputs.new_version }}
+        if: contains(steps.check_devel.outputs.is_not_devel, 'true')
+        run: make set-changelog-version-linux
+      - name: Poetry update lock and install virtual environment
+        # Necessary both to update the package dependencies and account for the new tag
+        run: make update-install
+      - name: Package Docs
+        # We run this step before the package build, so that the docs are packaged before code obfuscation as no
+        # references are generated for obfuscated/compiled code.
+        uses: causalens/docs-upload-action@v0.0.2
+        with:
+          artifactory-password: ${{ secrets.JF_PASSWORD }}
+          artifactory-username: ${{ secrets.JF_USERNAME }}
+          artifactory-url: https://causalens.jfrog.io/artifactory
+          package-name: cai-causal-graph
+          package-paths: cai_causal_graph
+          version: ${{ steps.extract_tag.outputs.new_version }}
+      - name: Build packages - default os and python
+        # For the main python distribution build both wheel (bdist) and sdist and publish
+        if: success()
+        run: make build-all
+      - name: Run release acceptance tests
+        # The release acceptance tests can mean anything, by default it is unittests, setup via Makefile
+        run: make release-acceptance-tests
+      - name: Detect if dist/ is empty
+        # Pushing packages from empty directory raises an error in actions, detect if empty first
+        id: check_dist
+        shell: bash
+        run: |
+          if [[ $(ls -A "dist/" | wc -l) -ne 0 ]]
+            then
+              echo 'not empty' && echo "not_empty='true'" >> $GITHUB_OUTPUT
+            else
+              echo 'empty' && echo "not_empty='false'" >> $GITHUB_OUTPUT
+          fi
+      - name: Publish packages
+        if: ( success() && contains(steps.check_dist.outputs.not_empty, 'true') )
+        run: make publish
+      - name: Commit version bump and changelog resolution
+        # Best to keep this step to almost end, as other things can go wrong and this needs to be then reverted
+        env:
+          BRANCH: ${{ steps.extract_branch.outputs.branch }}
+        if: success()
+        run: |
+                git config --global --add safe.directory .
+                rm -rf dist/
+                git add -u .
+                if test -f _unstage.txt; then
+                  git restore --staged --pathspec-from-file=_unstage.txt
+                fi
+                git add poetry.lock -f
+                git commit -m "Version Bump"
+                git push origin $(echo "HEAD:$BRANCH" | tr -d '[:space:]')
+      - name: Trigger post-release workflow
+        # This will check if newly published packages can be pip installed in clean environments
+        if: success()
+        uses: peter-evans/repository-dispatch@v2.0.0
+        with:
+          token: ${{ secrets.GH_ACTIONS_KEY }}
+          repository: ${{ github.repository }}
+          event-type: post-release
+          client-payload: '{"version": "${{ steps.extract_tag.outputs.new_version }}"}'
+      - name: Publish message to Causal AI Dev Slack channel - only for development tags
+        uses: 8398a7/action-slack@v3
+        env:
+          SLACK_WEBHOOK_URL: '${{ secrets.SLACK_CAI_DEV_CHANNEL_WEBHOOK }}'
+        # Post a message to the Causal AI Dev Slack channel
+        if: ( success() && contains(steps.check_devel.outputs.is_not_devel, 'false') )
+        with:
+          status: custom
+          custom_payload: |
+            {
+              username: 'action-slack',
+              blocks: [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "${{ github.event.repository.name }} development tag ${{ steps.extract_tag.outputs.new_version }} has been released :wrench:"
+                  }
+                }
+              ]
+            }
+      - name: Publish message to Causal AI Dev Slack channel - only for stable tags (i.e., non-development ones)
+        uses: 8398a7/action-slack@v3
+        env:
+          SLACK_WEBHOOK_URL: '${{ secrets.SLACK_CAI_DEV_CHANNEL_WEBHOOK }}'
+          # Post a message to the Causal AI Dev Slack channel
+        if: ( success() && contains(steps.check_devel.outputs.is_not_devel, 'true') )
+        with:
+          status: custom
+          custom_payload: |
+            {
+              username: 'action-slack',
+              blocks: [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "${{ github.event.repository.name }} tag ${{ steps.extract_tag.outputs.new_version }} has been released :tada:"
+                  }
+                }
+              ]
+            }
+      - name: Publish message to Tech Team Slack channel - only for stable tags (i.e., non-development ones)
+        uses: 8398a7/action-slack@v3
+        env:
+          SLACK_WEBHOOK_URL: '${{ secrets.SLACK_TECH_TEAM_CHANNEL_WEBHOOK }}'
+        # Post a message to the Tech Team Slack channel
+        if: ( success() && contains(steps.check_devel.outputs.is_not_devel, 'true') )
+        with:
+          status: custom
+          custom_payload: |
+            {
+              username: 'action-slack',
+              blocks: [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "${{ github.event.repository.name }} tag ${{ steps.extract_tag.outputs.new_version }} has been released :tada:"
+                  }
+                }
+              ]
+            }

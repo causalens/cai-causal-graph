@@ -1,0 +1,26 @@
+{
+    "type": "category",
+    "label": "Causal Graph",
+    "link": {
+        "type": "generated-index",
+        "title": "Causal Graph",
+        "description": "Understand how to use Causal Graphs"
+    },
+    "items": [
+        {
+            "type": "doc",
+            "id": "docs/introduction",
+            "label": "Introduction"
+        },
+        {
+            "type": "doc",
+            "id": "docs/quickstart",
+            "label": "Quickstart"
+        },
+        {
+            "type": "doc",
+            "id": "docs/causal_graph",
+            "label": "Causal Graph"
+        }
+    ]
+}
