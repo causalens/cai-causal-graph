@@ -12,6 +12,7 @@ Documentation, including a quickstart and code reference docs, can be found [her
 ![DEPENDENCIES](https://github.com/causalens/cai-causal-graph/workflows/DEPENDENCIES-CHECKS/badge.svg?branch=main) 
 ![RELEASE](https://github.com/causalens/cai-causal-graph/workflows/RELEASE/badge.svg) 
 ![POST-RELEASE](https://github.com/causalens/cai-causal-graph/workflows/POST-RELEASE/badge.svg?branch=main) 
+[![SECURITY: bandit](https://img.shields.io/badge/security-bandit-success.svg)](https://github.com/PyCQA/bandit)
 ![INTERROGATE](./docs/interrogate_badge.svg)
 
 > **Note**  
