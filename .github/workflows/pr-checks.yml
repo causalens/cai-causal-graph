@@ -5,7 +5,6 @@ on:
 
 jobs:
   run-pr-checks:
-    env:
     runs-on: ${{ matrix.os }}  # This is defined by the strategy below
     strategy:
       # The strategy allows to automatically test different os and python version combinations
@@ -53,7 +52,5 @@ jobs:
         run: make lint
       - name: Run interrogate documentation coverage check
         run: make interrogate
-      - name: Compile and remove originals
-        run: make prepare
       - name: Run package tests
         run: make test
