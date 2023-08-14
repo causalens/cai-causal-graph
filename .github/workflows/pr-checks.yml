@@ -52,7 +52,5 @@ jobs:
         run: make lint
       - name: Run interrogate documentation coverage check
         run: make interrogate
-      - name: Compile and remove originals
-        run: make prepare
       - name: Run package tests
         run: make test
