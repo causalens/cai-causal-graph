@@ -18,6 +18,7 @@ __all__ = [
     # Causal Graph and components
     'CausalGraph',
     'Skeleton',
+    'TimeSeriesCausalGraph',
     # Causal types
     'EDGE_T',
     'NODE_T',
@@ -26,4 +27,5 @@ __all__ = [
 __version__ = '0.1.0'
 
 from cai_causal_graph.causal_graph import CausalGraph, Skeleton
+from cai_causal_graph.time_series_causal_graph import TimeSeriesCausalGraph
 from cai_causal_graph.type_definitions import EDGE_T, NODE_T
