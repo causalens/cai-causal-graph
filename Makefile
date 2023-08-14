@@ -75,7 +75,7 @@ mypy:
 # Run linting checks of the package using mypy
 lint: mypy
 
-# Run bandit check on the package (medium severity -ll and low confidence -i)
+# Run bandit check on the package source directory (medium severity -ll and low confidence -i)
 bandit:
 	poetry run bandit -r -ll -i cai_causal_graph
 

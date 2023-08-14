@@ -58,8 +58,11 @@ jobs:
       - name: Poetry update lock and install virtual environment
         run: make update-install
       - name: Run type checking
-        # This is required as could've been invalidated by other merges to main since branching out
+        # This is required as it could have been invalidated by other merges to main since branching out
         run: make lint
+      - name: Run security checking
+        # This is required as it could have been invalidated by other merges to main since branching out
+        run: make security-lint
       - name: Build package check
         # We check that bdist and sdist can build, as if not this would fail the release cycle
         # No need to set up the virtual environment first, as toml build-system.requires sets environment for build

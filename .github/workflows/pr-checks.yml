@@ -50,6 +50,8 @@ jobs:
         run: make format-check
       - name: Run type checking
         run: make lint
+      - name: Run security checking
+        run: make security-lint
       - name: Run interrogate documentation coverage check
         run: make interrogate
       - name: Run package tests
