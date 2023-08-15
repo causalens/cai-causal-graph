@@ -5,7 +5,7 @@ of a given data set. They comprise a collection of causal relationships between 
 how a given variable causally affects other variables. It is important to note that the causal graph does not define how 
 a specific node is functionally related to its parents; that information is encoded in a structural causal model. The 
 causal graph simply shows how information flows from one node (i.e., a variable in a data set) to another. As a result, 
-causal graphs are a fundamental element of [Causal AI](https://causalens.com/resources/knowledge-hub/). 
+causal graphs are a fundamental element of [Causal AI](https://causalens.com/resources/knowledge-hub/what-is-causalai/). 
 The majority of Causal AI tasks, such as [causal modeling](https://causalens.com/causalnet-state-of-the-art-structural-causal-modeling/), 
 [counterfactual reasoning](https://youtu.be/NwF_gjvcKfE), [causal effect estimation](https://youtu.be/1ZR44wH9QCU), 
 [root cause analysis](https://causalens.com/root-cause-analysis/), 
