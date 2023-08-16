@@ -17,19 +17,12 @@ limitations under the License.
 from __future__ import annotations
 
 import re
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy
 
 from cai_causal_graph import CausalGraph
-from cai_causal_graph.type_definitions import NodeLike
-from cai_causal_graph.type_definitions import EDGE_T
-from cai_causal_graph.graph_components import (
-    get_variable_name_and_lag,
-    Edge,
-    Node,
-    get_name_from_lag,
-)
+from cai_causal_graph.graph_components import Edge, Node, get_name_from_lag, get_variable_name_and_lag
 from cai_causal_graph.type_definitions import EDGE_T, PAIR_T, NodeLike, NodeVariableType
 
 # define a decorator to check whether we must reset the summary graph or not
@@ -47,7 +40,9 @@ def reset_summary_graph(func):
     return wrapper
 
 
-def extract_names_and_lags(node_names: List[NodeLike]) -> List[Dict[str, int]]:
+def extract_names_and_lags(
+    node_names: List[NodeLike],
+) -> Tuple[List[Dict[str, int]], int]:
     """
     Extract the names and lags from a list of node names.
     This is useful for converting a list of node names into a list of node names and lags.
@@ -62,11 +57,9 @@ def extract_names_and_lags(node_names: List[NodeLike]) -> List[Dict[str, int]]:
     for node_name in node_names:
         variable_name, lag = get_variable_name_and_lag(node_name)
         names_and_lags.append({variable_name: lag})
-    sorted_names_and_lags = sorted(
-        names_and_lags, key=lambda x: max(x.values()), reverse=True
-    )
-    first_dict_value = next(iter(sorted_names_and_lags[0].values()))
-    return sorted_names_and_lags, first_dict_value
+    sorted_names_and_lags = sorted(names_and_lags, key=lambda x: max(x.values()), reverse=True)
+    maxlag = next(iter(sorted_names_and_lags[0].values()))
+    return sorted_names_and_lags, maxlag
 
 
 class TimeSeriesCausalGraph(CausalGraph):
@@ -95,11 +88,11 @@ class TimeSeriesCausalGraph(CausalGraph):
         # autoregressive order of the graph (max lag)
         self._order: Optional[int] = None
         # list of variables in the graph, i.e. discarding the lags (X1(t-1) and X1 are the same variable)
-        self._variables: Optional[List[NodeLike]] = None
+        self._variables: Optional[List[str]] = None
         self._summary_graph: Optional[CausalGraph] = None
         self._minimal_graph: Optional[TimeSeriesCausalGraph] = None
-        self._meta_time_name = "time_lag"
-        self._meta_variable_name = "variable_name"
+        self._meta_time_name = 'time_lag'
+        self._meta_variable_name = 'variable_name'
 
     def __eq__(self, other: object) -> bool:
         """Return True if the graphs are equal."""
@@ -196,36 +189,26 @@ class TimeSeriesCausalGraph(CausalGraph):
                 # will have the variable names as nodes
                 source_node = edge.source
                 destination_node = edge.destination
-                source_variable_name = source_node.get_metadata()[
-                    self._meta_variable_name
-                ]
-                destination_variable_name = destination_node.get_metadata()[
-                    self._meta_variable_name
-                ]
+                source_variable_name = source_node.get_metadata()[self._meta_variable_name]
+                destination_variable_name = destination_node.get_metadata()[self._meta_variable_name]
+
+                assert source_variable_name is not None, 'Source variable name is None, cannot create summary graph.'
+                assert (
+                    destination_variable_name is not None
+                ), 'Destination variable name is None, cannot create summary graph.'
 
                 if source_variable_name != destination_variable_name:
-                    ltr = summary_graph.is_edge_by_pair(
-                        (source_variable_name, destination_variable_name)
-                    )
-                    rtl = summary_graph.is_edge_by_pair(
-                        (destination_variable_name, source_variable_name)
-                    )
+                    ltr = summary_graph.is_edge_by_pair((source_variable_name, destination_variable_name))
+                    rtl = summary_graph.is_edge_by_pair((destination_variable_name, source_variable_name))
 
                     # if edge is not in the summary graph, add it
                     if not ltr and not rtl:
-                        summary_graph.add_edge_by_pair(
-                            (source_variable_name, destination_variable_name)
-                        )
+                        summary_graph.add_edge_by_pair((source_variable_name, destination_variable_name))
                     elif rtl:
                         # if edge is already in the summary graph but in the opposite direction, make it bi-directed
                         # remove the edge and add it again as bi-directed
-                        summary_graph.remove_edge_by_pair(
-                            (source_variable_name, destination_variable_name)
-                        )
-                        summary_graph.add_edge(
-                            (source_variable_name, destination_variable_name),
-                            directed=False,
-                        )
+                        summary_graph.remove_edge_by_pair((source_variable_name, destination_variable_name))
+                        summary_graph.add_edge_by_pair((source_variable_name, destination_variable_name))
 
             self._summary_graph = summary_graph
 
@@ -272,8 +255,8 @@ class TimeSeriesCausalGraph(CausalGraph):
                     lagged_node = Node(
                         identifier=lagged_identifier,
                         meta={
-                            "variable_name": node.identifier,
-                            "time_lag": lag,
+                            'variable_name': node.identifier,
+                            'time_lag': lag,
                         },
                     )
                     # if node does not exist, add it
@@ -287,25 +270,21 @@ class TimeSeriesCausalGraph(CausalGraph):
                         lagged_source_identifier = get_name_from_lag(
                             in_edge.source.identifier, in_edge.source.time_lag + lag
                         )
-                        if not extended_graph.edge_exists(
-                            lagged_source_identifier, lagged_identifier
-                        ):
+                        if not extended_graph.edge_exists(lagged_source_identifier, lagged_identifier):
                             # check if the source node exists
                             if not extended_graph.node_exists(lagged_source_identifier):
                                 # if it does not exist, create it
                                 lagged_source_node = Node(
                                     identifier=lagged_source_identifier,
                                     meta={
-                                        "variable_name": in_edge.source.identifier,
-                                        "time_lag": in_edge.source.time_lag + lag,
+                                        'variable_name': in_edge.source.identifier,
+                                        'time_lag': in_edge.source.time_lag + lag,
                                     },
                                 )
                                 extended_graph.add_node(node=lagged_source_node)
                             else:
                                 # if it exists, get it
-                                lagged_source_node = extended_graph.get_node(
-                                    lagged_source_identifier
-                                )
+                                lagged_source_node = extended_graph.get_node(lagged_source_identifier)
                             lagged_edge = Edge(
                                 source=lagged_source_node,
                                 destination=lagged_node,
@@ -350,9 +329,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         node: Optional[Node] = None,
         **kwargs,
     ) -> Node:
-        node = super().add_node(
-            identifier, variable_type=variable_type, meta=meta, node=node, **kwargs
-        )
+        node = super().add_node(identifier, variable_type=variable_type, meta=meta, node=node, **kwargs)
         # populate the metadata for each node
         vname, lag = get_variable_name_and_lag(node.identifier)
         node.meta[self._meta_variable_name] = vname
@@ -369,9 +346,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         variable_type: NodeVariableType = NodeVariableType.UNSPECIFIED,
         meta: Optional[dict] = None,
     ):
-        super().replace_node(
-            node_id, new_node_id, variable_type=variable_type, meta=meta
-        )
+        super().replace_node(node_id, new_node_id, variable_type=variable_type, meta=meta)
 
     @reset_summary_graph
     def delete_node(self, identifier: NodeLike):
@@ -393,9 +368,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         edge: Optional[Edge] = None,
         **kwargs,
     ) -> Edge:
-        edge = super().add_edge(
-            source, destination, edge_type=edge_type, meta=meta, edge=edge, **kwargs
-        )
+        edge = super().add_edge(source, destination, edge_type=edge_type, meta=meta, edge=edge, **kwargs)
         # populate the metadata for each node
         for node in self.get_nodes():
             # extract variable name and lag from node name
@@ -406,9 +379,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         return edge
 
     @classmethod
-    def from_causal_graph(
-        cls, causal_graph: CausalGraph, store_graphs: bool = False
-    ) -> TimeSeriesCausalGraph:
+    def from_causal_graph(cls, causal_graph: CausalGraph, store_graphs: bool = False) -> TimeSeriesCausalGraph:
         """
         Return a time series causal graph from a causal graph.
         This is useful for converting a causal graph from a single time step into a time series causal graph.
@@ -423,9 +394,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         # set all the attributes related to time series
 
         # create a temporary TimeSeriesCausalGraph object to get default values for new attributes
-        temp_obj = cls(
-            None, None, None, None
-        )  # Assuming __init__ takes three arguments
+        temp_obj = cls(None, None, True, store_graphs)  # Assuming __init__ takes three arguments
 
         # Copy all attributes from the temporary object to the new object
         for name, value in vars(temp_obj).items():
@@ -445,9 +414,7 @@ class TimeSeriesCausalGraph(CausalGraph):
             # set the variable name and lag in the metadata
             node.variable_name = variable_name
             node.time_lag = lag
-            variables.append(
-                variable_name
-            ) if variable_name not in variables else variables
+            variables.append(variable_name) if variable_name not in variables else variables
 
         obj._order = maxlag
         obj._variables = sorted(variables)
@@ -462,11 +429,10 @@ class TimeSeriesCausalGraph(CausalGraph):
         Return a time series causal graph from an adjacency matrix.
         This is useful for converting an adjacency matrix into a time series causal graph.
         """
-        graph = CausalGraph.from_adjacency_matrix(
-            adjacency_matrix, node_names=node_names
-        )
+        graph = CausalGraph.from_adjacency_matrix(adjacency_matrix, node_names=node_names)
         return TimeSeriesCausalGraph.from_causal_graph(graph)
 
+    @staticmethod
     def from_adjacency_matrices(
         adjacency_matrices: Dict[int, numpy.ndarray],
         variable_names: Optional[List[Union[NodeLike, int]]] = None,
@@ -503,15 +469,14 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         assert isinstance(adjacency_matrices, dict)
         # keys must be integers or str that can be converted to integers
-        assert all(
-            isinstance(key, (int, str)) and int(key) == key
-            for key in adjacency_matrices
-        )
-
-        assert len(variable_names) == adjacency_matrices[0].shape[0], (
-            "The number of variable names must be equal to the number of nodes in the adjacency matrix."
-            f"Got {len(variable_names)} variable names and {adjacency_matrices[0].shape[0]} nodes."
-        )
+        assert all(isinstance(key, (int, str)) and int(key) == key for key in adjacency_matrices)
+        if variable_names is not None:
+            assert len(variable_names) == adjacency_matrices[0].shape[0], (
+                'The number of variable names must be equal to the number of nodes in the adjacency matrix.'
+                f'Got {len(variable_names)} variable names and {adjacency_matrices[0].shape[0]} nodes.'
+            )
+        else:
+            variable_names = [f'node_{i}' for i in range(adjacency_matrices[0].shape[0])]
 
         # we could create the full adjacency matrix from the adjacency matrices by stacking them according to the time delta
         # but if we have many time deltas, this could be very memory intensive
@@ -536,31 +501,13 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         return tsgraph
 
-    def get_full_autoregressive_adjacency_matrix(self) -> numpy.ndarray:
-        """
-        Return a full autoregressive adjacency matrix of the graph with inter-slice edges, i.e. X-1 -> X.
-
-        This is useful for converting a time series causal graph into a single adjacency matrix.
-        Return sparse matrix of shape (order d \times d) where d is the number of nodes.
-        """
-        pass
-
-    def get_full_instance_adjacency_matrix(self) -> numpy.ndarray:
-        """
-        Return a full instance adjacency matrix of the graph with intra-slice edges, i.e. X -> Y.
-
-        This is useful for converting a time series causal graph into a single adjacency matrix.
-        Return sparse matrix of shape (d \times d) where d is the number of nodes.
-        """
-        pass
-
     @property
-    def order(self) -> int:
+    def order(self) -> Optional[int]:
         """Return the order of the graph."""
         return self._order
 
     @property
-    def variables(self) -> List[str]:
+    def variables(self) -> Optional[List[str]]:
         """Return the variables in the graph."""
         return self._variables
 
