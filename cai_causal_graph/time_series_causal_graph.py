@@ -16,14 +16,13 @@ limitations under the License.
 
 from __future__ import annotations
 
-import re
 from typing import Dict, List, Optional, Tuple, Union
 
 import numpy
 
 from cai_causal_graph import CausalGraph
 from cai_causal_graph.graph_components import Edge, Node, get_name_from_lag, get_variable_name_and_lag
-from cai_causal_graph.type_definitions import EDGE_T, PAIR_T, NodeLike, NodeVariableType
+from cai_causal_graph.type_definitions import EDGE_T, NodeLike, NodeVariableType
 
 # define a decorator to check whether we must reset the summary graph or not
 # do this after adding/removing nodes/edges
@@ -248,8 +247,58 @@ class TimeSeriesCausalGraph(CausalGraph):
             # needed in the mimimal graph)
             for lag in range(1, backward_steps + 1):
                 # add nodes
+                neglag = -lag
                 for node in minimum_graph.get_nodes():
                     # create the node with -lag
+                    # create the new identifier from the lag
+                    lagged_identifier = get_name_from_lag(node.identifier, neglag)
+                    lagged_node = Node(
+                        identifier=lagged_identifier,
+                        meta={
+                            'variable_name': node.identifier,
+                            'time_lag': neglag,
+                        },
+                    )
+                    # if node does not exist, add it
+                    if not extended_graph.node_exists(lagged_node.identifier):
+                        extended_graph.add_node(node=node)
+
+                    # add in-bound edges (here it could beyond the backward_steps as dictated by the minimum graph)
+                    for in_edge in minimum_graph.get_edges(destination=node.identifier):
+                        # create the edge with -lag
+                        # create the new identifier from the lag
+                        lagged_source_identifier = get_name_from_lag(
+                            in_edge.source.identifier, in_edge.source.time_lag + neglag
+                        )
+                        if not extended_graph.edge_exists(lagged_source_identifier, lagged_identifier):
+                            # check if the source node exists
+                            if not extended_graph.node_exists(lagged_source_identifier):
+                                # if it does not exist, create it
+                                lagged_source_node = Node(
+                                    identifier=lagged_source_identifier,
+                                    meta={
+                                        'variable_name': in_edge.source.identifier,
+                                        'time_lag': in_edge.source.time_lag + neglag,
+                                    },
+                                )
+                                extended_graph.add_node(node=lagged_source_node)
+                            else:
+                                # if it exists, get it
+                                lagged_source_node = extended_graph.get_node(lagged_source_identifier)
+                            lagged_edge = Edge(
+                                source=lagged_source_node,
+                                destination=lagged_node,
+                            )
+
+                            extended_graph.add_edge(edge=lagged_edge)
+
+        if forward_steps is not None:
+            # start from 1 as 0 is already defined
+            # with the forward extension, the maximum positive lag is forward_steps
+            
+            for lag in range(1, forward_steps + 1):
+                for node in minimum_graph.get_nodes():
+                    # create the node with +lag (if it does not exist)
                     # create the new identifier from the lag
                     lagged_identifier = get_name_from_lag(node.identifier, lag)
                     lagged_node = Node(
@@ -261,11 +310,16 @@ class TimeSeriesCausalGraph(CausalGraph):
                     )
                     # if node does not exist, add it
                     if not extended_graph.node_exists(lagged_node.identifier):
-                        extended_graph.add_node(node=node)
+                        extended_graph.add_node(node=lagged_node)
+                    
+                    # add all the in-bound edges corresponding the the previous lag
 
-                    # add in-bound edges (here it could beyond the backward_steps as dictated by the minimum graph)
-                    for in_edge in minimum_graph.get_edges(destination=node.identifier):
-                        # create the edge with -lag
+                    # get the identifier of the node with lag -1
+                    lagged_previous_identifier = get_name_from_lag(lagged_identifier, lag - 1)
+                    # get the node with lag -1
+
+                    for in_edge in extended_graph.get_edges(destination=lagged_previous_identifier):
+                        # create the edge with +lag
                         # create the new identifier from the lag
                         lagged_source_identifier = get_name_from_lag(
                             in_edge.source.identifier, in_edge.source.time_lag + lag
@@ -283,7 +337,6 @@ class TimeSeriesCausalGraph(CausalGraph):
                                 )
                                 extended_graph.add_node(node=lagged_source_node)
                             else:
-                                # if it exists, get it
                                 lagged_source_node = extended_graph.get_node(lagged_source_identifier)
                             lagged_edge = Edge(
                                 source=lagged_source_node,
@@ -292,7 +345,16 @@ class TimeSeriesCausalGraph(CausalGraph):
 
                             extended_graph.add_edge(edge=lagged_edge)
 
-            # TODO: foward steps
+
+                        
+
+
+                        
+
+
+
+
+
 
         return extended_graph
 

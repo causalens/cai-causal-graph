@@ -16,7 +16,7 @@ limitations under the License.
 
 import unittest
 
-from cai_causal_graph import EDGE_T, NODE_T, CausalGraph, TimeSeriesCausalGraph
+from cai_causal_graph import EDGE_T, CausalGraph, TimeSeriesCausalGraph
 from cai_causal_graph.time_series_causal_graph import extract_names_and_lags
 
 
@@ -250,3 +250,44 @@ class TestCausalGraphEdgeTypes(unittest.TestCase):
         extended_graph_1._update_meta_from_node_names()
 
         self.assertEqual(extended_dag_1, extended_graph_1)
+
+    def test_extend_graph_forward(self):
+        # # with 1 steps
+        # # dag
+        # extended_dag = self.tsdag.extend_graph(forward_steps=1)
+
+        # # create the extended graph by extending the minimal graph
+        # extended_graph = self.ground_truth_minimum_graph.copy()
+
+        # extended_graph.add_edge('X1', 'X1 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        # extended_graph.add_edge('X2', 'X2 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        # extended_graph.add_edge('X3', 'X3 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        # extended_graph.add_edge('X1', 'X2 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        # extended_graph.add_edge('X1 future(n=1)', 'X3 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        
+        # extended_graph._update_meta_from_node_names()
+
+        # self.assertEqual(extended_dag, extended_graph)
+
+        # dag_1
+        extended_dag_1 = self.tsdag_1.extend_graph(forward_steps=1)
+
+        # create the extended graph by extending the minimal graph
+        extended_graph_1 = self.ground_truth_minimum_graph_1.copy()
+
+        extended_graph_1.add_edge('X3', 'X1 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X3', 'X3 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X1', 'X1 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X2', 'X2 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X3 future(n=1)', 'X1 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X3 lag(n=1)', 'X2 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph_1._update_meta_from_node_names()
+
+        self.assertEqual(extended_dag_1, extended_graph_1)
+
+        
+
+
+        
+
+
