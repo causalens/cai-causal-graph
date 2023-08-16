@@ -30,15 +30,34 @@ def get_variable_name_and_lag(node_name: NodeLike) -> str:
     Example:
         'X lag(n=2)' -> 'X'
     """
-    match = re.match(r'(\w+)(?: lag\(n=(\d+)\))?', node_name)
+    match = re.match(r"(\w+)(?: lag\(n=(\d+)\))?", node_name)
     if match:
         variable_name = match.group(1)
         lag = match.group(2)
         lag = int(lag) if lag else 0
         return variable_name, lag
     else:
-        raise ValueError(f'Invalid node name: {node_name}')
-    
+        raise ValueError(f"Invalid node name: {node_name}")
+
+
+def get_name_from_lag(variable_name: str, lag: int):
+    """
+    Get the name of a lagged variable.
+    If the lag is 0, then the variable name is returned.
+    If the lag is not 0, then the old lag is removed and
+    variable name is appended with the lag.
+
+    Example:
+        'X', 2 -> 'X lag(n=2)'
+    """
+    if lag == 0:
+        return variable_name
+    else:
+        # remove the old lag if it exists
+        variable_name, _ = get_variable_name_and_lag(variable_name)
+
+    return f"{variable_name} lag(n={lag})"
+
 
 class Node(HasIdentifier, HasMetadata, CanDictSerialize):
     """A utility class that manages the state of a node."""
@@ -57,14 +76,14 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         """
         assert isinstance(
             identifier, str
-        ), f'Node identifiers must be strings. Got {identifier} which is of type {type(identifier)}.'
+        ), f"Node identifiers must be strings. Got {identifier} which is of type {type(identifier)}."
         self._identifier = identifier
 
         self.variable_type: NodeVariableType = variable_type
         self.meta = dict() if meta is None else meta
         assert isinstance(self.meta, dict) and all(
             isinstance(k, str) for k in self.meta
-        ), 'Metadata must be provided as a dictionary with strings as keys.'
+        ), "Metadata must be provided as a dictionary with strings as keys."
 
         self._inbound_edges: List[Edge] = []
         self._outbound_edges: List[Edge] = []
@@ -93,7 +112,9 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
     def _assert_is_valid(self):
         """Assert that the node is valid, i.e. that it has not been deleted."""
         if not self._is_valid:
-            raise CausalGraphErrors.NodeDoesNotExistError(f'The node {self._identifier} has been deleted.')
+            raise CausalGraphErrors.NodeDoesNotExistError(
+                f"The node {self._identifier} has been deleted."
+            )
 
     def invalidate(self):
         """Set this node to be invalid after deleting it."""
@@ -124,7 +145,9 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         if isinstance(new_type, str):
             new_type = NodeVariableType(new_type)
         if not isinstance(new_type, NodeVariableType):
-            raise TypeError(f'Expected NodeVariableType or string, got object of type {type(new_type)}.')
+            raise TypeError(
+                f"Expected NodeVariableType or string, got object of type {type(new_type)}."
+            )
         self._variable_type = new_type
 
     def _check_var_name_is_valid(self, name: str):
@@ -134,13 +157,13 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         vname_this, _ = get_variable_name_and_lag(self.identifier)
 
         # check that the name is valid relative to the given Node
-        assert vname_this == vname, f'Invalid node name: {name}.'
+        assert vname_this == vname, f"Invalid node name: {name}."
 
     @property
     def variable_name(self) -> str:
         """Return the variable name of the node from the metadata."""
-        return self.meta.get('variable_name', None)
-    
+        return self.meta.get("variable_name", None)
+
     @variable_name.setter
     def variable_name(self, new_name: str):
         """
@@ -149,12 +172,12 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         :param new_name: New variable name.
         """
         self._check_var_name_is_valid(new_name)
-        self.meta['variable_name'] = new_name
-    
+        self.meta["variable_name"] = new_name
+
     @property
     def time_lag(self) -> int:
         """Return the time lag of the node from the metadata."""
-        return self.meta.get('time_lag', 0)
+        return self.meta.get("time_lag", 0)
 
     @time_lag.setter
     def time_lag(self, new_lag: int):
@@ -163,7 +186,7 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
 
         :param new_lag: New time lag.
         """
-        self.meta['time_lag'] = new_lag
+        self.meta["time_lag"] = new_lag
 
     @property
     def metadata(self) -> dict:
@@ -195,24 +218,32 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
     def _add_inbound_edge(self, edge: Edge):
         """Add a specific inbound (directed) edge to the node."""
         self._assert_is_valid()
-        assert edge not in self._inbound_edges, 'Provided edge is already an inbound edge to the node.'
+        assert (
+            edge not in self._inbound_edges
+        ), "Provided edge is already an inbound edge to the node."
         self._inbound_edges.append(edge)
 
     def _add_outbound_edge(self, edge: Edge):
         """Add a specific outbound (directed) edge from the node."""
         self._assert_is_valid()
-        assert edge not in self._outbound_edges, 'Provided edge is already an outbound edge from the node.'
+        assert (
+            edge not in self._outbound_edges
+        ), "Provided edge is already an outbound edge from the node."
         self._outbound_edges.append(edge)
 
     def _delete_inbound_edge(self, edge: Edge):
         """Delete a specific inbound (directed) edge to the node."""
         self._assert_is_valid()
-        self._inbound_edges.remove(edge)  # Will raise ValueError if edge is not in the list.
+        self._inbound_edges.remove(
+            edge
+        )  # Will raise ValueError if edge is not in the list.
 
     def _delete_outbound_edge(self, edge: Edge):
         """Delete a specific outbound (directed) edge to the node."""
         self._assert_is_valid()
-        self._outbound_edges.remove(edge)  # Will raise ValueError if edge is not in the list.
+        self._outbound_edges.remove(
+            edge
+        )  # Will raise ValueError if edge is not in the list.
 
     @staticmethod
     def identifier_from(node_like: NodeLike) -> str:
@@ -222,11 +253,17 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         elif isinstance(node_like, str):
             return node_like
         else:
-            raise TypeError(f'The provided node needs to be a string or HasIdentifier subclass. Got {type(node_like)}.')
+            raise TypeError(
+                f"The provided node needs to be a string or HasIdentifier subclass. Got {type(node_like)}."
+            )
 
     def __repr__(self) -> str:
         """Return a string description of the object."""
-        type_string = f', type="{self.variable_type}"' if self.variable_type != NodeVariableType.UNSPECIFIED else ''
+        type_string = (
+            f', type="{self.variable_type}"'
+            if self.variable_type != NodeVariableType.UNSPECIFIED
+            else ""
+        )
 
         return f'Node("{self.identifier}"{type_string})'
 
@@ -234,13 +271,19 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         """Return a detailed string description of the object."""
         return self.__repr__()
 
-    def to_dict(self) -> dict:
+    def to_dict(self, include_meta: bool = True) -> dict:
         """Serialize the Node instance to a dictionary."""
-        return {
-            'identifier': self.identifier,
-            'variable_type': self.variable_type,
-            'meta': deepcopy(self.meta),
-        }
+        if include_meta:
+            return {
+                "identifier": self.identifier,
+                "variable_type": self.variable_type,
+                "meta": deepcopy(self.meta),
+            }
+        else:
+            return {
+                "identifier": self.identifier,
+                "variable_type": self.variable_type,
+            }
 
 
 class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
@@ -289,7 +332,8 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         elif self.get_edge_pair() == other.get_edge_pair()[::-1]:
             # Some edges inherently have no direction. So allow them to be defined with opposite source/destination
             return (
-                self.get_edge_type() in [EDGE_T.UNDIRECTED_EDGE, EDGE_T.BIDIRECTED_EDGE, EDGE_T.UNKNOWN_EDGE]
+                self.get_edge_type()
+                in [EDGE_T.UNDIRECTED_EDGE, EDGE_T.BIDIRECTED_EDGE, EDGE_T.UNKNOWN_EDGE]
                 and self.get_edge_type() == other.get_edge_type()
             )
 
@@ -302,7 +346,9 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
     def _assert_valid(self):
         """Assert that the edge is valid, i.e. that has not been deleted."""
         if not self._valid:
-            raise CausalGraphErrors.EdgeDoesNotExistError(f'The edge {self.identifier} has been deleted.')
+            raise CausalGraphErrors.EdgeDoesNotExistError(
+                f"The edge {self.identifier} has been deleted."
+            )
 
     def invalidate(self):
         """Set this edge to be invalid after deleting it."""
@@ -333,7 +379,7 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
     @property
     def descriptor(self) -> str:
         """Return the edge descriptor."""
-        return f'({self._source.identifier} {self._edge_type} {self._destination.identifier})'
+        return f"({self._source.identifier} {self._edge_type} {self._destination.identifier})"
 
     @property
     def metadata(self) -> dict:
@@ -368,8 +414,8 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
     def to_dict(self) -> dict:
         """Serialize the Edge instance to a dictionary."""
         return {
-            'source': self._source.to_dict(),
-            'destination': self.destination.to_dict(),
-            'edge_type': self._edge_type,
-            'meta': deepcopy(self.meta),
+            "source": self._source.to_dict(),
+            "destination": self.destination.to_dict(),
+            "edge_type": self._edge_type,
+            "meta": deepcopy(self.meta),
         }
