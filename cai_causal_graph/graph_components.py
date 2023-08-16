@@ -23,12 +23,13 @@ from cai_causal_graph.exceptions import CausalGraphErrors
 from cai_causal_graph.interfaces import CanDictSerialize, HasIdentifier, HasMetadata
 from cai_causal_graph.type_definitions import EDGE_T, NodeLike, NodeVariableType
 
+
 def get_variable_name_and_lag(node_name: NodeLike) -> Tuple[str, int]:
     """
     Extract the variable name from a node name.
 
     Example:
-        'X lag(n=2)' -> 'X' if lagged in the past, 
+        'X lag(n=2)' -> 'X' if lagged in the past,
         'X future(n=2)' -> 'X' if lagged in the future.
     """
     # get the string name if the node is a Node object
@@ -43,16 +44,17 @@ def get_variable_name_and_lag(node_name: NodeLike) -> Tuple[str, int]:
         variable_name = match.group(1)
         past_lag = match.group(2)
         future_lag = match.group(3)
-        
+
         if past_lag:
             return variable_name, -int(past_lag)
         elif future_lag:
             return variable_name, int(future_lag)
         else:
             return variable_name, 0  # no lag information
-        
+
     else:
         raise ValueError(f'Invalid node name: {node_name}')
+
 
 def get_name_from_lag(variable_name: str, lag: int):
     """
@@ -69,7 +71,7 @@ def get_name_from_lag(variable_name: str, lag: int):
     :param lag: The lag of the variable.
     :return: The name of the lagged variable.
     """
-    
+
     # remove the old lag if it exists
     variable_name, old_lag = get_variable_name_and_lag(variable_name)
 

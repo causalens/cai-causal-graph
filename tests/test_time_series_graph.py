@@ -264,7 +264,7 @@ class TestCausalGraphEdgeTypes(unittest.TestCase):
         # extended_graph.add_edge('X3', 'X3 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
         # extended_graph.add_edge('X1', 'X2 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
         # extended_graph.add_edge('X1 future(n=1)', 'X3 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        
+
         # extended_graph._update_meta_from_node_names()
 
         # self.assertEqual(extended_dag, extended_graph)
@@ -284,10 +284,3 @@ class TestCausalGraphEdgeTypes(unittest.TestCase):
         extended_graph_1._update_meta_from_node_names()
 
         self.assertEqual(extended_dag_1, extended_graph_1)
-
-        
-
-
-        
-
-

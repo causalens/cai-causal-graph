@@ -295,7 +295,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         if forward_steps is not None:
             # start from 1 as 0 is already defined
             # with the forward extension, the maximum positive lag is forward_steps
-            
+
             for lag in range(1, forward_steps + 1):
                 for node in minimum_graph.get_nodes():
                     # create the node with +lag (if it does not exist)
@@ -311,7 +311,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                     # if node does not exist, add it
                     if not extended_graph.node_exists(lagged_node.identifier):
                         extended_graph.add_node(node=lagged_node)
-                    
+
                     # add all the in-bound edges corresponding the the previous lag
 
                     # get the identifier of the node with lag -1
@@ -344,17 +344,6 @@ class TimeSeriesCausalGraph(CausalGraph):
                             )
 
                             extended_graph.add_edge(edge=lagged_edge)
-
-
-                        
-
-
-                        
-
-
-
-
-
 
         return extended_graph
 
