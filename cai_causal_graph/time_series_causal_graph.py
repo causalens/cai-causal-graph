@@ -90,7 +90,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         # list of variables in the graph, i.e. discarding the lags (X1(t-1) and X1 are the same variable)
         self._variables: Optional[List[str]] = None
         self._summary_graph: Optional[CausalGraph] = None
-        self._minimal_graph: Optional[TimeSeriesCausalGraph] = None
+        self._minimum_graph: Optional[TimeSeriesCausalGraph] = None
         self._meta_time_name = 'time_lag'
         self._meta_variable_name = 'variable_name'
 
@@ -133,36 +133,36 @@ class TimeSeriesCausalGraph(CausalGraph):
 
     def get_minimum_graph(self) -> TimeSeriesCausalGraph:
         """
-        Return a minimal graph.
+        Return a minimum graph.
 
-        The minimal graph is the graph with the minimum number of edges that is equivalent to the original graph.
+        The minimum graph is the graph with the minimum number of edges that is equivalent to the original graph.
         In other words, it is a graph that has no edges whose destination is not time delta 0.
         """
-        minimal_cg = TimeSeriesCausalGraph()
+        minimum_cg = TimeSeriesCausalGraph()
 
         # first step
-        # go through all the nodes and add them to the minimal graph if they have time delta 0
+        # go through all the nodes and add them to the minimum graph if they have time delta 0
         for node in self.get_nodes():
             if node.get_metadata()[self._meta_time_name] == 0:
                 # add if node is not already in the graph
-                if not minimal_cg.node_exists(node.identifier):
-                    minimal_cg.add_node(node=node)
+                if not minimum_cg.node_exists(node.identifier):
+                    minimum_cg.add_node(node=node)
 
-        # second step: add nodes that are connected to the nodes in the minimal graph
-        # go through all the nodes in the minimal graph and add the nodes that are entering them
-        for node in minimal_cg.get_nodes():
+        # second step: add nodes that are connected to the nodes in the minimum graph
+        # go through all the nodes in the minimum graph and add the nodes that are entering them
+        for node in minimum_cg.get_nodes():
             for edge in self.get_edges():
                 # could also check just edge.destination == node (avoiding the metadata check)
                 if edge.destination.identifier == node.identifier:
                     # add the node if it is not already in the graph
-                    if not minimal_cg.node_exists(edge.source):
-                        minimal_cg.add_node(node=self.get_node(edge.source))
-                    minimal_cg.add_edge(edge=edge)
+                    if not minimum_cg.node_exists(edge.source):
+                        minimum_cg.add_node(node=self.get_node(edge.source))
+                    minimum_cg.add_edge(edge=edge)
 
-        return minimal_cg
+        return minimum_cg
 
-    def is_minimal_graph(self) -> bool:
-        """Return True if the graph is minimal."""
+    def is_minimum_graph(self) -> bool:
+        """Return True if the graph is minimum."""
         return self == self.get_minimum_graph()
 
     def get_summary_graph(self) -> CausalGraph:
@@ -572,7 +572,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         The keys are the time deltas and the values are the adjacency matrices.
         """
         adjacency_matrices: Dict[int, numpy.ndarray] = {}
-        # get the minimal graph
+        # get the minimum graph
         graph = self.get_minimum_graph()
 
         if self.variables is None:
