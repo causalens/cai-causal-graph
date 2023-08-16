@@ -126,8 +126,9 @@ class TimeSeriesCausalGraph(CausalGraph):
         return True
 
     def copy(self, include_meta: bool = True) -> TimeSeriesCausalGraph:
+        """Return a copy of the graph."""
         graph = super().copy(include_meta=include_meta)
-        # cast the graph to TimeSeriesCausalGraph
+        # cast the graph to TimeSeriesCausalGraph to have the correct metadata
         return TimeSeriesCausalGraph.from_causal_graph(graph)
 
     def get_minimum_graph(self) -> TimeSeriesCausalGraph:
