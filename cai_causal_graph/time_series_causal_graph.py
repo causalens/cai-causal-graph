@@ -30,6 +30,8 @@ from cai_causal_graph.type_definitions import EDGE_T, NodeLike, NodeVariableType
 
 # TODO: we can do one general for many other things as well
 def reset_summary_graph(func):
+    """Decorator to reset the summary graph."""
+
     # TODO: make this more clever as it is not said that we need to reset the summary graph
     def wrapper(self, *args, **kwargs):
         function = func(self, *args, **kwargs)
@@ -56,7 +58,7 @@ def extract_names_and_lags(
     for node_name in node_names:
         variable_name, lag = get_variable_name_and_lag(node_name)
         names_and_lags.append({variable_name: lag})
-    sorted_names_and_lags = sorted(names_and_lags, key=lambda x: max(x.values()), reverse=True)
+    sorted_names_and_lags = sorted(names_and_lags, key=lambda x: max(x.values()), reverse=False)
     maxlag = next(iter(sorted_names_and_lags[0].values()))
     return sorted_names_and_lags, maxlag
 
@@ -65,12 +67,11 @@ class TimeSeriesCausalGraph(CausalGraph):
     """
     A causal graph for time series data.
 
-    #TODO: add more documentation
-
     The node in a time series causal graph will have additional metadata that
-    gives the time information of the node. The two additional metadata are:
+    gives the time information of the node together with the variable name.
+    The two additional metadata are:
     - 'timedelta': the time difference with respect the reference time 0
-    - 'variable_name': the name of the variable (without the lag information)
+    - 'variable_name': the name of the variable (without the lag information).
     """
 
     def __init__(
@@ -561,6 +562,41 @@ class TimeSeriesCausalGraph(CausalGraph):
     def variables(self) -> Optional[List[str]]:
         """Return the variables in the graph."""
         return self._variables
+
+    @property
+    def adjacency_matrices(self) -> Dict[int, numpy.ndarray]:
+        """
+        Return the adjacence matrix dictionry of the `cai_causal_graph.causal_graph.Skeleton` instance.
+
+        The keys are the time deltas and the values are the adjacency matrices.
+        """
+        adjacency_matrices: Dict[int, numpy.ndarray] = {}
+        # get the minimal graph
+        graph = self.get_minimum_graph()
+
+        if self.variables is None:
+            return adjacency_matrices
+
+        for edge in graph.edges:
+            # get the source and destination of the edge
+            # extract the variable name and lag from the node attributes
+            source_variable_name, source_lag = (
+                edge.source.meta[self._meta_variable_name],
+                edge.source.meta[self._meta_time_name],
+            )
+            if source_lag not in adjacency_matrices:
+                adjacency_matrices[source_lag] = numpy.zeros((len(self.variables), len(self.variables)))
+
+            destination_variable_name, _ = (
+                edge.destination.meta[self._meta_variable_name],
+                edge.destination.meta[self._meta_time_name],
+            )
+
+            # we only have undirected edges in the Skeleton, so no need to check for other types
+            adjacency_matrices[source_lag][
+                self.variables.index(source_variable_name), self.variables.index(destination_variable_name)
+            ] = 1
+        return adjacency_matrices
 
     def _update_meta_from_node_names(self):
         """

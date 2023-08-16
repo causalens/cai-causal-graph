@@ -16,6 +16,8 @@ limitations under the License.
 
 import unittest
 
+import numpy
+
 from cai_causal_graph import EDGE_T, CausalGraph, TimeSeriesCausalGraph
 from cai_causal_graph.time_series_causal_graph import extract_names_and_lags
 
@@ -107,8 +109,8 @@ class TestCausalGraphEdgeTypes(unittest.TestCase):
 
     def test_extract_names_and_lags(self):
         nodes, maxlag = extract_names_and_lags(self.nodes)
-        self.assertEqual(nodes, [{'X1': 1}, {'X2': 1}, {'X3': 1}, {'X1': 0}, {'X2': 0}, {'X3': 0}])
-        assert maxlag == 1
+        self.assertEqual(nodes, [{'X1': -1}, {'X2': -1}, {'X3': -1}, {'X1': 0}, {'X2': 0}, {'X3': 0}])
+        assert maxlag == -1
 
     def test_from_causal_graph(self):
         # dag
@@ -142,9 +144,18 @@ class TestCausalGraphEdgeTypes(unittest.TestCase):
         adj_mat_lag_0 = full_adj_mat[intra_indices, :][:, intra_indices]
         adj_mat_lag_1 = full_adj_mat[lagged_indices, :][:, intra_indices]
 
+        matrices = {0: adj_mat_lag_0, -1: adj_mat_lag_1}
+
         variables = ['X1', 'X2', 'X3']
-        tsdag = TimeSeriesCausalGraph.from_adjacency_matrices({0: adj_mat_lag_0, 1: adj_mat_lag_1}, variables)
+        tsdag = TimeSeriesCausalGraph.from_adjacency_matrices(matrices, variables)
         self.assertEqual(tsdag, mg)
+
+        # test the attribute adjacency_matrices
+
+        # get the adjacency matrices from the tsdag
+        adj_matrices = self.tsdag.adjacency_matrices
+        for key, value in adj_matrices.items():
+            numpy.testing.assert_equal(value, matrices[key])
 
     def test_summary_graph(self):
         summary_graph = self.tsdag.get_summary_graph()
