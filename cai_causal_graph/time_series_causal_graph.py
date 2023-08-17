@@ -616,10 +616,22 @@ class TimeSeriesCausalGraph(CausalGraph):
                 edge.destination.meta[self._meta_time_name],
             )
 
-            # we only have undirected edges in the Skeleton, so no need to check for other types
-            adjacency_matrices[source_lag][
-                self.variables.index(source_variable_name), self.variables.index(destination_variable_name)
-            ] = 1
+            if edge.get_edge_type() == EDGE_T.DIRECTED_EDGE:
+                adjacency_matrices[source_lag][
+                    self.variables.index(source_variable_name), self.variables.index(destination_variable_name)
+                ] = 1
+            elif edge.get_edge_type() == EDGE_T.UNDIRECTED_EDGE:
+                adjacency_matrices[source_lag][
+                    self.variables.index(source_variable_name), self.variables.index(destination_variable_name)
+                ] = 1
+                adjacency_matrices[source_lag][
+                    self.variables.index(destination_variable_name), self.variables.index(source_variable_name)
+                ] = 1
+            else:
+                raise TypeError(
+                    f'Adjacency matrices can only be computed if the CausalGraph instance solely contains directed and '
+                    f'undirected edges. Got {edge.get_edge_type()} for the edge {edge.descriptor}.'
+                )
         return adjacency_matrices
 
     @property
