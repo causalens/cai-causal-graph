@@ -393,6 +393,19 @@ class TimeSeriesCausalGraph(CausalGraph):
         node: Optional[Node] = None,
         **kwargs,
     ) -> Node:
+        """
+        Add a node to the graph. See `cai_causal_graph.causal_graph.CausalGraph.add_node` for more details.
+
+        In addition to the `CausalGraph.add_node` method, this method also populates the metadata of the node with
+        the variable name and the time lag.
+
+        :param identifier: The identifier of the node.
+        :param variable_type: The type of the variable.
+        :param meta: The metadata of the node.
+        :param node: The node to add.
+        :param kwargs: Additional keyword arguments.
+        :return: The added node.
+        """
         node = super().add_node(identifier, variable_type=variable_type, meta=meta, node=node, **kwargs)
         # populate the metadata for each node
         vname, lag = get_variable_name_and_lag(node.identifier)
@@ -410,14 +423,17 @@ class TimeSeriesCausalGraph(CausalGraph):
         variable_type: NodeVariableType = NodeVariableType.UNSPECIFIED,
         meta: Optional[dict] = None,
     ):
+        """Replace a node in the graph. See `cai_causal_graph.causal_graph.CausalGraph.replace_node` for more details."""
         super().replace_node(node_id, new_node_id, variable_type=variable_type, meta=meta)
 
     @reset_attributes
     def delete_node(self, identifier: NodeLike):
+        """Delete a node from the graph. See `cai_causal_graph.causal_graph.CausalGraph.delete_node` for more details."""
         super().delete_node(identifier)
 
     @reset_attributes
     def delete_edge(self, source: NodeLike, destination: NodeLike):
+        """Delete an edge from the graph. See `cai_causal_graph.causal_graph.CausalGraph.delete_edge` for more details."""
         super().delete_edge(source, destination)
 
     @reset_attributes
@@ -432,6 +448,12 @@ class TimeSeriesCausalGraph(CausalGraph):
         edge: Optional[Edge] = None,
         **kwargs,
     ) -> Edge:
+        """
+        Add an edge to the graph. See `cai_causal_graph.causal_graph.CausalGraph.add_edge` for more details.
+
+        In addition to the `CausalGraph.add_edge` method, this method also populates the metadata of the nodes with
+        the variable name and the time lag.
+        """
         edge = super().add_edge(source, destination, edge_type=edge_type, meta=meta, edge=edge, **kwargs)
         # populate the metadata for each node
         for node in self.get_nodes():
