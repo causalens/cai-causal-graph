@@ -199,19 +199,9 @@ class TimeSeriesCausalGraph(CausalGraph):
                     destination_variable_name is not None
                 ), 'Destination variable name is None, cannot create summary graph.'
 
-                if source_variable_name != destination_variable_name:
-                    ltr = summary_graph.is_edge_by_pair((source_variable_name, destination_variable_name))
-                    rtl = summary_graph.is_edge_by_pair((destination_variable_name, source_variable_name))
-
-                    # if edge is not in the summary graph, add it
-                    if not ltr and not rtl:
-                        summary_graph.add_edge_by_pair((source_variable_name, destination_variable_name))
-                    elif rtl:
-                        # if edge is already in the summary graph but in the opposite direction, make it bi-directed
-                        # remove the edge and add it again as bi-directed
-                        summary_graph.remove_edge_by_pair((source_variable_name, destination_variable_name))
-                        summary_graph.add_edge_by_pair((source_variable_name, destination_variable_name))
-
+                if source_variable_name != destination_variable_name and not summary_graph.is_edge_by_pair((source_variable_name, destination_variable_name)):
+                    summary_graph.add_edge_by_pair((source_variable_name, destination_variable_name))
+                   
             self._summary_graph = summary_graph
 
         return self._summary_graph
