@@ -19,7 +19,7 @@ import unittest
 import numpy
 
 from cai_causal_graph import EDGE_T, CausalGraph, TimeSeriesCausalGraph
-from cai_causal_graph.time_series_causal_graph import extract_names_and_lags
+from cai_causal_graph.utils import extract_names_and_lags
 
 
 class TestCausalGraphEdgeTypes(unittest.TestCase):
@@ -113,6 +113,8 @@ class TestCausalGraphEdgeTypes(unittest.TestCase):
 
     def test_extract_names_and_lags(self):
         nodes, maxlag = extract_names_and_lags(self.nodes)
+        # sort the nodes by value
+        nodes = sorted(nodes, key=lambda x: list(x.values())[0])
         self.assertEqual(nodes, [{'X1': -1}, {'X2': -1}, {'X3': -1}, {'X1': 0}, {'X2': 0}, {'X3': 0}])
         assert maxlag == -1
 

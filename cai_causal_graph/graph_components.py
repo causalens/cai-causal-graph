@@ -15,71 +15,13 @@ limitations under the License.
 """
 from __future__ import annotations
 
-import re
 from copy import deepcopy
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from cai_causal_graph.exceptions import CausalGraphErrors
 from cai_causal_graph.interfaces import CanDictSerialize, HasIdentifier, HasMetadata
 from cai_causal_graph.type_definitions import EDGE_T, NodeLike, NodeVariableType
-
-
-def get_variable_name_and_lag(node_name: NodeLike) -> Tuple[str, int]:
-    """
-    Extract the variable name from a node name and ts lag from a node name.
-
-    Example:
-        'X lag(n=2)' -> 'X', -2 if lagged in the past,
-        'X future(n=2)' -> 'X', 2 if lagged in the future.
-    """
-    # get the string name if the node is a Node object
-    if isinstance(node_name, Node):
-        node_name = node_name.identifier
-    assert isinstance(node_name, str), f'Invalid node name: {node_name}.'
-
-    is_match = re.match(r'(\w+)(?: lag\(n=(\d+)\))?(?: future\(n=(\d+)\))?', node_name)
-
-    if is_match:
-        variable_name = is_match.group(1)
-        past_lag = is_match.group(2)
-        future_lag = is_match.group(3)
-
-        if past_lag:
-            return variable_name, -int(past_lag)
-        elif future_lag:
-            return variable_name, int(future_lag)
-        else:
-            return variable_name, 0  # no lag information
-
-    else:
-        raise ValueError(f'Invalid node name: {node_name}')
-
-
-def get_name_from_lag(variable_name: str, lag: int) -> str:
-    """
-    Get the name of a lagged variable.
-    If the lag is 0, then the variable name is returned.
-    If the lag is not 0, then the old lag is removed and
-    variable name is appended with the lag.
-
-    Example:
-        'X', -2 -> 'X lag(n=2)', # lagged in the past
-        'X', 2 -> 'X future(n=2)', # lagged in the future
-
-    :param variable_name: The name of the variable.
-    :param lag: The lag of the variable.
-    :return: The name of the lagged variable.
-    """
-
-    # remove the old lag if it exists
-    variable_name, old_lag = get_variable_name_and_lag(variable_name)
-
-    if lag == 0:
-        return variable_name
-    elif lag > 0:
-        return f'{variable_name} future(n={lag})'
-    else:
-        return f'{variable_name} lag(n={-lag})'
+from cai_causal_graph.utils import get_variable_name_and_lag
 
 
 class Node(HasIdentifier, HasMetadata, CanDictSerialize):
@@ -327,6 +269,8 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         Check if the edge is equal to another edge.
 
         This method checks for the edge source, destination, and type but ignores any metadata.
+
+        :param other: The other edge to compare to.
         """
         if not isinstance(other, Edge):
             return False
