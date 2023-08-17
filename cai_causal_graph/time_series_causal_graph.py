@@ -91,7 +91,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         # list of variables in the graph, i.e. discarding the lags (X1(t-1) and X1 are the same variable)
         self._variables: Optional[List[str]] = None
         self._summary_graph: Optional[CausalGraph] = None
-        self._minimum_graph: Optional[TimeSeriesCausalGraph] = None
+        self._minimal_graph: Optional[TimeSeriesCausalGraph] = None
         self._meta_time_name = 'time_lag'
         self._meta_variable_name = 'variable_name'
 
@@ -132,39 +132,39 @@ class TimeSeriesCausalGraph(CausalGraph):
         # cast the graph to TimeSeriesCausalGraph to have the correct metadata
         return TimeSeriesCausalGraph.from_causal_graph(graph)
 
-    def get_minimum_graph(self) -> TimeSeriesCausalGraph:
+    def get_minimal_graph(self) -> TimeSeriesCausalGraph:
         """
-        Return a minimum graph.
+        Return a minimal graph.
 
-        The minimum graph is the graph with the minimum number of edges that is equivalent to the original graph.
+        The minimal graph is the graph with the minimal number of edges that is equivalent to the original graph.
         In other words, it is a graph that has no edges whose destination is not time delta 0.
         """
-        minimum_cg = TimeSeriesCausalGraph()
+        minimal_cg = TimeSeriesCausalGraph()
 
         # first step
-        # go through all the nodes and add them to the minimum graph if they have time delta 0
+        # go through all the nodes and add them to the minimal graph if they have time delta 0
         for node in self.get_nodes():
             if node.get_metadata()[self._meta_time_name] == 0:
                 # add if node is not already in the graph
-                if not minimum_cg.node_exists(node.identifier):
-                    minimum_cg.add_node(node=node)
+                if not minimal_cg.node_exists(node.identifier):
+                    minimal_cg.add_node(node=node)
 
-        # second step: add nodes that are connected to the nodes in the minimum graph
-        # go through all the nodes in the minimum graph and add the nodes that are entering them
-        for node in minimum_cg.get_nodes():
+        # second step: add nodes that are connected to the nodes in the minimal graph
+        # go through all the nodes in the minimal graph and add the nodes that are entering them
+        for node in minimal_cg.get_nodes():
             for edge in self.get_edges():
                 # could also check just edge.destination == node (avoiding the metadata check)
                 if edge.destination.identifier == node.identifier:
                     # add the node if it is not already in the graph
-                    if not minimum_cg.node_exists(edge.source):
-                        minimum_cg.add_node(node=self.get_node(edge.source))
-                    minimum_cg.add_edge(edge=edge)
+                    if not minimal_cg.node_exists(edge.source):
+                        minimal_cg.add_node(node=self.get_node(edge.source))
+                    minimal_cg.add_edge(edge=edge)
 
-        return minimum_cg
+        return minimal_cg
 
-    def is_minimum_graph(self) -> bool:
-        """Return True if the graph is minimum."""
-        return self == self.get_minimum_graph()
+    def is_minimal_graph(self) -> bool:
+        """Return True if the graph is minimal."""
+        return self == self.get_minimal_graph()
 
     def get_summary_graph(self) -> CausalGraph:
         """
@@ -217,7 +217,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         If a backward step of n is specified, it means that the graph will be extended in order to include nodes at time -n.
         For example, if t is a reference time, if backward_steps is 2, the graph will be extended to include nodes at time t-2.
         This does not mean that the graph will be extended to only include nodes at time t-2, but rather that it will include
-        nodes at time t-2 and all the nodes that are connected to them as specified by the minimum graph.
+        nodes at time t-2 and all the nodes that are connected to them as specified by the minimal graph.
 
         If both backward_steps and forward_steps are None, return the original graph.
 
@@ -229,25 +229,25 @@ class TimeSeriesCausalGraph(CausalGraph):
         assert backward_steps is None or backward_steps > 0
         assert forward_steps is None or forward_steps > 0
 
-        # first get the minimum graph
-        minimum_graph = self.get_minimum_graph()
+        # first get the minimal graph
+        minimal_graph = self.get_minimal_graph()
 
-        # create a new graph by copying the minimum graph
-        extended_graph = minimum_graph.copy()
+        # create a new graph by copying the minimal graph
+        extended_graph = minimal_graph.copy()
 
         if backward_steps is not None:
             # start from 1 as 0 is already defined
             # we cannot start directly from maxlag as it may be possible
             # that not all the nodes from 1 to -maxlag are defined (as they were not
             # needed in the mimimal graph)
-            maxlag = minimum_graph.order
+            maxlag = minimal_graph.order
             assert maxlag is not None
 
             # create all the nodes from 1 to maxlag
             for lag in range(1, backward_steps + 1):
                 # add nodes
                 neglag = -lag
-                for node in minimum_graph.get_nodes():
+                for node in minimal_graph.get_nodes():
                     # create the node with -lag
                     # create the new identifier from the lag
                     lagged_identifier = get_name_from_lag(node.identifier, neglag)
@@ -264,9 +264,9 @@ class TimeSeriesCausalGraph(CausalGraph):
 
             for lag in range(1, backward_steps + 1):
                 neglag = -lag
-                for node in minimum_graph.get_nodes():
-                    # add in-bound edges (here it could beyond the backward_steps as dictated by the minimum graph)
-                    for in_edge in minimum_graph.get_edges(destination=node.identifier):
+                for node in minimal_graph.get_nodes():
+                    # add in-bound edges (here it could beyond the backward_steps as dictated by the minimal graph)
+                    for in_edge in minimal_graph.get_edges(destination=node.identifier):
                         if in_edge.source.time_lag + neglag >= -backward_steps:
                             # create the edge with -lag
                             # create the new identifier from the lag
@@ -297,7 +297,7 @@ class TimeSeriesCausalGraph(CausalGraph):
             # add a waring if the backward_steps is smaller than the maximum lag in the graph
             if backward_steps < maxlag:
                 ramaining_nodes = []
-                for node in minimum_graph.get_nodes():
+                for node in minimal_graph.get_nodes():
                     if abs(node.time_lag) > backward_steps:
                         ramaining_nodes.append(node.identifier)
                 logger.warning(
@@ -310,7 +310,7 @@ class TimeSeriesCausalGraph(CausalGraph):
             # with the forward extension, the maximum positive lag is forward_steps
             assert forward_steps > 0, 'forward_steps must be positive.'
             for lag in range(1, forward_steps + 1):
-                for node in minimum_graph.get_nodes():
+                for node in minimal_graph.get_nodes():
                     # create the node with +lag (if it does not exist)
                     # create the new identifier from the lag
                     lagged_identifier = get_name_from_lag(node.identifier, lag)
@@ -595,8 +595,8 @@ class TimeSeriesCausalGraph(CausalGraph):
         The keys are the time deltas and the values are the adjacency matrices.
         """
         adjacency_matrices: Dict[int, numpy.ndarray] = {}
-        # get the minimum graph
-        graph = self.get_minimum_graph()
+        # get the minimal graph
+        graph = self.get_minimal_graph()
 
         if self.variables is None:
             return adjacency_matrices
