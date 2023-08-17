@@ -23,9 +23,8 @@ import numpy
 
 from cai_causal_graph import CausalGraph
 from cai_causal_graph.graph_components import Edge, Node, get_name_from_lag, get_variable_name_and_lag
-from cai_causal_graph.type_definitions import EDGE_T, NodeLike, NodeVariableType
-
 from cai_causal_graph.interfaces import HasIdentifier
+from cai_causal_graph.type_definitions import EDGE_T, NodeLike, NodeVariableType
 
 logger = logging.getLogger(__name__)
 
@@ -561,7 +560,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         # keys must be integers or str that can be converted to integers
         assert all(isinstance(key, (int, str)) and int(key) == key for key in adjacency_matrices)
         if variable_names is not None:
-            variable_names_str: List[Union[str,int]] = []
+            variable_names_str: List[Union[str, int]] = []
             assert len(variable_names) == adjacency_matrices[0].shape[0], (
                 'The number of variable names must be equal to the number of nodes in the adjacency matrix.'
                 f'Got {len(variable_names)} variable names and {adjacency_matrices[0].shape[0]} nodes.'
@@ -572,7 +571,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                     variable_names_str.append(variable_name.identifier)
                 else:
                     variable_names_str.append(variable_name)
-            
+
         else:
             variable_names_str = [f'node_{i}' for i in range(adjacency_matrices[0].shape[0])]
 
@@ -595,7 +594,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                     )
                 )
             # add the edges to the graph
-            tsgraph.add_edges_from(edges) # type: ignore
+            tsgraph.add_edges_from(edges)   # type: ignore
 
         return tsgraph
 
