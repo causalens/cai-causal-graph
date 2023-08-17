@@ -78,16 +78,17 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         Example usage:
             >>> from cai_causal_graph import CausalGraph, TimeSeriesCausalGraph
-
+            >>>
+            >>>
             >>> # How to initialize a TimeSeriesCausalGraph from a CausalGraph
             >>> cg = CausalGraph()
             >>> cg.add_edge('X1 lag(n=1)', 'X1', edge_type=EDGE_T.DIRECTED_EDGE)
             >>> cg.add_edge('X2 lag(n=1)', 'X2', edge_type=EDGE_T.DIRECTED_EDGE)
             >>> cg.add_edge('X1', 'X3', edge_type=EDGE_T.DIRECTED_EDGE)
-
-            # The time seroes causal graph will have the same nodes and edges as the causal graph
-            # but it is aware of the time information so 'X1 lag(n=1)' and 'X1' represent the same
-            # variable but at different times.
+            >>>
+            >>> # The time seroes causal graph will have the same nodes and edges as the causal graph
+            >>> # but it is aware of the time information so 'X1 lag(n=1)' and 'X1' represent the same
+            >>> # variable but at different times.
             >>> ts_cg = TimeSeriesCausalGraph.from_causal_graph(cg)
 
             >>> # How to initialize a TimeSeriesCausalGraph directly
