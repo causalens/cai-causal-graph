@@ -73,6 +73,7 @@ NodeLike = Union[str, HasIdentifier]
 TIME_NAME = 'time_lag'
 VARIABLE_NAME = 'variable_name'
 
+
 def validate_pair_type(pair: Union[PAIR_T, Tuple[NodeLike, NodeLike]]):
     """
     Validate an edge pair type by raising a `cai_causal_graph.exceptions.CausalGraphErrors.EdgeInvalidError` if it is

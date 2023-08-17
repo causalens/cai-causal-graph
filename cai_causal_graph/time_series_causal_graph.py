@@ -25,7 +25,7 @@ import numpy
 from cai_causal_graph import CausalGraph
 from cai_causal_graph.graph_components import Edge, Node
 from cai_causal_graph.interfaces import HasIdentifier
-from cai_causal_graph.type_definitions import EDGE_T, NodeLike, NodeVariableType, TIME_NAME, VARIABLE_NAME
+from cai_causal_graph.type_definitions import EDGE_T, TIME_NAME, VARIABLE_NAME, NodeLike, NodeVariableType
 from cai_causal_graph.utils import get_name_from_lag, get_variable_name_and_lag
 
 logger = logging.getLogger(__name__)
@@ -701,7 +701,7 @@ class TimeSeriesCausalGraph(CausalGraph):
     def order(self) -> Optional[int]:
         """
         Return the order of the graph.
-        
+
         The order of the graph is the maximum lag of the nodes in the minimal graph.
         """
         # get the maximum lag of the nodes in the graph
@@ -713,7 +713,7 @@ class TimeSeriesCausalGraph(CausalGraph):
     def variables(self) -> Optional[List[str]]:
         """
         Return the variables in the graph.
-        
+
         Variables differ from nodes in that they do not contain the lag.
         For example, if the graph contains the node "X1 lag(n=2)", the variable is "X1".
         """
