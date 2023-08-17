@@ -128,9 +128,9 @@ class TimeSeriesCausalGraph(CausalGraph):
             other_node = other.get_node(node.identifier)
             # check the variable name
             node_metadata_variable = node.variable_name
-            other_node_metadata_td = other_node.variable_name
+            other_node_metadata_variable = other_node.variable_name
 
-            if node_metadata_variable != other_node_metadata_td:
+            if node_metadata_variable != other_node_metadata_variable:
                 return False
 
             # check the time delta
@@ -417,7 +417,13 @@ class TimeSeriesCausalGraph(CausalGraph):
         if lag is None:
             lag = 0
 
-        identifier = node.identifier if node is not None else identifier
+        if node is not None:
+            identifier = node.identifier
+        elif isinstance(identifier, HasIdentifier):
+            identifier = identifier.identifier
+
+        assert isinstance(identifier, str), 'The identifier must be a string. Got %s.' % type(identifier)
+
         lagged_identifier = get_name_from_lag(identifier, lag)
 
         if node is None:
@@ -735,7 +741,7 @@ class TimeSeriesCausalGraph(CausalGraph):
             self._update_node_meta(node, variable_name, lag)
 
     @staticmethod
-    def _update_node_meta(node: Node, variable_name: str, lag: int):
+    def _update_node_meta(node: Node, variable_name: Optional[str] = None, lag: Optional[int] = None):
         """
         Update the metadata of a node.
 
