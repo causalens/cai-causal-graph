@@ -129,6 +129,23 @@ class TestCausalGraphSerialization(unittest.TestCase):
             self.assertDictEqual(graph_as_dict, graph_as_dict_2)
             self.assertIsInstance(json.dumps(graph_as_dict), str)
 
+        # test with include_metadata=False
+        graph_as_dict_nometa = self.fully_connected_graph.to_dict(include_meta=False)
+        assert 'meta' not in graph_as_dict_nometa.keys()
+        graph_as_dict_withmeta = self.fully_connected_graph.to_dict(include_meta=True)
+        assert 'meta' in graph_as_dict_withmeta['nodes']['x'].keys()
+
+        # test with a custom metadatan
+        newg = self.fully_connected_graph.copy()
+        newg.add_node('xm', variable_type=NODE_T.CONTINUOUS, meta={'test': 'test'})
+        graph_as_dict_withmeta = newg.to_dict(include_meta=True)
+        # test that the metadata is in the dict
+        assert 'test' in graph_as_dict_withmeta['nodes']['xm']['meta'].keys()
+
+        graph_as_dict_nometa = newg.to_dict(include_meta=False)
+        # test that the metadata is not in the dict
+        assert 'meta' not in graph_as_dict_nometa['nodes']['xm'].keys()
+
     def test_graph_is_json_serializable(self):
         cg = CausalGraph()
         cg.add_edge('a', 'b')
@@ -395,6 +412,11 @@ class TestCausalGraphSerialization(unittest.TestCase):
         # Evaluate the metadata from the copy reconstruction.
         self.assertEqual({'color': 'blue'}, cg_copy.get_node('x').meta)
         self.assertEqual({'color': 'red'}, cg_copy.get_edge('a', 'b').meta)
+
+        # test meta is not preserved when include_meta=False
+        cg_copy = causal_graph.copy(include_meta=False)
+        # meta should be empty
+        assert cg_copy.get_node('x').meta == {}
 
     def test_add_edge_from_edge(self):
         causal_graph = CausalGraph()

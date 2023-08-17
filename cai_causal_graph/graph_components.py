@@ -416,7 +416,7 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
     def to_dict(self, include_meta: bool = True) -> dict:
         """
         Serialize the Edge instance to a dictionary.
-        
+
         :param include_meta: Whether to include the edge metadata in the dictionary. Default is True.
         """
         if include_meta:

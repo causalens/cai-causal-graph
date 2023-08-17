@@ -1632,7 +1632,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
     def to_dict(self, include_meta: bool = True) -> dict:
         """
         Serialize a `cai_causal_graph.causal_graph.CausalGraph` instance by converting it to a dictionary.
-        
+
         :param include_meta: whether to include meta information about the graph in the dictionary.
         """
         nodes = {node.identifier: node.to_dict(include_meta=include_meta) for node in self.get_nodes(None)}
