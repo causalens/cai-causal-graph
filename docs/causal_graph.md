@@ -74,7 +74,7 @@ See the section on Markov Equivalence Classes at the end of this documentation p
 
 The `cai_causal_graph.causal_graph.CausalGraph` class stores nodes via `cai_causal_graph.graph_components.Node` objects. 
 It is possible to obtain a list of these `cai_causal_graph.graph_components.Node` objects by calling the 
-`cai_causal_graph.causal_graph.CausalGraph.nodes`property.
+`cai_causal_graph.causal_graph.CausalGraph.nodes` property.
 
 ```python
 from typing import List
