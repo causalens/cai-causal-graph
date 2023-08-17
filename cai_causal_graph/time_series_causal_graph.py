@@ -16,6 +16,7 @@ limitations under the License.
 
 from __future__ import annotations
 
+import logging
 from typing import Dict, List, Optional, Tuple, Union
 
 import numpy
@@ -24,18 +25,18 @@ from cai_causal_graph import CausalGraph
 from cai_causal_graph.graph_components import Edge, Node, get_name_from_lag, get_variable_name_and_lag
 from cai_causal_graph.type_definitions import EDGE_T, NodeLike, NodeVariableType
 
-# define a decorator to check whether we must reset the summary graph or not
-# do this after adding/removing nodes/edges
-
+logger = logging.getLogger(__name__)
 
 # TODO: we can do one general for many other things as well
-def reset_summary_graph(func):
+def reset_attributes(func):
     """Decorator to reset the summary graph."""
 
-    # TODO: make this more clever as it is not said that we need to reset the summary graph
+    # TODO: make this more clever as it is not said that we need to reset the summary graph etc
     def wrapper(self, *args, **kwargs):
         function = func(self, *args, **kwargs)
         self._summary_graph = None
+        self._order = None
+        self._variables = None
         return function
 
     return wrapper
@@ -247,6 +248,10 @@ class TimeSeriesCausalGraph(CausalGraph):
             # we cannot start directly from maxlag as it may be possible
             # that not all the nodes from 1 to -maxlag are defined (as they were not
             # needed in the mimimal graph)
+            maxlag = minimum_graph.order
+            assert maxlag is not None
+
+            # create all the nodes from 1 to maxlag
             for lag in range(1, backward_steps + 1):
                 # add nodes
                 neglag = -lag
@@ -263,41 +268,59 @@ class TimeSeriesCausalGraph(CausalGraph):
                     )
                     # if node does not exist, add it
                     if not extended_graph.node_exists(lagged_node.identifier):
-                        extended_graph.add_node(node=node)
+                        extended_graph.add_node(node=lagged_node)
 
+            for lag in range(1, backward_steps + 1):
+                neglag = -lag
+                for node in minimum_graph.get_nodes():
                     # add in-bound edges (here it could beyond the backward_steps as dictated by the minimum graph)
                     for in_edge in minimum_graph.get_edges(destination=node.identifier):
-                        # create the edge with -lag
-                        # create the new identifier from the lag
-                        lagged_source_identifier = get_name_from_lag(
-                            in_edge.source.identifier, in_edge.source.time_lag + neglag
-                        )
-                        if not extended_graph.edge_exists(lagged_source_identifier, lagged_identifier):
-                            # check if the source node exists
-                            if not extended_graph.node_exists(lagged_source_identifier):
-                                # if it does not exist, create it
-                                lagged_source_node = Node(
-                                    identifier=lagged_source_identifier,
-                                    meta={
-                                        'variable_name': in_edge.source.identifier,
-                                        'time_lag': in_edge.source.time_lag + neglag,
-                                    },
-                                )
-                                extended_graph.add_node(node=lagged_source_node)
-                            else:
-                                # if it exists, get it
-                                lagged_source_node = extended_graph.get_node(lagged_source_identifier)
-                            lagged_edge = Edge(
-                                source=lagged_source_node,
-                                destination=lagged_node,
+                        if in_edge.source.time_lag + neglag >= -maxlag:
+                            # if at the maximum allowed lag, we also allow intra-variable edges (i.e. with a lag of 0)
+                            if lag == backward_steps and in_edge.source.time_lag + neglag < -backward_steps:
+                                continue
+
+                            # create the edge with -lag
+                            # create the new identifier from the lag
+                            lagged_source_identifier = get_name_from_lag(
+                                in_edge.source.identifier, in_edge.source.time_lag + neglag
                             )
 
-                            extended_graph.add_edge(edge=lagged_edge)
+                            # check if lagged_source_identifier is in the graph and if the edge is not already there
+                            if extended_graph.node_exists(lagged_source_identifier) and not extended_graph.edge_exists(
+                                lagged_source_identifier, lagged_identifier
+                            ):
+                                lagged_identifier = get_name_from_lag(node.identifier, neglag)
+                                lagged_node = Node(
+                                    identifier=lagged_identifier,
+                                    meta={
+                                        'variable_name': node.identifier,
+                                        'time_lag': neglag,
+                                    },
+                                )
+                                lagged_source_node = extended_graph.get_node(lagged_source_identifier)
+                                lagged_edge = Edge(
+                                    source=lagged_source_node,
+                                    destination=lagged_node,
+                                )
+
+                                extended_graph.add_edge(edge=lagged_edge)
+
+            # add a waring if the backward_steps is smaller than the maximum lag in the graph
+            if backward_steps < maxlag:
+                ramaining_nodes = []
+                for node in minimum_graph.get_nodes():
+                    if abs(node.time_lag) > backward_steps:
+                        ramaining_nodes.append(node.identifier)
+                logger.warning(
+                    'backward_steps is smaller than the maximum lag in the graph, the following nodes will not be added: %s',
+                    list(set(ramaining_nodes)),
+                )
 
         if forward_steps is not None:
             # start from 1 as 0 is already defined
             # with the forward extension, the maximum positive lag is forward_steps
-
+            assert forward_steps > 0, 'forward_steps must be positive.'
             for lag in range(1, forward_steps + 1):
                 for node in minimum_graph.get_nodes():
                     # create the node with +lag (if it does not exist)
@@ -371,7 +394,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         return sorted(node_names)
 
-    @reset_summary_graph
+    @reset_attributes
     def add_node(
         self,
         /,
@@ -389,7 +412,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         node.meta[self._meta_time_name] = lag
         return node
 
-    @reset_summary_graph
+    @reset_attributes
     def replace_node(
         self,
         /,
@@ -401,15 +424,15 @@ class TimeSeriesCausalGraph(CausalGraph):
     ):
         super().replace_node(node_id, new_node_id, variable_type=variable_type, meta=meta)
 
-    @reset_summary_graph
+    @reset_attributes
     def delete_node(self, identifier: NodeLike):
         super().delete_node(identifier)
 
-    @reset_summary_graph
+    @reset_attributes
     def delete_edge(self, source: NodeLike, destination: NodeLike):
         super().delete_edge(source, destination)
 
-    @reset_summary_graph
+    @reset_attributes
     def add_edge(
         self,
         /,
@@ -555,16 +578,6 @@ class TimeSeriesCausalGraph(CausalGraph):
         return tsgraph
 
     @property
-    def order(self) -> Optional[int]:
-        """Return the order of the graph."""
-        return self._order
-
-    @property
-    def variables(self) -> Optional[List[str]]:
-        """Return the variables in the graph."""
-        return self._variables
-
-    @property
     def adjacency_matrices(self) -> Dict[int, numpy.ndarray]:
         """
         Return the adjacence matrix dictionry of the `cai_causal_graph.causal_graph.Skeleton` instance.
@@ -598,6 +611,21 @@ class TimeSeriesCausalGraph(CausalGraph):
                 self.variables.index(source_variable_name), self.variables.index(destination_variable_name)
             ] = 1
         return adjacency_matrices
+
+    @property
+    def order(self) -> Optional[int]:
+        """Return the order of the graph."""
+        # get the maximum lag of the nodes in the graph
+        if self._order is None:
+            self._order = max([abs(node.get_metadata()[self._meta_time_name]) for node in self.get_nodes()])
+        return self._order
+
+    @property
+    def variables(self) -> Optional[List[str]]:
+        """Return the variables in the graph."""
+        if self._variables is None:
+            self._variables = [get_variable_name_and_lag(node.identifier)[0] for node in self.get_nodes()]
+        return self._variables
 
     def _update_meta_from_node_names(self):
         """
