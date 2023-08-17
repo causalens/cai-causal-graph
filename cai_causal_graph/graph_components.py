@@ -26,24 +26,23 @@ from cai_causal_graph.type_definitions import EDGE_T, NodeLike, NodeVariableType
 
 def get_variable_name_and_lag(node_name: NodeLike) -> Tuple[str, int]:
     """
-    Extract the variable name from a node name.
+    Extract the variable name from a node name and ts lag from a node name.
 
     Example:
-        'X lag(n=2)' -> 'X' if lagged in the past,
-        'X future(n=2)' -> 'X' if lagged in the future.
+        'X lag(n=2)' -> 'X', -2 if lagged in the past,
+        'X future(n=2)' -> 'X', 2 if lagged in the future.
     """
     # get the string name if the node is a Node object
     if isinstance(node_name, Node):
         node_name = node_name.identifier
     assert isinstance(node_name, str), f'Invalid node name: {node_name}.'
-    match = re.match(r'(\w+) lag\(n=(\d+)\)', node_name)
 
-    match = re.match(r'(\w+)(?: lag\(n=(\d+)\))?(?: future\(n=(\d+)\))?', node_name)
+    is_match = re.match(r'(\w+)(?: lag\(n=(\d+)\))?(?: future\(n=(\d+)\))?', node_name)
 
-    if match:
-        variable_name = match.group(1)
-        past_lag = match.group(2)
-        future_lag = match.group(3)
+    if is_match:
+        variable_name = is_match.group(1)
+        past_lag = is_match.group(2)
+        future_lag = is_match.group(3)
 
         if past_lag:
             return variable_name, -int(past_lag)
@@ -56,7 +55,7 @@ def get_variable_name_and_lag(node_name: NodeLike) -> Tuple[str, int]:
         raise ValueError(f'Invalid node name: {node_name}')
 
 
-def get_name_from_lag(variable_name: str, lag: int):
+def get_name_from_lag(variable_name: str, lag: int) -> str:
     """
     Get the name of a lagged variable.
     If the lag is 0, then the variable name is returned.
@@ -64,8 +63,8 @@ def get_name_from_lag(variable_name: str, lag: int):
     variable name is appended with the lag.
 
     Example:
-        'X', 2 -> 'X lag(n=2)', # lagged in the past
-        'X', -2 -> 'X future(n=2)', # lagged in the future
+        'X', -2 -> 'X lag(n=2)', # lagged in the past
+        'X', 2 -> 'X future(n=2)', # lagged in the future
 
     :param variable_name: The name of the variable.
     :param lag: The lag of the variable.
@@ -180,7 +179,7 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         assert vname_this == vname, f'Invalid node name: {name}.'
 
     @property
-    def variable_name(self) -> str:
+    def variable_name(self) -> Optional[str]:
         """Return the variable name of the node from the metadata."""
         return self.meta.get('variable_name', None)
 
@@ -414,11 +413,22 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         """Return a detailed string description of the object."""
         return self.__repr__()
 
-    def to_dict(self) -> dict:
-        """Serialize the Edge instance to a dictionary."""
-        return {
-            'source': self._source.to_dict(),
-            'destination': self.destination.to_dict(),
-            'edge_type': self._edge_type,
-            'meta': deepcopy(self.meta),
-        }
+    def to_dict(self, include_meta: bool = True) -> dict:
+        """
+        Serialize the Edge instance to a dictionary.
+        
+        :param include_meta: Whether to include the edge metadata in the dictionary. Default is True.
+        """
+        if include_meta:
+            return {
+                'source': self._source.to_dict(),
+                'destination': self.destination.to_dict(),
+                'edge_type': self._edge_type,
+                'meta': deepcopy(self.meta),
+            }
+        else:
+            return {
+                'source': self._source.to_dict(),
+                'destination': self.destination.to_dict(),
+                'edge_type': self._edge_type,
+            }

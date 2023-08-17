@@ -1630,7 +1630,11 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
                 self._edges_by_destination.pop(key)
 
     def to_dict(self, include_meta: bool = True) -> dict:
-        """Serialize a `cai_causal_graph.causal_graph.CausalGraph` instance by converting it to a dictionary."""
+        """
+        Serialize a `cai_causal_graph.causal_graph.CausalGraph` instance by converting it to a dictionary.
+        
+        :param include_meta: whether to include meta information about the graph in the dictionary.
+        """
         nodes = {node.identifier: node.to_dict(include_meta=include_meta) for node in self.get_nodes(None)}
 
         edges: Dict[str, Dict[str, dict]] = {}
@@ -1638,7 +1642,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             source, destination = edge.get_edge_pair()
             if source not in edges:
                 edges[source] = {}
-            edges[source][destination] = edge.to_dict()
+            edges[source][destination] = edge.to_dict(include_meta=include_meta)
 
         return {
             'nodes': nodes,
