@@ -237,58 +237,55 @@ class TestCausalGraphEdgeTypes(unittest.TestCase):
         extended_dag = self.tsdag.extend_graph(backward_steps=2)
 
         # create the extended graph from the previous extended graph
-        # extended_graph.add_edge('X1 lag(n=3)', 'X1 lag(n=2)', edge_type=EDGE_T.DIRECTED_EDGE)
-        # extended_graph.add_edge('X2 lag(n=3)', 'X2 lag(n=2)', edge_type=EDGE_T.DIRECTED_EDGE)
-        # extended_graph.add_edge('X3 lag(n=3)', 'X3 lag(n=2)', edge_type=EDGE_T.DIRECTED_EDGE)
-        # extended_graph.add_edge('X1 lag(n=3)', 'X2 lag(n=2)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph.add_edge('X1 lag(n=2)', 'X1 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph.add_edge('X2 lag(n=2)', 'X2 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph.add_edge('X3 lag(n=2)', 'X3 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph.add_edge('X1 lag(n=2)', 'X2 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
         extended_graph.add_edge('X1 lag(n=2)', 'X3 lag(n=2)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph.add_node('X1 lag(n=2)')
-        extended_graph.add_node('X2 lag(n=2)')
-        extended_graph.add_node('X3 lag(n=2)')
         extended_graph._update_meta_from_node_names()
 
         self.assertEqual(extended_dag, extended_graph)
 
-        # # dag_1
-        # extended_dag_1 = self.tsdag_1.extend_graph(backward_steps=2)
+        # dag_1
+        extended_dag_1 = self.tsdag_1.extend_graph(backward_steps=2)
 
-        # # create the extended graph from the previous extended graph
+        # create the extended graph from the previous extended graph
         # extended_graph_1.add_edge('X3 lag(n=4)', 'X2 lag(n=2)', edge_type=EDGE_T.DIRECTED_EDGE)
-        # extended_graph_1.add_edge('X3 lag(n=3)', 'X1 lag(n=2)', edge_type=EDGE_T.DIRECTED_EDGE)
-        # extended_graph_1.add_edge('X3 lag(n=3)', 'X3 lag(n=2)', edge_type=EDGE_T.DIRECTED_EDGE)
-        # extended_graph_1.add_edge('X3 lag(n=2)', 'X1 lag(n=2)', edge_type=EDGE_T.DIRECTED_EDGE)
-        # extended_graph_1.add_edge('X1 lag(n=3)', 'X1 lag(n=2)', edge_type=EDGE_T.DIRECTED_EDGE)
-        # extended_graph_1.add_edge('X2 lag(n=3)', 'X2 lag(n=2)', edge_type=EDGE_T.DIRECTED_EDGE)
-        # extended_graph_1._update_meta_from_node_names()
+        extended_graph_1.add_edge('X3 lag(n=2)', 'X1 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X3 lag(n=2)', 'X3 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X3 lag(n=2)', 'X1 lag(n=2)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X1 lag(n=2)', 'X1 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X2 lag(n=2)', 'X2 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph_1._update_meta_from_node_names()
 
-        # self.assertEqual(extended_dag_1, extended_graph_1)
+        self.assertEqual(extended_dag_1, extended_graph_1)
 
-        # # dag 2
-        # extended_dag_2 = self.tsdag_2.extend_graph(backward_steps=1)
+        # dag 2
+        extended_dag_2 = self.tsdag_2.extend_graph(backward_steps=1)
 
-        # gr_ext_dag_2 = self.tsdag_2.copy()
-        # # add floating node
-        # gr_ext_dag_2.add_node('X1 lag(n=1)')
+        gr_ext_dag_2 = self.tsdag_2.copy()
+        # add floating node
+        gr_ext_dag_2.add_node('X1 lag(n=1)')
 
-        # self.assertEqual(extended_dag_2, gr_ext_dag_2)
+        self.assertEqual(extended_dag_2, gr_ext_dag_2)
 
     def test_extend_graph_forward(self):
-        # # with 1 steps
-        # # dag
-        # extended_dag = self.tsdag.extend_graph(forward_steps=1)
+        # with 1 steps
+        # dag
+        extended_dag = self.tsdag.extend_graph(forward_steps=1)
 
-        # # create the extended graph by extending the minimal graph
-        # extended_graph = self.ground_truth_minimum_graph.copy()
+        # create the extended graph by extending the minimal graph
+        extended_graph = self.ground_truth_minimum_graph.copy()
 
-        # extended_graph.add_edge('X1', 'X1 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        # extended_graph.add_edge('X2', 'X2 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        # extended_graph.add_edge('X3', 'X3 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        # extended_graph.add_edge('X1', 'X2 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        # extended_graph.add_edge('X1 future(n=1)', 'X3 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph.add_edge('X1', 'X1 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph.add_edge('X2', 'X2 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph.add_edge('X3', 'X3 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph.add_edge('X1', 'X2 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph.add_edge('X1 future(n=1)', 'X3 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
 
-        # extended_graph._update_meta_from_node_names()
+        extended_graph._update_meta_from_node_names()
 
-        # self.assertEqual(extended_dag, extended_graph)
+        self.assertEqual(extended_dag, extended_graph)
 
         # dag_1
         extended_dag_1 = self.tsdag_1.extend_graph(forward_steps=1)

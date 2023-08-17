@@ -199,9 +199,11 @@ class TimeSeriesCausalGraph(CausalGraph):
                     destination_variable_name is not None
                 ), 'Destination variable name is None, cannot create summary graph.'
 
-                if source_variable_name != destination_variable_name and not summary_graph.is_edge_by_pair((source_variable_name, destination_variable_name)):
+                if source_variable_name != destination_variable_name and not summary_graph.is_edge_by_pair(
+                    (source_variable_name, destination_variable_name)
+                ):
                     summary_graph.add_edge_by_pair((source_variable_name, destination_variable_name))
-                   
+
             self._summary_graph = summary_graph
 
         return self._summary_graph
@@ -265,22 +267,18 @@ class TimeSeriesCausalGraph(CausalGraph):
                 for node in minimum_graph.get_nodes():
                     # add in-bound edges (here it could beyond the backward_steps as dictated by the minimum graph)
                     for in_edge in minimum_graph.get_edges(destination=node.identifier):
-                        if in_edge.source.time_lag + neglag >= -maxlag:
-                            # if at the maximum allowed lag, we also allow intra-variable edges (i.e. with a lag of 0)
-                            if lag == backward_steps and in_edge.source.time_lag + neglag < -backward_steps:
-                                continue
-
+                        if in_edge.source.time_lag + neglag >= -backward_steps:
                             # create the edge with -lag
                             # create the new identifier from the lag
                             lagged_source_identifier = get_name_from_lag(
                                 in_edge.source.identifier, in_edge.source.time_lag + neglag
                             )
+                            lagged_identifier = get_name_from_lag(node.identifier, neglag)
 
                             # check if lagged_source_identifier is in the graph and if the edge is not already there
                             if extended_graph.node_exists(lagged_source_identifier) and not extended_graph.edge_exists(
                                 lagged_source_identifier, lagged_identifier
                             ):
-                                lagged_identifier = get_name_from_lag(node.identifier, neglag)
                                 lagged_node = Node(
                                     identifier=lagged_identifier,
                                     meta={
