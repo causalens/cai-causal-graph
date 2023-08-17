@@ -25,6 +25,8 @@ from cai_causal_graph import CausalGraph
 from cai_causal_graph.graph_components import Edge, Node, get_name_from_lag, get_variable_name_and_lag
 from cai_causal_graph.type_definitions import EDGE_T, NodeLike, NodeVariableType
 
+from cai_causal_graph.interfaces import HasIdentifier
+
 logger = logging.getLogger(__name__)
 
 # TODO: we can do one general for many other things as well
@@ -559,12 +561,20 @@ class TimeSeriesCausalGraph(CausalGraph):
         # keys must be integers or str that can be converted to integers
         assert all(isinstance(key, (int, str)) and int(key) == key for key in adjacency_matrices)
         if variable_names is not None:
+            variable_names_str: List[Union[str,int]] = []
             assert len(variable_names) == adjacency_matrices[0].shape[0], (
                 'The number of variable names must be equal to the number of nodes in the adjacency matrix.'
                 f'Got {len(variable_names)} variable names and {adjacency_matrices[0].shape[0]} nodes.'
             )
+            # convert the variable names to strings if they are not strings
+            for variable_name in variable_names:
+                if isinstance(variable_name, HasIdentifier):
+                    variable_names_str.append(variable_name.identifier)
+                else:
+                    variable_names_str.append(variable_name)
+            
         else:
-            variable_names = [f'node_{i}' for i in range(adjacency_matrices[0].shape[0])]
+            variable_names_str = [f'node_{i}' for i in range(adjacency_matrices[0].shape[0])]
 
         # we could create the full adjacency matrix from the adjacency matrices by stacking them according to the time delta
         # but if we have many time deltas, this could be very memory intensive
@@ -575,17 +585,17 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         for time_delta, adjacency_matrix in adjacency_matrices.items():
             # create the edges
-            edges = []
+            edges: List[Tuple[str, str]] = []
             # get the edges from the adjacency matrix by getting the indices of the non-zero elements
             for row, column in zip(*numpy.where(adjacency_matrix)):
                 edges.append(
                     (
-                        get_name_from_lag(variable_names[row], time_delta),
-                        variable_names[column],
+                        get_name_from_lag(variable_names_str[row], time_delta),
+                        variable_names_str[column],
                     )
                 )
             # add the edges to the graph
-            tsgraph.add_edges_from(edges)
+            tsgraph.add_edges_from(edges) # type: ignore
 
         return tsgraph
 
