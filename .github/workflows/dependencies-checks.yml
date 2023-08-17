@@ -44,7 +44,7 @@ jobs:
           restore-keys: |
             venv-${{ runner.os }}-
       - name: Set up python build dependencies
-        # Making sure latest pip and wheel are installed.
+        # Ensure latest pip, setuptools, and wheel are installed.
         run: make install-build-deps
       - name: Install and configure poetry
         uses: snok/install-poetry@v1

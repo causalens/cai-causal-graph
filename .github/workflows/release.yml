@@ -96,7 +96,7 @@ jobs:
         # To have a consistent cache directory between different os (linux/macosx)
         run: poetry config cache-dir .pypoetry
       - name: Set up python build dependencies
-        # Because we are going to build a wheel later, update pip, wheel and setuptools
+        # Ensure latest pip, setuptools, and wheel are installed.
         run: make install-build-deps
       - name: Update package version from tag
         # The recipe is slightly different for linux
