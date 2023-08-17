@@ -313,6 +313,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                                     source=lagged_source_node,
                                     destination=lagged_dest_node,
                                     edge_type=in_edge.get_edge_type(),
+                                    meta=in_edge.meta, # copy the meta from the original edge
                                 )
 
                                 extended_graph.add_edge(edge=lagged_edge)
@@ -370,6 +371,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                                 source=lagged_source_node,
                                 destination=lagged_node,
                                 edge_type=in_edge.get_edge_type(),
+                                meta=in_edge.meta, # copy the meta from the original edge
                             )
 
                             extended_graph.add_edge(edge=lagged_edge)
@@ -405,6 +407,8 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         For example, if the node is X and the lag is -1, the node will be X lag(n=1).
         If the node is X lag(n=1) and the lag is -2, the node will be X lag(n=2).
+
+        Moreover, if you want to make sure to copy all the metadata from the original node, you have to provide the node.
 
         :param identifier: The identifier of the node. Default is None.
         :param node: The node. If provided, the identifier is ignored. Default is None.
