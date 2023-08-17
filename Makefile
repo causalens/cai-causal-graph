@@ -104,7 +104,7 @@ remove-generic-wheel:
 	rm -f dist/*-py3-*.whl
 
 # Package and publish the docs to causaLens' artifactory
-package-docs:
+package-and-publish-docs:
     poetry source add causalens https://causalens.jfrog.io/artifactory/api/pypi/python-open-source/simple/
 	poetry config http-basic.causalens ${ARTIFACTORY_USERNAME} ${ARTIFACTORY_PASSWORD}
 	poetry add --source=causalens docs-builder@~0.2.0

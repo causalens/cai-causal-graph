@@ -8,9 +8,7 @@ on:
 jobs:
   package-and-publish:
     env:
-      # These env variables are needed to publish docs to causaLens artifactory and to publish code to PyPI
-      POETRY_HTTP_BASIC_CAUSALENS_PASSWORD: '${{ secrets.JF_PASSWORD }}'
-      POETRY_HTTP_BASIC_CAUSALENS_USERNAME: '${{ secrets.JF_USERNAME }}'
+      # These env variables are needed to publish code to PyPI
       PYPI_TOKEN: '${{ secrets.PYPI_TOKEN }}'
       REF: '${{ github.ref }}'
     runs-on: ${{ matrix.os }}  # This is defined by the strategy below
@@ -113,17 +111,19 @@ jobs:
       - name: Poetry update lock and install virtual environment
         # Necessary both to update the package dependencies and account for the new tag
         run: make update-install
-      - name: Package Docs
+      - name: Package and Publish Docs
         # We run this step before the package build, so that the docs are packaged before code obfuscation as no
         # references are generated for obfuscated/compiled code.
-        uses: causalens/docs-upload-action@v0.0.2
-        with:
-          artifactory-password: ${{ secrets.JF_PASSWORD }}
-          artifactory-username: ${{ secrets.JF_USERNAME }}
-          artifactory-url: https://causalens.jfrog.io/artifactory
-          package-name: cai-causal-graph
-          package-paths: cai_causal_graph
-          version: ${{ steps.extract_tag.outputs.new_version }}
+        env:
+          ARTIFACTORY_URL: https://causalens.jfrog.io/artifactory
+          ARTIFACTORY_USERNAME: ${{ secrets.JF_USERNAME }}
+          ARTIFACTORY_PASSWORD: ${{ secrets.JF_PASSWORD }}
+          ARTIFACTORY_REPOSITORY: documentation
+          BUILD_REFERENCE: true
+          PACKAGE: cai-causal-graph
+          PACKAGE_PATHS: cai_causal_graph
+          VERSION: ${{ steps.set-version.outputs.version }}
+        run: make package-and-publish-docs
       - name: Build packages - default os and python
         # For the main python distribution build both wheel (bdist) and sdist and publish
         if: success()
