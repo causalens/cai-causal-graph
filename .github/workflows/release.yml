@@ -9,6 +9,8 @@ jobs:
   package-and-publish:
     env:
       # These env variables are needed to publish code to PyPI
+      ARTIFACTORY_USERNAME: ${{ secrets.JF_USERNAME }}
+      ARTIFACTORY_PASSWORD: ${{ secrets.JF_PASSWORD }}
       PYPI_TOKEN: '${{ secrets.PYPI_TOKEN }}'
       REF: '${{ github.ref }}'
     runs-on: ${{ matrix.os }}  # This is defined by the strategy below
