@@ -122,7 +122,7 @@ jobs:
           BUILD_REFERENCE: true
           PACKAGE: cai-causal-graph
           PACKAGE_PATHS: cai_causal_graph
-          VERSION: ${{ steps.set-version.outputs.version }}
+          VERSION: ${{ steps.extract_tag.outputs.new_version }}
         run: make package-and-publish-docs
       - name: Build packages - default os and python
         # For the main python distribution build both wheel (bdist) and sdist and publish
