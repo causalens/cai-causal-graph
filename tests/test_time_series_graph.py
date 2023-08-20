@@ -19,10 +19,11 @@ import unittest
 import numpy
 
 from cai_causal_graph import EDGE_T, CausalGraph, TimeSeriesCausalGraph
+from cai_causal_graph.time_series_causal_graph import TimeSeriesNode
 from cai_causal_graph.utils import extract_names_and_lags, get_variable_name_and_lag
 
 
-class TestCausalGraphEdgeTypes(unittest.TestCase):
+class TestTimeSeriesCausalGraph(unittest.TestCase):
     def setUp(self) -> None:
         """
         Set up a time series causal graph tests.
@@ -152,6 +153,43 @@ class TestCausalGraphEdgeTypes(unittest.TestCase):
 
         self.tsdag_3 = TimeSeriesCausalGraph.from_causal_graph(causal_graph_3)
 
+    def test_time_series_nodes(self):
+        tsnode = TimeSeriesNode(variable_name='X1', time_lag=-1)
+        tsnode_1 = TimeSeriesNode('X2 lag(n=1)')
+
+        self.assertEqual(tsnode.time_lag, -1)
+        self.assertEqual(tsnode_1.time_lag, -1)
+
+        # test with future lag
+        tsnode = TimeSeriesNode(variable_name='X1', time_lag=3)
+        tsnode_1 = TimeSeriesNode('X2 future(n=3)')
+        self.assertEqual(tsnode.time_lag, 3)
+        self.assertEqual(tsnode_1.time_lag, 3)
+
+    def test_add_node(self):
+        ts_cg = TimeSeriesCausalGraph()
+        ts_cg.add_node('X1 lag(n=1)')
+        assert ts_cg.get_node('X1 lag(n=1)').time_lag == -1
+
+        ts_cg.add_node(variable_name='X1', time_lag=-2)
+        assert ts_cg.get_node('X1 lag(n=2)').time_lag == -2
+
+    def test_add_edge(self):
+        ts_cg = TimeSeriesCausalGraph()
+        ts_cg.add_edge('X1 lag(n=1)', 'X2 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+
+        # test that nodes are added correctly
+        assert ts_cg.get_node('X1 lag(n=1)').time_lag == -1
+        assert ts_cg.get_node('X2 lag(n=1)').time_lag == -1
+
+    def test_replace_node(self):
+        ts_cg = TimeSeriesCausalGraph()
+        ts_cg.add_edge('X1 lag(n=1)', 'X2 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+
+        ts_cg.replace_node('X1 lag(n=1)', 'X1 lag(n=2)')
+        assert ts_cg.get_node('X1 lag(n=2)').time_lag == -2
+        # check 'X1 lag(n=1)' does not exist
+        self.assertFalse(ts_cg.node_exists('X1 lag(n=1)'))
 
     def test_get_variable_name_and_lag(self):
         # create a bad node name
@@ -163,7 +201,7 @@ class TestCausalGraphEdgeTypes(unittest.TestCase):
         bad_node_name = 'X1 lag(n=1) future(n=1)'
         with self.assertRaises(ValueError):
             get_variable_name_and_lag(bad_node_name)
-        
+
         # create a correct node name
         node_name = 'X1 lag(n=1)'
         name, lag = get_variable_name_and_lag(node_name)
@@ -221,6 +259,12 @@ class TestCausalGraphEdgeTypes(unittest.TestCase):
         adj_matrices = self.tsdag.adjacency_matrices
         for key, value in adj_matrices.items():
             numpy.testing.assert_equal(value, matrices[key])
+
+        # test without time delta 0
+        matrices = {-1: adj_mat_lag_1}
+        variables = ['X1', 'X2', 'X3']
+        tsdag = TimeSeriesCausalGraph.from_adjacency_matrices(matrices, variables)
+        self.assertEqual(len(tsdag.edges), adj_mat_lag_1.sum())
 
     def test_summary_graph(self):
         summary_graph = self.tsdag.get_summary_graph()

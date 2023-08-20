@@ -21,7 +21,6 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from cai_causal_graph.exceptions import CausalGraphErrors
 from cai_causal_graph.interfaces import CanDictSerialize, HasIdentifier, HasMetadata
 from cai_causal_graph.type_definitions import EDGE_T, NodeLike, NodeVariableType
-from cai_causal_graph.utils import get_variable_name_and_lag
 
 
 class Node(HasIdentifier, HasMetadata, CanDictSerialize):
@@ -111,45 +110,6 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
             raise TypeError(f'Expected NodeVariableType or string, got object of type {type(new_type)}.')
         self._variable_type = new_type
 
-    def _check_var_name_is_valid(self, name: str):
-        """Check that the name is valid."""
-        # get variable name
-        variable_name, _ = get_variable_name_and_lag(name)
-        # do the same for the current node
-        variable_name_this, _ = get_variable_name_and_lag(self.identifier)
-
-        # check that the name is valid relative to the given Node
-        assert variable_name_this == variable_name, f'Invalid node name: {name}. Expected {variable_name_this}.'
-
-    @property
-    def variable_name(self) -> Optional[str]:
-        """Return the variable name of the node from the metadata."""
-        return self.meta.get('variable_name', None)
-
-    @variable_name.setter
-    def variable_name(self, new_name: str):
-        """
-        Set the variable name of the node.
-
-        :param new_name: New variable name.
-        """
-        self._check_var_name_is_valid(new_name)
-        self.meta['variable_name'] = new_name
-
-    @property
-    def time_lag(self) -> int:
-        """Return the time lag of the node from the metadata."""
-        return self.meta.get('time_lag', 0)
-
-    @time_lag.setter
-    def time_lag(self, new_lag: int):
-        """
-        Set the time lag of the node.
-
-        :param new_lag: New time lag.
-        """
-        self.meta['time_lag'] = new_lag
-
     @property
     def metadata(self) -> dict:
         """Return the node metadata."""
@@ -221,14 +181,15 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
 
     def to_dict(self, include_meta: bool = True) -> dict:
         """Serialize the Node instance to a dictionary."""
-        node_dict =  {
-                'identifier': self.identifier,
-                'variable_type': self.variable_type,
-            }
+        node_dict = {
+            'identifier': self.identifier,
+            'variable_type': self.variable_type,
+        }
         if include_meta:
             node_dict['meta'] = deepcopy(self.meta)
-        
+
         return node_dict
+
 
 class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
     """A utility class that manages the state of an edge."""
@@ -368,5 +329,5 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
 
         if include_meta:
             edge_dict['meta'] = deepcopy(self.meta)
-        
+
         return edge_dict

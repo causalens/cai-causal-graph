@@ -36,7 +36,7 @@ def get_variable_name_and_lag(node_name: NodeLike) -> Tuple[str, int]:
 
     if not isinstance(node_name, str):
         raise TypeError(f'Expected node name to be a string, got type {type(node_name)}.')
-    
+
     # Validation for cases with both "lag" and "future"
     if 'lag' in node_name and 'future' in node_name:
         raise ValueError(f'Invalid node name with both past and future lags: {node_name}.')
