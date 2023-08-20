@@ -197,8 +197,6 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         # now check the metadata timedelta in the nodes
         for node in self.get_nodes():
-
-            assert isinstance(node, TimeSeriesNode)
             other_node = other.get_node(node.identifier)
             assert isinstance(other_node, TimeSeriesNode)
 
@@ -406,7 +404,6 @@ class TimeSeriesCausalGraph(CausalGraph):
             if backward_steps < maxlag:
                 ramaining_nodes = []
                 for node in minimal_graph.get_nodes():
-                    assert isinstance(node, TimeSeriesNode)
                     if abs(node.time_lag) > backward_steps:
                         ramaining_nodes.append(node.identifier)
                 logger.warning(
@@ -422,7 +419,6 @@ class TimeSeriesCausalGraph(CausalGraph):
             # first create all the nodes from 1 to forward_steps
             for lag in range(1, forward_steps + 1):
                 for node in minimal_graph.get_nodes():
-                    assert isinstance(node, TimeSeriesNode)
                     # create the node with +lag (if it does not exist)
                     lagged_node = self._get_lagged_node(node=node, lag=lag)
                     # if node does not exist, add it
@@ -866,30 +862,19 @@ class TimeSeriesCausalGraph(CausalGraph):
         if self._variables is None:
             variables = []
             for node in self.get_nodes():
-                assert isinstance(node, TimeSeriesNode)
                 assert node.variable_name is not None
                 variables.append(node.variable_name)
             self._variables = sorted(list(set(variables)))
         return self._variables
 
-    # def _update_meta_from_node_names(self):
-    #     """
-    #     Update the metadata from the node names.
+    def get_nodes(self, identifier: Optional[Union[NodeLike, List[NodeLike]]] = None) -> List[TimeSeriesNode]:
+        """
+        Return the time series nodes in the graph.
 
-    #     This is just for internal use.
-    #     """
-    #     for node in self.nodes:
-    #         # get the variable name and lag from the node name
-    #         variable_name, lag = get_variable_name_and_lag(node.identifier)
-    #         # set the variable name and lag in the metadata
-    #         self._update_node_meta(node, variable_name, lag)
-
-    # @staticmethod
-    # def _update_node_meta(node: TimeSeriesNode, variable_name: Optional[str] = None, lag: Optional[int] = None):
-    #     """
-    #     Update the metadata of a node.
-
-    #     This is just for internal use.
-    #     """
-    #     node.meta[VARIABLE_NAME] = variable_name
-    #     node.meta[TIME_LAG] = lag
+        :param identifier: The identifier of the node(s) to return.
+        :return: A list of nodes.
+        """
+        nodes = super().get_nodes(identifier)
+        # check all nodes are TimeSeriesNode
+        assert all(isinstance(node, TimeSeriesNode) for node in nodes)
+        return nodes
