@@ -113,12 +113,13 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
 
     def _check_var_name_is_valid(self, name: str):
         """Check that the name is valid."""
-        vname, _ = get_variable_name_and_lag(name)
+        # get variable name
+        variable_name, _ = get_variable_name_and_lag(name)
         # do the same for the current node
-        vname_this, _ = get_variable_name_and_lag(self.identifier)
+        variable_name_this, _ = get_variable_name_and_lag(self.identifier)
 
         # check that the name is valid relative to the given Node
-        assert vname_this == vname, f'Invalid node name: {name}.'
+        assert variable_name_this == variable_name, f'Invalid node name: {name}. Expected {variable_name_this}.'
 
     @property
     def variable_name(self) -> Optional[str]:
@@ -220,18 +221,14 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
 
     def to_dict(self, include_meta: bool = True) -> dict:
         """Serialize the Node instance to a dictionary."""
+        node_dict =  {
+                'identifier': self.identifier,
+                'variable_type': self.variable_type,
+            }
         if include_meta:
-            return {
-                'identifier': self.identifier,
-                'variable_type': self.variable_type,
-                'meta': deepcopy(self.meta),
-            }
-        else:
-            return {
-                'identifier': self.identifier,
-                'variable_type': self.variable_type,
-            }
-
+            node_dict['meta'] = deepcopy(self.meta)
+        
+        return node_dict
 
 class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
     """A utility class that manages the state of an edge."""
@@ -363,16 +360,13 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
 
         :param include_meta: Whether to include the edge metadata in the dictionary. Default is True.
         """
+        edge_dict = {
+            'source': self._source.to_dict(),
+            'destination': self.destination.to_dict(),
+            'edge_type': self._edge_type,
+        }
+
         if include_meta:
-            return {
-                'source': self._source.to_dict(),
-                'destination': self.destination.to_dict(),
-                'edge_type': self._edge_type,
-                'meta': deepcopy(self.meta),
-            }
-        else:
-            return {
-                'source': self._source.to_dict(),
-                'destination': self.destination.to_dict(),
-                'edge_type': self._edge_type,
-            }
+            edge_dict['meta'] = deepcopy(self.meta)
+        
+        return edge_dict

@@ -70,7 +70,7 @@ PAIR_T = Tuple[str, str]  # Defines a pair of variables. Can be used to query ed
 NodeLike = Union[str, HasIdentifier]
 
 # meta for time series
-TIME_NAME = 'time_lag'
+TIME_LAG = 'time_lag'
 VARIABLE_NAME = 'variable_name'
 
 

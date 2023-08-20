@@ -21,26 +21,34 @@ from cai_causal_graph.type_definitions import HasIdentifier, NodeLike
 
 def get_variable_name_and_lag(node_name: NodeLike) -> Tuple[str, int]:
     """
-    Extract the variable name from a node name and time-series lag from a node name.
+    Extract the variable name and time series lag from a node name.
 
     Example:
         'X lag(n=2)' -> 'X', -2 if lagged in the past,
         'X future(n=2)' -> 'X', 2 if lagged in the future.
+
+    :param node_name: The name of the node.
+    :return: A tuple with the variable name and lag.
     """
     # get the string name if the node is a Node object
     if isinstance(node_name, HasIdentifier):
         node_name = node_name.identifier
 
     if not isinstance(node_name, str):
-        raise TypeError(f'Expected node name to be a string, got: {node_name}')
+        raise TypeError(f'Expected node name to be a string, got type {type(node_name)}.')
+    
+    # Validation for cases with both "lag" and "future"
+    if 'lag' in node_name and 'future' in node_name:
+        raise ValueError(f'Invalid node name with both past and future lags: {node_name}.')
 
-    is_match = re.match(r'(\w+)(?: lag\(n=(\d+)\))?(?: future\(n=(\d+)\))?', node_name)
+    is_match = re.match(r'^(\w+)(?: lag\(n=(\d+)\))?(?: future\(n=(\d+)\))?$', node_name)
 
     if is_match:
         variable_name = is_match.group(1)
         past_lag = is_match.group(2)
         future_lag = is_match.group(3)
 
+        # # we need to check that the node name does not contain both a lag and future lag
         if past_lag:
             return variable_name, -int(past_lag)
         elif future_lag:
@@ -52,9 +60,9 @@ def get_variable_name_and_lag(node_name: NodeLike) -> Tuple[str, int]:
         raise ValueError(f'Invalid node name: {node_name}. Expected format: "X", "X lag(n=2)", or "X future(n=2)".')
 
 
-def get_name_from_lag(variable_name: str, lag: int) -> str:
+def name_with_lag(variable_or_node_name: str, lag: int) -> str:
     """
-    Get the name of a lagged variable.
+    Get the name of a lagged node.
 
     If the lag is 0, then the variable name is returned.
     If the lag is not 0, then the old lag is removed and
@@ -64,13 +72,14 @@ def get_name_from_lag(variable_name: str, lag: int) -> str:
         'X', -2 -> 'X lag(n=2)', # lagged in the past
         'X', 2 -> 'X future(n=2)', # lagged in the future
 
-    :param variable_name: The name of the variable.
-    :param lag: The lag of the variable.
-    :return: The name of the lagged variable.
+    :param variable_or_node_name: The name of the variable or node.
+    :param lag: The lag of the node.
+    :return: The name of the lagged node.
     """
     # remove the old lag if it exists
-    variable_name, old_lag = get_variable_name_and_lag(variable_name)
+    variable_name, old_lag = get_variable_name_and_lag(variable_or_node_name)
 
+    assert isinstance(lag, int), f'Expected lag to be an integer, got type {type(lag)}.'
     if lag == 0:
         return variable_name
     elif lag > 0:
@@ -84,13 +93,13 @@ def extract_names_and_lags(
 ) -> Tuple[List[Dict[str, int]], int]:
     """
     Extract the names and lags from a list of node names.
-    This is useful for converting a list of node names into a list of node names and lags.
+    This is useful for converting a list of node names into a list of variable names and lags.
 
     Example:
         ['X', 'Y', 'Z lag(n=2)'] -> [{'X': 0}, {'Y': 0}, {'Z': 2}]
 
     :param node_names: List of node names.
-    :return: List of dictionaries with node names and lags sorted by lag and the maximum lag.
+    :return: List of dictionaries with variable names and lags and the maximum lag.
     """
     names_and_lags = []
     max_lag: int = 0
