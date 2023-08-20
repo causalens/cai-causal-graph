@@ -118,7 +118,7 @@ class TimeSeriesNode(Node):
     def variable_name(self) -> Optional[str]:
         """Return the variable name of the node from the metadata."""
         return self.meta.get('variable_name', None)
-    
+
     def __repr__(self) -> str:
         return super().__repr__().replace('Node', 'TimeSeriesNode')
 
@@ -605,7 +605,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         if new_node_id is None:
             # update name from the variable name and time lag
-            new_node_id = get_name_with_lag(variable_name, time_lag)
+            new_node_id = get_name_with_lag(variable_name, time_lag)   # type: ignore
         else:
             new_node_id = Node.identifier_from(new_node_id)
             variable_name, time_lag = get_variable_name_and_lag(Node.identifier_from(new_node_id))
@@ -682,7 +682,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
 
         sepsets = causal_graph._sepsets
-        
+
         # copy nodes and make them TimeSeriesNodes
         ts_cg = TimeSeriesCausalGraph()
         for node in causal_graph.get_nodes():
@@ -697,43 +697,10 @@ class TimeSeriesCausalGraph(CausalGraph):
             source = ts_cg.get_node(edge.source)
             destination = ts_cg.get_node(edge.destination)
             ts_cg.add_edge(source, destination, meta=edge.meta)
-        
+
         ts_cg._sepsets = sepsets
 
         return ts_cg
-        
-        # # create an instance without calling __init__
-        # obj = cls.__new__(cls)
-
-        # # copy all attributes from causal_graph to the new object
-        # for name, value in vars(causal_graph).items():
-        #     setattr(obj, name, value)
-
-        # # set all the attributes related to time series
-
-        # # create a temporary TimeSeriesCausalGraph object to get default values for new attributes
-        # temp_obj = cls(input_list=None, output_list=None, fully_connected=True)
-
-        # # Copy all attributes from the temporary object to the new object
-        # for name, value in vars(temp_obj).items():
-        #     if not hasattr(obj, name):
-        #         setattr(obj, name, value)
-
-        # variables = []
-        # maxlag = 0
-        # # now for each node in tsgraph set the metadata
-        # for node in obj.get_nodes():
-        #     # transform the node into a time series node
-        #     meta = deepcopy(node.meta)
-        #     # get the variable name and lag from the node name
-        #     variable_name, lag = get_variable_name_and_lag(node.identifier)
-        #     node = TimeSeriesNode(variable_name=variable_name, time_lag=lag, meta=meta)
-        #     maxlag = max(maxlag, lag)
-        #     variables.append(variable_name) if variable_name not in variables else variables
-
-        # obj._maxlag = maxlag
-        # obj._variables = sorted(variables)
-        # return obj
 
     @staticmethod
     def from_adjacency_matrix(
@@ -885,7 +852,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         # get the maximum lag of the nodes in the graph
         if self._maxlag is None:
-            self._maxlag = max([abs(node.time_lag) for node in self.get_minimal_graph().get_nodes()])
+            self._maxlag = max([abs(node.time_lag) for node in self.get_minimal_graph().get_nodes()])   # type: ignore
         return self._maxlag
 
     @property
@@ -900,6 +867,7 @@ class TimeSeriesCausalGraph(CausalGraph):
             variables = []
             for node in self.get_nodes():
                 assert isinstance(node, TimeSeriesNode)
+                assert node.variable_name is not None
                 variables.append(node.variable_name)
             self._variables = sorted(list(set(variables)))
         return self._variables
