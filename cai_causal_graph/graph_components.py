@@ -186,7 +186,7 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
             'variable_type': self.variable_type,
         }
         if include_meta:
-            node_dict['meta'] = deepcopy(self.meta)
+            node_dict['meta'] = deepcopy(self.meta)   # type: ignore
 
         return node_dict
 

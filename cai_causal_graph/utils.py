@@ -60,7 +60,7 @@ def get_variable_name_and_lag(node_name: NodeLike) -> Tuple[str, int]:
         raise ValueError(f'Invalid node name: {node_name}. Expected format: "X", "X lag(n=2)", or "X future(n=2)".')
 
 
-def name_with_lag(variable_or_node_name: str, lag: int) -> str:
+def get_name_with_lag(variable_or_node_name: str, lag: int) -> str:
     """
     Get the name of a lagged node.
 
