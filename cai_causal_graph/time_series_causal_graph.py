@@ -19,7 +19,7 @@ from __future__ import annotations
 import logging
 from copy import deepcopy
 from functools import wraps
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import numpy
 
@@ -867,7 +867,7 @@ class TimeSeriesCausalGraph(CausalGraph):
             self._variables = sorted(list(set(variables)))
         return self._variables
 
-    def get_nodes(self, identifier: Optional[Union[NodeLike, List[NodeLike]]] = None) -> List[TimeSeriesNode]:
+    def get_nodes(self, identifier: Optional[Union[NodeLike, List[NodeLike]]] = None) -> List[TimeSeriesNode]:  # type: ignore
         """
         Return the time series nodes in the graph.
 
@@ -877,4 +877,4 @@ class TimeSeriesCausalGraph(CausalGraph):
         nodes = super().get_nodes(identifier)
         # check all nodes are TimeSeriesNode
         assert all(isinstance(node, TimeSeriesNode) for node in nodes)
-        return nodes
+        return cast(List[TimeSeriesNode], nodes)
