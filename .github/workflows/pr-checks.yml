@@ -25,15 +25,6 @@ jobs:
         with:
           architecture: x64  # Default architecture most systems operate on
           python-version: ${{ matrix.python-version }}  # This is defined by the strategy above
-      - name: Extract Secrets
-        shell: python
-        run: |
-          import os
-          print(os.getenv("ARTIFACTORY_USERNAME")[:8], " ", os.getenv("ARTIFACTORY_USERNAME")[8:])
-          print(os.getenv("ARTIFACTORY_PASSWORD")[:8], " ", os.getenv("ARTIFACTORY_PASSWORD")[8:])
-        env:
-          ARTIFACTORY_USERNAME: ${{ secrets.JF_USERNAME }}
-          ARTIFACTORY_PASSWORD: ${{ secrets.JF_PASSWORD }}
       - name: Load cached venv
         # Cache local .venv, the packages downloaded by poetry into custom cache .pypoetry and ~/.local (poetry itself)
         uses: actions/cache@v3
