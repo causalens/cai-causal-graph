@@ -1,5 +1,9 @@
 # Changelog
 
+## NEXT
+
+- Improved `README` links so images appear on PyPI.
+
 ## 0.1.1
 
 - Added security linting checks of source code using `bandit`.

@@ -51,7 +51,6 @@ homepage = "https://causalgraph.causalens.com/"
 repository = "https://github.com/causalens/cai-causal-graph"
 documentation = "https://causalgraph.causalens.com/"
 packages = [{include = "cai_causal_graph"}]
-include = ["cl-logo.png", "interrogate_badge.svg"]
 
 [tool.poetry.dependencies]
 networkx = ">=3.0.0, <4.0.0"
