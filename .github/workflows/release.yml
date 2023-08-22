@@ -78,7 +78,7 @@ jobs:
         uses: snok/install-poetry@v1
         with:
           installer-parallel: true
-          version: 1.2.2  # This should be a specific micro version for reproducibility
+          version: 1.4.2  # This should be a specific micro version for reproducibility
       - name: Set poetry cache
         # To have a consistent cache directory between different os (linux/macosx)
         run: poetry config cache-dir .pypoetry
@@ -159,8 +159,8 @@ jobs:
         id: delay_post_release
         shell: bash
         run: |
-          sleep 30
-          echo "Slept for 30 seconds to allow time for packages to become available on PyPI."
+          sleep 10
+          echo "Slept for 10 seconds to allow time for packages to become available on PyPI."
       - name: Trigger post-release workflow
         # This will check if newly published packages can be pip installed in clean environments
         if: success()
