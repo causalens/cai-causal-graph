@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.1.1
 
 - Added security linting checks of source code using `bandit`.
 - Improved documentation packaging and publishing.
