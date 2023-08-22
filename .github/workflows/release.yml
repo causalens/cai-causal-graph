@@ -8,9 +8,7 @@ on:
 jobs:
   package-and-publish:
     env:
-      # These env variables are needed to publish docs to causaLens artifactory and to publish code to PyPI
-      POETRY_HTTP_BASIC_CAUSALENS_PASSWORD: '${{ secrets.JF_PASSWORD }}'
-      POETRY_HTTP_BASIC_CAUSALENS_USERNAME: '${{ secrets.JF_USERNAME }}'
+      # These env variables are needed to publish code to PyPI
       PYPI_TOKEN: '${{ secrets.PYPI_TOKEN }}'
       REF: '${{ github.ref }}'
     runs-on: ${{ matrix.os }}  # This is defined by the strategy below
@@ -27,7 +25,7 @@ jobs:
           # Use a PAT with admin privileges, so we can push to main the changes to changelog, lock and toml.
           # https://github.community/t/how-to-push-to-protected-branches-in-a-github-action/16101/34
           token: ${{ secrets.GH_ACTIONS_KEY }}
-          fetch-depth: 0  # 0 fetches all history, apparently needed for push:
+          fetch-depth: 0  # 0 fetches all history, apparently needed for push.
       - name: Extract branch name
         # This is required for pushing the changes to version, lock and changelog to the correct branch.
         id: extract_branch
@@ -76,17 +74,6 @@ jobs:
         with:
           architecture: x64  # Default architecture most systems operate on
           python-version: ${{ matrix.python-version }}  # This is defined by the strategy above
-      - name: Load cached venv
-        # Cache local .venv, the packages downloaded by poetry into custom cache .pypoetry and ~/.local (poetry itself)
-        uses: actions/cache@v3
-        with:
-          path: |
-            .venv
-            .pypoetry
-            ~/.local
-          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: |
-            venv-${{ runner.os }}-
       - name: Install and configure poetry
         uses: snok/install-poetry@v1
         with:
@@ -96,7 +83,7 @@ jobs:
         # To have a consistent cache directory between different os (linux/macosx)
         run: poetry config cache-dir .pypoetry
       - name: Set up python build dependencies
-        # Because we are going to build a wheel later, update pip, wheel and setuptools
+        # Ensure latest pip, setuptools, and wheel are installed.
         run: make install-build-deps
       - name: Update package version from tag
         # The recipe is slightly different for linux
@@ -113,17 +100,6 @@ jobs:
       - name: Poetry update lock and install virtual environment
         # Necessary both to update the package dependencies and account for the new tag
         run: make update-install
-      - name: Package Docs
-        # We run this step before the package build, so that the docs are packaged before code obfuscation as no
-        # references are generated for obfuscated/compiled code.
-        uses: causalens/docs-upload-action@v0.0.2
-        with:
-          artifactory-password: ${{ secrets.JF_PASSWORD }}
-          artifactory-username: ${{ secrets.JF_USERNAME }}
-          artifactory-url: https://causalens.jfrog.io/artifactory
-          package-name: cai-causal-graph
-          package-paths: cai_causal_graph
-          version: ${{ steps.extract_tag.outputs.new_version }}
       - name: Build packages - default os and python
         # For the main python distribution build both wheel (bdist) and sdist and publish
         if: success()
@@ -160,16 +136,21 @@ jobs:
                 git add poetry.lock -f
                 git commit -m "Version Bump"
                 git push origin $(echo "HEAD:$BRANCH" | tr -d '[:space:]')
-      - name: Wait for packages to be available on PyPI
-        # This will sleep for a few seconds to allow for packages to become available on PyPI.
-        # Sometimes the post-release checks fail as there is a slight race between the post-release asking for a
-        #  specific version and that version becoming available on PyPI.
+      - name: Package and Publish Docs
+        # We run this step after the package build and version bump commit as this modifies the virtual environment and
+        # poetry.lock to add the docs-upload dependency. This is not publicly available so cannot be a dependency for
+        # this package.
         if: success()
-        id: delay_post_release
-        shell: bash
-        run: |
-          sleep 10
-          echo "Slept for 10 seconds to allow time for packages to become available on PyPI."
+        env:
+          ARTIFACTORY_URL: https://causalens.jfrog.io/artifactory
+          ARTIFACTORY_USERNAME: ${{ secrets.JF_USERNAME }}
+          ARTIFACTORY_PASSWORD: ${{ secrets.JF_PASSWORD }}
+          ARTIFACTORY_REPOSITORY: documentation
+          BUILD_REFERENCE: true
+          PACKAGE: cai-causal-graph
+          PACKAGE_PATHS: cai_causal_graph
+          VERSION: ${{ steps.extract_tag.outputs.new_version }}
+        run: make package-and-publish-docs
       - name: Trigger post-release workflow
         # This will check if newly published packages can be pip installed in clean environments
         if: success()

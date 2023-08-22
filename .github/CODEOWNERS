@@ -8,3 +8,4 @@
 /cai_causal_graph/ @causalens/causal-ai-team @causalens/mle
 /docs/ @causalens/causal-ai-team @causalens/mle
 /tests/ @causalens/causal-ai-team @causalens/mle
+/tooling/ @causalens/platform-team

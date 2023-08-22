@@ -3,6 +3,7 @@
 ## NEXT
 
 - Added security linting checks of source code using `bandit`.
+- Improved documentation packaging and publishing.
 
 ## 0.1.0
 
