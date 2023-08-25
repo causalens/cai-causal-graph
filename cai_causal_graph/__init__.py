@@ -23,7 +23,7 @@ __all__ = [
     'EDGE_T',
     'NODE_T',
     # Time series
-    'TIME_LAG'
+    'TIME_LAG',
 ]
 
 __version__ = '0.1.2'
