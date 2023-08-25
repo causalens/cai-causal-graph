@@ -169,10 +169,10 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
     def test_add_node(self):
         ts_cg = TimeSeriesCausalGraph()
         ts_cg.add_node('X1 lag(n=1)')
-        assert ts_cg.get_node('X1 lag(n=1)').time_lag == -1
+        self.assertEqual(ts_cg.get_node('X1 lag(n=1)').time_lag, -1)
 
         ts_cg.add_node(variable_name='X1', time_lag=-2)
-        assert ts_cg.get_node('X1 lag(n=2)').time_lag == -2
+        self.assertEqual(ts_cg.get_node('X1 lag(n=2)').time_lag, -2)
 
     def test_add_edge(self):
         ts_cg = TimeSeriesCausalGraph()

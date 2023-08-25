@@ -138,10 +138,7 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
     ) -> bool:
         """Return true if edge exists."""
         edge_pairs = self.get_edge_pairs()
-        return (source, destination) in edge_pairs or (
-            destination,
-            source,
-        ) in edge_pairs
+        return (source, destination) in edge_pairs or (destination, source) in edge_pairs
 
     def get_edge_pairs(self) -> List[PAIR_T]:
         """Return all edge pairs in the current graph."""
@@ -607,12 +604,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
                     f'Expected identifier to be a string, list of strings, or None. Got {type(identifier)}.'
                 )
         else:
-            node_list = list(
-                map(
-                    self._nodes_by_identifier.__getitem__,
-                    sorted(list(self._nodes_by_identifier.keys())),
-                )
-            )
+            node_list = list(map(self._nodes_by_identifier.__getitem__, sorted(list(self._nodes_by_identifier.keys()))))
 
         return node_list
 
@@ -657,7 +649,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         :param meta: The meta values for the node.
         :param node: A `cai_causal_graph.graph_components.Node` node to be used to construct a new node. All the
             properties of the provided node will be deep copied to the constructed node, including metadata and
-            variable type. If provided, then all other parameters to the method must not be specified. Default is `None`.
+            variable type. If provided, then all other parameters to the method must not be specified. Default is
+            `None`.
         :param kwargs: kwargs
         :return: The created node.
         """
@@ -797,14 +790,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         # remove the original edge
         self.delete_node(original_node.identifier)
 
-    def get_edge(
-        self,
-        /,
-        source: NodeLike,
-        destination: NodeLike,
-        *,
-        edge_type: Optional[EDGE_T] = None,
-    ) -> Edge:
+    def get_edge(self, /, source: NodeLike, destination: NodeLike, *, edge_type: Optional[EDGE_T] = None) -> Edge:
         """Return an edge based on its source, destination and (optional) edge_type."""
         # get edge with the specified source and destination
         try:
@@ -925,14 +911,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """
         return [edge for edge in self.edges if edge.get_edge_type() == edge_type]
 
-    def edge_exists(
-        self,
-        /,
-        source: NodeLike,
-        destination: NodeLike,
-        *,
-        edge_type: Optional[EDGE_T] = None,
-    ) -> bool:
+    def edge_exists(self, /, source: NodeLike, destination: NodeLike, *, edge_type: Optional[EDGE_T] = None) -> bool:
         """Returns True if the edge exists. If edge_type is None (default), this ignores edge types."""
         try:
             edge = self.get_edge(source, destination)
@@ -967,12 +946,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         if edge.get_edge_type() != new_edge_type:
             meta = edge.meta
             self.remove_edge(source=source, destination=destination, edge_type=edge.get_edge_type())
-            self.add_edge(
-                source=source,
-                destination=destination,
-                edge_type=new_edge_type,
-                meta=meta,
-            )
+            self.add_edge(source=source, destination=destination, edge_type=new_edge_type, meta=meta)
 
     def add_edge(
         self,
@@ -1099,12 +1073,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             validate_pair_type(pair)
             self.add_edge(source=pair[0], destination=pair[1])
 
-    def add_edge_by_pair(
-        self,
-        pair: Tuple[NodeLike, NodeLike],
-        edge_type: EDGE_T = EDGE_T.DIRECTED_EDGE,
-        **kwargs,
-    ):
+    def add_edge_by_pair(self, pair: Tuple[NodeLike, NodeLike], edge_type: EDGE_T = EDGE_T.DIRECTED_EDGE, **kwargs):
         """Add edge by pair identifier (source, destination)."""
         validate_pair_type(pair)
         self.add_edge(pair[0], pair[1], edge_type=edge_type, **kwargs)
@@ -1114,14 +1083,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         validate_pair_type(pair)
         self.delete_edge(pair[0], pair[1], edge_type=edge_type)
 
-    def delete_edge(
-        self,
-        /,
-        source: NodeLike,
-        destination: NodeLike,
-        *,
-        edge_type: Optional[EDGE_T] = None,
-    ):
+    def delete_edge(self, /, source: NodeLike, destination: NodeLike, *, edge_type: Optional[EDGE_T] = None):
         """
         Delete an edge from the causal graph.
 
@@ -1315,9 +1277,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         return descendant_graph
 
     def is_ancestor(
-        self,
-        ancestor_node: NodeLike,
-        descendant_node: Union[NodeLike, Set[NodeLike], List[NodeLike]],
+        self, ancestor_node: NodeLike, descendant_node: Union[NodeLike, Set[NodeLike], List[NodeLike]]
     ) -> bool:
         """
         Check whether there is a causal path between ancestor and descendant node(s).
@@ -1340,9 +1300,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         return descendant_node_set.issubset(self.get_descendants(ancestor_node))
 
     def is_descendant(
-        self,
-        descendant_node: NodeLike,
-        ancestor_node: Union[NodeLike, Set[NodeLike], List[NodeLike]],
+        self, descendant_node: NodeLike, ancestor_node: Union[NodeLike, Set[NodeLike], List[NodeLike]]
     ) -> bool:
         """
         Check whether there is a causal path between descendant and ancestor node(s).
@@ -1472,10 +1430,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         return networkx.d_separated(self.to_networkx(), nodes_1, nodes_2, separation_set)
 
     def is_minimally_d_separated(
-        self,
-        node_1: NodeLike,
-        node_2: NodeLike,
-        separation_set: Optional[Set[NodeLike]] = None,
+        self, node_1: NodeLike, node_2: NodeLike, separation_set: Optional[Set[NodeLike]] = None
     ) -> bool:
         """
         Check whether given nodes are minimally d-separated given the separation set.
