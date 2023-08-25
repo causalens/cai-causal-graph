@@ -22,10 +22,12 @@ __all__ = [
     # Causal types
     'EDGE_T',
     'NODE_T',
+    # Time series
+    'TIME_LAG'
 ]
 
 __version__ = '0.1.2'
 
 from cai_causal_graph.causal_graph import CausalGraph, Skeleton
 from cai_causal_graph.time_series_causal_graph import TimeSeriesCausalGraph
-from cai_causal_graph.type_definitions import EDGE_T, NODE_T
+from cai_causal_graph.type_definitions import EDGE_T, NODE_T, TIME_LAG

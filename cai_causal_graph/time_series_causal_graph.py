@@ -57,12 +57,12 @@ class TimeSeriesNode(Node):
     """
     Time series node.
 
-    A node in a time series causal graph will have additional metadata and attributes that
-    gives the time information of the node together with the variable name.
+    A node in a time series causal graph will have additional metadata and attributes that gives the time information
+    of the node together with the variable name.
 
     The two additional metadata are:
-    - 'time_lag': the time difference with respect to the reference time 0
-    - 'variable_name': the name of the variable (without the lag information).
+    - `cai_causal_graph.type_definitions.TIME_LAG`: the time difference with respect to the reference time 0
+    - `cai_causal_graph.type_definitions.VARIABLE_NAME`: the name of the variable (without the lag information)
     """
 
     def __init__(
@@ -103,9 +103,9 @@ class TimeSeriesNode(Node):
 
         # populate the metadata for each node
         if meta is not None:
-            meta.update({'time_lag': time_lag, 'variable_name': variable_name})
+            meta.update({TIME_LAG: time_lag, VARIABLE_NAME: variable_name})
         else:
-            meta = {'time_lag': time_lag, 'variable_name': variable_name}
+            meta = {TIME_LAG: time_lag, VARIABLE_NAME: variable_name}
 
         # populate the metadata for each node
         super().__init__(identifier, meta, variable_type)
@@ -113,12 +113,12 @@ class TimeSeriesNode(Node):
     @property
     def time_lag(self) -> int:
         """Return the time lag of the node from the metadata."""
-        return self.meta.get('time_lag', 0)
+        return self.meta.get(TIME_LAG, 0)
 
     @property
     def variable_name(self) -> Optional[str]:
         """Return the variable name of the node from the metadata."""
-        return self.meta.get('variable_name', None)
+        return self.meta.get(VARIABLE_NAME, None)
 
     def __repr__(self) -> str:
         return super().__repr__().replace('Node', 'TimeSeriesNode')
@@ -131,8 +131,8 @@ class TimeSeriesCausalGraph(CausalGraph):
     The node in a time series causal graph will have additional metadata that
     gives the time information of the node together with the variable name.
     The two additional metadata are:
-    - 'time_lag': the time difference with respect to the reference time 0
-    - 'variable_name': the name of the variable (without the lag information).
+    - `cai_causal_graph.type_definitions.TIME_LAG`: the time difference with respect to the reference time 0
+    - `cai_causal_graph.type_definitions.VARIABLE_NAME`: the name of the variable (without the lag information)
     """
 
     def __init__(
@@ -507,8 +507,8 @@ class TimeSeriesCausalGraph(CausalGraph):
             variable_name, _ = get_variable_name_and_lag(identifier)
 
             meta = {
-                'variable_name': variable_name,
-                'time_lag': lag,
+                VARIABLE_NAME: variable_name,
+                TIME_LAG: lag,
             }
         else:
             # modify the identifier of the provided node
@@ -611,9 +611,9 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         if meta is not None:
             meta = meta.copy()
-            meta.update({'variable_name': variable_name, 'time_lag': time_lag})
+            meta.update({VARIABLE_NAME: variable_name, TIME_LAG: time_lag})
         else:
-            meta = {'variable_name': variable_name, 'time_lag': time_lag}
+            meta = {VARIABLE_NAME: variable_name, TIME_LAG: time_lag}
 
         super().replace_node(node_id, new_node_id, variable_type=variable_type, meta=meta)
 

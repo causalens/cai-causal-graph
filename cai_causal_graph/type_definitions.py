@@ -69,7 +69,7 @@ NODE_T = NodeVariableType  # This should be the base one, it will allow for all 
 PAIR_T = Tuple[str, str]  # Defines a pair of variables. Can be used to query edges, paths, functions.
 NodeLike = Union[str, HasIdentifier]
 
-# meta for time series
+# Meta tags for time series
 TIME_LAG = 'time_lag'
 VARIABLE_NAME = 'variable_name'
 
