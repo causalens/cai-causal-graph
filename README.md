@@ -1,6 +1,6 @@
 # cai-causal-graph
 
-![causaLens logo](cl-logo.png)
+![causaLens logo](https://github.com/causalens/cai-causal-graph/blob/main/cl-logo.png?raw=true)
 
 ## From causaLens, a Causal AI package for causal graphs
 Documentation, including a quickstart and code reference docs, can be found [here](https://causalgraph.causalens.com/).
@@ -16,7 +16,7 @@ Documentation, including a quickstart and code reference docs, can be found [her
 
 [![LINTING: mypy](https://img.shields.io/badge/Linting-mypy-informational.svg)](https://mypy-lang.org/)
 [![SECURITY: bandit](https://img.shields.io/badge/Security-bandit-informational.svg)](https://github.com/PyCQA/bandit)
-![INTERROGATE](interrogate_badge.svg)
+![INTERROGATE](https://github.com/causalens/cai-causal-graph/blob/main/interrogate_badge.svg?raw=true)
 
 > **Note**  
 > The current development cycle of this branch is `v0.1.x` (stable).

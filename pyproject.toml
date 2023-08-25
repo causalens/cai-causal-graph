@@ -42,7 +42,7 @@ cache_dir = '/dev/null'
 
 [tool.poetry]
 name = "cai-causal-graph"
-version = "0.1.1"
+version = "0.1.2.dev4"
 description = "A Causal AI package for causal graphs."
 license = "Apache-2.0"
 authors = ["causaLens <opensource@causalens.com>"]
@@ -51,7 +51,6 @@ homepage = "https://causalgraph.causalens.com/"
 repository = "https://github.com/causalens/cai-causal-graph"
 documentation = "https://causalgraph.causalens.com/"
 packages = [{include = "cai_causal_graph"}]
-include = ["cl-logo.png", "interrogate_badge.svg"]
 
 [tool.poetry.dependencies]
 networkx = ">=3.0.0, <4.0.0"

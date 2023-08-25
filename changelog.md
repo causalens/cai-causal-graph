@@ -1,5 +1,10 @@
 # Changelog
 
+## NEXT
+
+- Improved `README` links so images appear on PyPI.
+- Upgraded `poetry` version from `1.2.2` to `1.4.2` in the GitHub workflows.
+
 ## 0.1.1
 
 - Added security linting checks of source code using `bandit`.
@@ -7,4 +12,6 @@
 
 ## 0.1.0
 
-- Initial release of the `cai-causal-graph` package with the `cai_causal_graph.causal_graph.CausalGraph` class and component classes: `cai_causal_graph.causal_graph.Skeleton`, `cai_causal_graph.graph_components.Node`, and `cai_causal_graph.graph_components.Edge`.
+- Initial release of the `cai-causal-graph` package with the `cai_causal_graph.causal_graph.CausalGraph` class and
+  component classes: `cai_causal_graph.causal_graph.Skeleton`, `cai_causal_graph.graph_components.Node`, and
+  `cai_causal_graph.graph_components.Edge`.
