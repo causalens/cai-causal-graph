@@ -1,6 +1,11 @@
 # Changelog
 
-## NEXT
+## 0.1.2
+
+- Improved `README` links so images appear on PyPI.
+- Upgraded `poetry` version from `1.2.2` to `1.4.2` in the GitHub workflows.
+
+## 0.1.1
 
 - Added `cai_causal_graph.time_series_causal_graph.TimeSeriesNode` class to extend the `cai_causal_graph.graph_components.Node` class to time series representations of causal graphs. The main additions are:
   - `variable_name`: the variable name of the time series node. For example, if the time series node is a lagged version of the variable `x`, then `variable_name` would be `x`.
@@ -12,7 +17,10 @@
   - extended summary graph (obtained with the method `extend_graph`), obtained by extending backward and forward in time via the arguments `backward_steps` and `forward_steps` respectively.
 - A new `from_adjacency_matrices` method to create a `TimeSeriesCausalGraph` from a dictionary of adjacency matrices where the keys are the time lags.
 - Added security linting checks of source code using `bandit`.
+- Improved documentation packaging and publishing.
 
 ## 0.1.0
 
-- Initial release of the `cai-causal-graph` package with the `cai_causal_graph.causal_graph.CausalGraph` class and component classes: `cai_causal_graph.causal_graph.Skeleton`, `cai_causal_graph.graph_components.Node`, and `cai_causal_graph.graph_components.Edge`.
+- Initial release of the `cai-causal-graph` package with the `cai_causal_graph.causal_graph.CausalGraph` class and
+  component classes: `cai_causal_graph.causal_graph.Skeleton`, `cai_causal_graph.graph_components.Node`, and
+  `cai_causal_graph.graph_components.Edge`.
