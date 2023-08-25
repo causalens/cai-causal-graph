@@ -61,7 +61,7 @@ class TimeSeriesNode(Node):
     gives the time information of the node together with the variable name.
 
     The two additional metadata are:
-    - 'time_lag': the time difference with respect the reference time 0
+    - 'time_lag': the time difference with respect to the reference time 0
     - 'variable_name': the name of the variable (without the lag information).
     """
 
@@ -131,7 +131,7 @@ class TimeSeriesCausalGraph(CausalGraph):
     The node in a time series causal graph will have additional metadata that
     gives the time information of the node together with the variable name.
     The two additional metadata are:
-    - 'time_lag': the time difference with respect the reference time 0
+    - 'time_lag': the time difference with respect to the reference time 0
     - 'variable_name': the name of the variable (without the lag information).
     """
 
@@ -703,14 +703,19 @@ class TimeSeriesCausalGraph(CausalGraph):
 
     @staticmethod
     def from_adjacency_matrix(
-        adjacency_matrix: numpy.ndarray,
+        adjacency: numpy.ndarray,
         node_names: Optional[List[Union[NodeLike, int]]] = None,
     ) -> TimeSeriesCausalGraph:
         """
-        Return a time series causal graph from an adjacency matrix.
-        This is useful for converting an adjacency matrix into a time series causal graph.
+        Construct a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` instance from an adjacency matrix
+        and optionally a list of node names.
+
+        :param adjacency: A square binary numpy adjacency array.
+        :param node_names: A list of strings, `cai_causal_graph.interfaces.HasIdentifier`, and/or integers which can be
+            coerced to `cai_causal_graph.graph_components.Node`.
+        :return: A `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` object.
         """
-        graph = CausalGraph.from_adjacency_matrix(adjacency_matrix, node_names=node_names)
+        graph = CausalGraph.from_adjacency_matrix(adjacency, node_names=node_names)
         return TimeSeriesCausalGraph.from_causal_graph(graph)
 
     @staticmethod
