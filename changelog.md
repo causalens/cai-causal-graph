@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.1.2
 
 - Improved `README` links so images appear on PyPI.
 - Upgraded `poetry` version from `1.2.2` to `1.4.2` in the GitHub workflows.
