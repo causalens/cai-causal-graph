@@ -45,6 +45,7 @@ jobs:
           pip list
           # Sleep for 10 seconds to allow time for packages to become available on PyPI
           sleep 10
+          echo "Slept for 10 seconds to allow time for package to become available on PyPI."
           # These are the python build dependencies
           pip install -U pip wheel setuptools
           pip install $PACKAGE==$VERSION
