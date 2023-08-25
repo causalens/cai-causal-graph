@@ -34,6 +34,7 @@ jobs:
         env:
           # These credentials are needed to fetch the package and its dependencies from PyPI
           VERSION: '${{ github.event.client_payload.version }}'
+        shell: bash
         run: |
           # Create and enter an empty temporary directory so that there is no conflict between local module and package
           mkdir tmp && cd tmp
@@ -42,6 +43,8 @@ jobs:
           which python
           which pip
           pip list
+          # Sleep for 10 seconds to allow time for packages to become available on PyPI
+          sleep 10
           # These are the python build dependencies
           pip install -U pip wheel setuptools
           pip install $PACKAGE==$VERSION
