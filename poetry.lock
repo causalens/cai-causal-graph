@@ -882,19 +882,19 @@ files = [
 
 [[package]]
 name = "mdformat"
-version = "0.7.16"
+version = "0.7.17"
 description = "CommonMark compliant Markdown formatter"
 category = "dev"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "mdformat-0.7.16-py3-none-any.whl", hash = "sha256:76398d03baa394f331fb560fd0aed8257cf77b65b1c8146b92d395af16253662"},
-    {file = "mdformat-0.7.16.tar.gz", hash = "sha256:99b105033207d2ab70ba1ced8e07327ed4ef1e0a6bc1c7c00207ea73ab502782"},
+    {file = "mdformat-0.7.17-py3-none-any.whl", hash = "sha256:91ffc5e203f5814a6ad17515c77767fd2737fc12ffd8b58b7bb1d8b9aa6effaa"},
+    {file = "mdformat-0.7.17.tar.gz", hash = "sha256:a9dbb1838d43bb1e6f03bd5dca9412c552544a9bc42d6abb5dc32adfe8ae7c0d"},
 ]
 
 [package.dependencies]
 importlib-metadata = {version = ">=3.6.0", markers = "python_version < \"3.10\""}
-markdown-it-py = ">=1.0.0,<3.0.0"
+markdown-it-py = ">=1.0.0,<4.0.0"
 tomli = {version = ">=1.1.0", markers = "python_version < \"3.11\""}
 
 [[package]]
