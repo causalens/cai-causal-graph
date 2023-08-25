@@ -93,13 +93,15 @@ def extract_names_and_lags(
 ) -> Tuple[List[Dict[str, int]], int]:
     """
     Extract the names and lags from a list of node names.
+
     This is useful for converting a list of node names into a list of variable names and lags.
 
     Example:
-        ['X', 'Y', 'Z lag(n=2)'] -> [{'X': 0}, {'Y': 0}, {'Z': 2}]
+    >>> ['X', 'Y', 'Z lag(n=2)'] -> [{'X': 0}, {'Y': 0}, {'Z': 2}], 2
 
     :param node_names: List of node names.
-    :return: List of dictionaries with variable names and lags and the maximum lag.
+    :return: Tuple with the first element being a list of dictionaries with variable names and lags and the second
+        element being the maximum lag.
     """
     names_and_lags = []
     max_lag: int = 0

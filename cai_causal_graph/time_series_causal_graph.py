@@ -32,10 +32,11 @@ from cai_causal_graph.utils import get_name_with_lag, get_variable_name_and_lag
 
 logger = logging.getLogger(__name__)
 
+
 # TODO: we can do one general for many other things as well
 def _reset_attributes(func):
     """
-    Decorator to reset attributes such as  summary graph, miminal graph etc.
+    Decorator to reset attributes such as summary graph, minimal graph, etc.
 
     Whenever a function is called that changes the graph, we need to reset the summary graph etc.
     """
@@ -138,15 +139,15 @@ class TimeSeriesCausalGraph(CausalGraph):
         self,
         input_list: Optional[List[NodeLike]] = None,
         output_list: Optional[List[NodeLike]] = None,
-        fully_connected: bool = True,
+        fully_connected: bool = False,
     ):
         """
         Initialize the time series causal graph.
 
         :param input_list: list of input nodes. Default is None.
         :param output_list: list of output nodes. Default is None.
-        :param fully_connected: if True, the graph will be fully connected.
-            Default is True.
+        :param fully_connected: if `True`, the graph will be fully connected from inputs to outputs.
+            Default is `False`.
 
         Example usage:
             >>> from cai_causal_graph import CausalGraph, TimeSeriesCausalGraph
@@ -165,7 +166,7 @@ class TimeSeriesCausalGraph(CausalGraph):
             >>> cg.add_edge('X2 lag(n=1)', 'X2', edge_type=EDGE_T.DIRECTED_EDGE)
             >>> cg.add_edge('X1', 'X3', edge_type=EDGE_T.DIRECTED_EDGE)
             >>>
-            >>> # The time series causal graph will have the same nodes and edges as the causal graph
+            >>> # The time series causal graph will have the same nodes and edges as the causal graph,
             >>> # but it is aware of the time information so 'X1 lag(n=1)' and 'X1' represent the same
             >>> # variable but at different times.
             >>> ts_cg = TimeSeriesCausalGraph.from_causal_graph(cg)
@@ -336,21 +337,26 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         Return an extended graph.
 
-        Extend the graph in time by adding nodes for each variable at each time step from backward_steps to forward_steps.
-        If a backward step of n is specified, it means that the graph will be extended in order to include nodes at time -n.
-        For example, if t is a reference time, if backward_steps is 2, the graph will be extended to include nodes at time t-2.
-        This does not mean that the graph will be extended to only include nodes at time t-2, but rather that it will include
-        nodes at time t-2 and all the nodes that are connected to them as specified by the minimal graph.
+        Extend the graph in time by adding nodes for each variable at each time step from `backward_steps` to
+        `forward_steps`. If a backward step of n is specified, it means that the graph will be extended in order to
+        include nodes back to time -n. For example, if t is the reference time, if `backward_steps` is 2, the graph
+        will be extended to include nodes back to time t-2. This does not mean that the graph will be extended to only
+        include nodes at time t-2, but rather that it will include nodes at time t-2 and all the nodes that are
+        connected to them as specified by the minimal graph.
 
-        If both backward_steps and forward_steps are None, return the original graph.
+        If both `backward_steps` and `forward_steps` are None, the original graph is returned.
 
         :param backward_steps: Number of steps to extend the graph backwards in time. If None, do not extend backwards.
         :param forward_steps: Number of steps to extend the graph forwards in time. If None, do not extend forwards.
-        :return: Extended graph with nodes for each variable at each time step from backward_steps to forward_steps.
+        :return: Extended graph with nodes for each variable at each time step from `backward_steps` to `forward_steps`.
         """
         # check steps are valid (positive integers) if not None
-        assert backward_steps is None or backward_steps > 0
-        assert forward_steps is None or forward_steps > 0
+        if backward_steps is not None:
+            assert backward_steps == int(backward_steps), f'backward_steps must be an integer. Got {backward_steps}.'
+            assert backward_steps > 0, f'backward_steps must be a positive integer. Got {backward_steps}.'
+        if forward_steps is not None:
+            assert forward_steps == int(forward_steps), f'backward_steps must be an integer. Got {forward_steps}.'
+            assert forward_steps > 0, f'forward_steps must be a positive integer. Got {forward_steps}.'
 
         # first get the minimal graph
         minimal_graph = self.get_minimal_graph()
@@ -359,11 +365,9 @@ class TimeSeriesCausalGraph(CausalGraph):
         extended_graph = minimal_graph.copy()
 
         if backward_steps is not None:
-            assert backward_steps > 0, 'backward_steps must be a positive integer.'
-            # start from 1 as 0 is already defined
-            # we cannot start directly from maxlag as it may be possible
-            # that not all the nodes from 1 to -maxlag are defined (as they were not
-            # needed in the mimimal graph)
+            # Start from 1 as 0 is already defined.
+            # We cannot start directly from maxlag as it may be possible that not all the nodes from 1 to -maxlag are
+            # defined (as they were not needed in the minimal graph).
             maxlag = minimal_graph.maxlag
             assert maxlag is not None
 
@@ -400,21 +404,20 @@ class TimeSeriesCausalGraph(CausalGraph):
                             meta=edge.meta,
                         )
 
-            # add a waring if the backward_steps is smaller than the maximum lag in the graph
+            # Log a warning if the backward_steps is smaller than the maximum lag in the graph.
             if backward_steps < maxlag:
-                ramaining_nodes = []
+                remaining_nodes = []
                 for node in minimal_graph.get_nodes():
                     if abs(node.time_lag) > backward_steps:
-                        ramaining_nodes.append(node.identifier)
+                        remaining_nodes.append(node.identifier)
                 logger.warning(
                     'backward_steps is smaller than the maximum lag in the graph, the following nodes will not be added: %s',
-                    list(set(ramaining_nodes)),
+                    list(set(remaining_nodes)),
                 )
 
         if forward_steps is not None:
-            # start from 1 as 0 is already defined
-            # with the forward extension, the maximum positive lag is forward_steps
-            assert forward_steps > 0, 'forward_steps must be positive.'
+            # Start from 1 as 0 is already defined.
+            # With the forward extension, the maximum positive lag is forward_steps.
 
             # first create all the nodes from 1 to forward_steps
             for lag in range(1, forward_steps + 1):
@@ -667,8 +670,8 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         return edge
 
-    @staticmethod
-    def from_causal_graph(causal_graph: CausalGraph) -> TimeSeriesCausalGraph:
+    @classmethod
+    def from_causal_graph(cls, causal_graph: CausalGraph) -> TimeSeriesCausalGraph:
         """
         Return a time series causal graph from a causal graph.
 
@@ -677,10 +680,10 @@ class TimeSeriesCausalGraph(CausalGraph):
         :param causal_graph: The causal graph.
         """
 
-        sepsets = causal_graph._sepsets
+        sepsets = deepcopy(causal_graph._sepsets)
 
         # copy nodes and make them TimeSeriesNodes
-        ts_cg = TimeSeriesCausalGraph()
+        ts_cg = cls()
         for node in causal_graph.get_nodes():
             meta = deepcopy(node.meta)
             # get the variable name and lag from the node name
@@ -742,8 +745,8 @@ class TimeSeriesCausalGraph(CausalGraph):
         ... ]
 
         :param adjacency_matrices: A dictionary of adjacency matrices. Keys are the time delta.
-        :param variable_names: A list of variable names. If not provided, the variable names are integers starting from 0.
-            Node names must correspond to the variable names and must not contain the lag.
+        :param variable_names: A list of variable names. If not provided, the variable names are integers starting
+            from 0. Node names must correspond to the variable names and must not contain the lag.
         :return: A time series causal graph.
         """
         assert isinstance(adjacency_matrices, dict)
@@ -769,9 +772,9 @@ class TimeSeriesCausalGraph(CausalGraph):
         else:
             variable_names_str = [f'node_{i}' for i in range(shape[0])]
 
-        # we could create the full adjacency matrix from the adjacency matrices by stacking them according to the time delta
-        # but if we have many time deltas, this could be very memory intensive
-        # so we create the graph by adding the edges one by one for each time delta
+        # We could create the full adjacency matrix from the adjacency matrices by stacking them according to the time
+        # delta but if we have many time deltas, this could be very memory intensive. Therefore, we create the graph by
+        # adding the edges one by one for each time delta.
 
         # create the empty graph
         tsgraph = TimeSeriesCausalGraph()
