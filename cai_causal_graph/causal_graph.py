@@ -1290,7 +1290,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             Hence, if some nodes are descendants and some are not, `False` is returned.
         """
         descendant_node_set = (
-            set([descendant_node])
+            {descendant_node}
             if not isinstance(descendant_node, (set, list))
             else set(descendant_node)
             if isinstance(descendant_node, list)
@@ -1314,7 +1314,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """
 
         ancestor_node_set = (
-            set([ancestor_node])
+            {ancestor_node}
             if not isinstance(ancestor_node, (set, list))
             else set(ancestor_node)
             if isinstance(ancestor_node, list)
@@ -1405,14 +1405,14 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             separation_set = set()
 
         nodes_1 = (
-            set([nodes_1])
+            {nodes_1}
             if not isinstance(nodes_1, (set, list))
             else set(nodes_1)
             if isinstance(nodes_1, list)
             else nodes_1
         )
         nodes_2 = (
-            set([nodes_2])
+            {nodes_2}
             if not isinstance(nodes_2, (set, list))
             else set(nodes_2)
             if isinstance(nodes_2, list)

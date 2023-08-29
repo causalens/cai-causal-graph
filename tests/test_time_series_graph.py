@@ -143,8 +143,8 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         causal_graph_3.add_node('D lag(n=1)')
         causal_graph_3.add_node('E lag(n=1)')
 
-        # we would not need to do this but we want to test that the underlying
-        # time series graph is being correctly constructed
+        # We would not need to do this, but we want to test that the underlying time series graph is being correctly
+        # constructed.
         for edge in causal_graph_3.edges:
             source_name = edge.source.identifier
             dest_name = edge.destination.identifier
@@ -237,8 +237,7 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         self.assertEqual(tsdag, mg)
 
     def test_from_adjacency_matrices(self):
-        # the minimal tsdag has maxlag = 1 so we need two adjacency matrices
-        # one for lag 0 and one for lag 1
+        # The minimal tsdag has maxlag = 1, so we need two adjacency matrices one for lag 0 and one for lag 1.
         mg = self.tsdag.get_minimal_graph()
         # extract the adjacency matrices from the adjacency matrix of the minimal graph
         intra_indices = [0, 2, 4]  # 'X1', 'X2', 'X3'

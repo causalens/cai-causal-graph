@@ -451,38 +451,42 @@ class TimeSeriesCausalGraph(CausalGraph):
         return extended_graph
 
     @staticmethod
-    def get_variable_names_from_node_names(node_names: List[str]):
+    def get_variable_names_from_node_names(node_names: List[str]) -> List[str]:
         """
         Return a list of variable names from a list of node names.
+
         This is useful for converting a list of node names into a list of variable names.
         Variables are the elementary (unique) units of a time series causal graph.
 
         Example:
             ['X', 'X lag(n=1)', 'Y', 'Z lag(n=2)'] -> ['X', 'Y', 'Z']
 
-        :param node_names: Can be a list of node names or a list of dictionaries with node names and lags.
-        :return: List of variable names.
+        :param node_names: A list of node names.
+        :return: A sorted list of variable names.
         """
         assert isinstance(node_names, list)
 
-        for node_name in node_names:
-            vname, _ = get_variable_name_and_lag(node_name)
-            if vname not in node_names:
-                node_names.append(vname)
+        var_names = []
 
-        return sorted(node_names)
+        for node_name in node_names:
+            var_name, _ = get_variable_name_and_lag(node_name)
+            if var_name not in var_names:
+                var_names.append(var_name)
+
+        return sorted(var_names)
 
     @staticmethod
     def _get_lagged_node(
         identifier: Optional[NodeLike] = None, node: Optional[TimeSeriesNode] = None, lag: Optional[int] = None
-    ):
+    ) -> TimeSeriesNode:
         """
         Return the lagged node of a node with a given lag. Lag is overwritten if the node is already lagged.
 
         For example, if the node is X and the lag is -1, the node will be X lag(n=1).
         If the node is X lag(n=1) and the lag is -2, the node will be X lag(n=2).
 
-        Moreover, if you want to make sure to copy all the metadata from the original node, you have to provide the node.
+        Moreover, if you want to make sure to copy all the metadata from the original node, you have to provide the
+        node instance and not the identifier.
 
         :param identifier: The identifier of the node. Default is None.
         :param node: The node. If provided, the identifier is ignored. Default is None.
@@ -650,21 +654,21 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         Add an edge to the graph. See `cai_causal_graph.causal_graph.CausalGraph.add_edge` for more details.
 
-        In addition to the `CausalGraph.add_edge` method, this method also populates the metadata of the nodes with
-        the variable name and the time lag.
+        In addition to the `cai_causal_graph.causal_graph.CausalGraph.add_edge` method, this method also populates the
+        metadata of the nodes with the variable name and the time lag.
         """
         # if the source and destination time series nodes do not exist, create them
         if source is not None and not self.node_exists(source):
             source_meta = None
             if isinstance(source, HasMetadata):
                 source_meta = source.get_metadata()
-                source = self.add_node(source, meta=source_meta)
+            source = self.add_node(source, meta=source_meta)
 
         if destination is not None and not self.node_exists(destination):
             destination_meta = None
             if isinstance(destination, HasMetadata):
                 destination_meta = destination.get_metadata()
-                destination = self.add_node(destination, meta=destination_meta)
+            destination = self.add_node(destination, meta=destination_meta)
 
         edge = super().add_edge(source, destination, edge_type=edge_type, meta=meta, edge=edge, **kwargs)
 
@@ -724,11 +728,11 @@ class TimeSeriesCausalGraph(CausalGraph):
         variable_names: Optional[List[Union[NodeLike, int]]] = None,
     ) -> TimeSeriesCausalGraph:
         """
-        Return a time series causal graph from a dictionary of adjacency matrices. Keys are the time delta.
+        Return a time series causal graph from a dictionary of adjacency matrices. Keys are the time deltas.
         This is useful for converting a list of adjacency matrices into a time series causal graph.
 
-        For example, the adjacency matrix with time delta -1 is stored in adjacency_matrices[-1] as would correspond to X-1 -> X,
-        where X is the set of nodes.
+        For example, the adjacency matrix with time delta -1 is stored in adjacency_matrices[-1] and would correspond
+        to X-1 -> X, where X is the set of nodes.
 
         Example:
         >>> adjacency_matrices = {
@@ -890,4 +894,4 @@ class TimeSeriesCausalGraph(CausalGraph):
         nodes = super().get_nodes(identifier)
         # check all nodes are TimeSeriesNode
         assert all(isinstance(node, TimeSeriesNode) for node in nodes)
-        return cast(List[TimeSeriesNode], nodes)
+        return nodes  # type: ignore
