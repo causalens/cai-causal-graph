@@ -33,6 +33,8 @@ ts_node = TimeSeriesNode(time_lag=1, variable_name='X', meta={TIME_LAG: 1, VARIA
 ```
 
 ## Examples of time series causal graphs
+The following examples have been drawn from _Peters, J., Janzing, D. and Schölkopf, B., 2017. Elements of causal inference: foundations and learning algorithms (p. 288). The MIT Press_.
+
 Example of a time series with no instantaneous effects.
 ![ts_no_instantaneous_effects](images/ts_no_instantaneous_effects.png)
 
