@@ -320,7 +320,7 @@ ts_cg: TimeSeriesCausalGraph
 maxlag = ts_cg.maxlag
 ```
 
-### variables
+### Variables
 Return the list of variable identifiers in the time series graph.
 Variables differ from nodes in that they do not contain the lag.
 For example, if the graph contains the node "X1 lag(n=2)", the variable is "X1".
