@@ -179,15 +179,15 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         ts_cg.add_edge('X1 lag(n=1)', 'X2 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
 
         # test that nodes are added correctly
-        assert ts_cg.get_node('X1 lag(n=1)').time_lag == -1
-        assert ts_cg.get_node('X2 lag(n=1)').time_lag == -1
+        self.assertEqual(ts_cg.get_node('X1 lag(n=1)').time_lag, -1)
+        self.assertEqual(ts_cg.get_node('X2 lag(n=1)').time_lag, -1)
 
     def test_replace_node(self):
         ts_cg = TimeSeriesCausalGraph()
         ts_cg.add_edge('X1 lag(n=1)', 'X2 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
 
         ts_cg.replace_node('X1 lag(n=1)', 'X1 lag(n=2)')
-        assert ts_cg.get_node('X1 lag(n=2)').time_lag == -2
+        self.assertEqual(ts_cg.get_node('X1 lag(n=2)').time_lag, -2)
         # check 'X1 lag(n=1)' does not exist
         self.assertFalse(ts_cg.node_exists('X1 lag(n=1)'))
 
@@ -213,7 +213,7 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         # sort the nodes by value
         nodes = sorted(nodes, key=lambda x: list(x.values())[0])
         self.assertEqual(nodes, [{'X1': -1}, {'X2': -1}, {'X3': -1}, {'X1': 0}, {'X2': 0}, {'X3': 0}])
-        assert maxlag == -1
+        self.assertEqual(maxlag, -1)
 
     def test_from_causal_graph(self):
         # dag

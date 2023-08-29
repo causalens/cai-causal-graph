@@ -131,20 +131,20 @@ class TestCausalGraphSerialization(unittest.TestCase):
 
         # test with include_metadata=False
         graph_as_dict_nometa = self.fully_connected_graph.to_dict(include_meta=False)
-        assert 'meta' not in graph_as_dict_nometa.keys()
+        self.assertNotIn('meta', graph_as_dict_nometa['nodes']['x'].keys())
         graph_as_dict_withmeta = self.fully_connected_graph.to_dict(include_meta=True)
-        assert 'meta' in graph_as_dict_withmeta['nodes']['x'].keys()
+        self.assertIn('meta', graph_as_dict_withmeta['nodes']['x'].keys())
 
         # test with a custom metadatan
         newg = self.fully_connected_graph.copy()
         newg.add_node('xm', variable_type=NODE_T.CONTINUOUS, meta={'test': 'test'})
         graph_as_dict_withmeta = newg.to_dict(include_meta=True)
         # test that the metadata is in the dict
-        assert 'test' in graph_as_dict_withmeta['nodes']['xm']['meta'].keys()
+        self.assertIn('test', graph_as_dict_withmeta['nodes']['xm']['meta'].keys())
 
         graph_as_dict_nometa = newg.to_dict(include_meta=False)
         # test that the metadata is not in the dict
-        assert 'meta' not in graph_as_dict_nometa['nodes']['xm'].keys()
+        self.assertNotIn('meta', graph_as_dict_nometa['nodes']['xm'].keys())
 
     def test_graph_is_json_serializable(self):
         cg = CausalGraph()
@@ -416,7 +416,7 @@ class TestCausalGraphSerialization(unittest.TestCase):
         # test meta is not preserved when include_meta=False
         cg_copy = causal_graph.copy(include_meta=False)
         # meta should be empty
-        assert cg_copy.get_node('x').meta == {}
+        self.assertDictEqual(cg_copy.get_node('x').meta, {})
 
     def test_add_edge_from_edge(self):
         causal_graph = CausalGraph()

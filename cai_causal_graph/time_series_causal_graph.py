@@ -539,8 +539,8 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         Add a node to the time series graph. See `cai_causal_graph.causal_graph.CausalGraph.add_node` for more details.
 
-        In addition to the `CausalGraph.add_node` method, this method also populates the metadata of the node with
-        the variable name and the time lag.
+        In addition to the `cai_causal_graph.causal_graph.CausalGraph.add_node` method, this method also populates the
+        metadata of the node with the variable name and the time lag.
 
         :param identifier: The identifier of the time series node.
         :param variable_name: The variable name of the time series node.
