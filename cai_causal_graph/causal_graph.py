@@ -174,8 +174,7 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
 
     @staticmethod
     def from_adjacency_matrix(
-        adjacency: numpy.ndarray,
-        node_names: Optional[List[Union[NodeLike, int]]] = None,
+            adjacency: numpy.ndarray, node_names: Optional[List[Union[NodeLike, int]]] = None
     ) -> Skeleton:
         """Instantiate a `cai_causal_graph.causal_graph.Skeleton` object from an adjacency matrix."""
         graph: CausalGraph = CausalGraph.from_adjacency_matrix(adjacency=adjacency, node_names=node_names)
@@ -1659,10 +1658,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         the numpy array.
         """
         for edge in self.edges:
-            if edge.get_edge_type() not in [
-                EDGE_T.DIRECTED_EDGE,
-                EDGE_T.UNDIRECTED_EDGE,
-            ]:
+            if edge.get_edge_type() not in [EDGE_T.DIRECTED_EDGE, EDGE_T.UNDIRECTED_EDGE]:
                 raise TypeError(
                     'Cannot convert a CausalGraph instance to a numpy array if it contains edges other than directed '
                     f'and undirected edges. Got {edge.get_edge_type()} for the edge {edge.descriptor}.'
@@ -1738,8 +1734,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
     @staticmethod
     def from_adjacency_matrix(
-        adjacency: numpy.ndarray,
-        node_names: Optional[List[Union[NodeLike, int]]] = None,
+            adjacency: numpy.ndarray, node_names: Optional[List[Union[NodeLike, int]]] = None
     ) -> CausalGraph:
         """
         Construct a `cai_causal_graph.causal_graph.CausalGraph` instance from an adjacency matrix and optionally a list
