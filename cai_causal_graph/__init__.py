@@ -19,6 +19,7 @@ __all__ = [
     'CausalGraph',
     'Skeleton',
     'TimeSeriesCausalGraph',
+    'TimeSeriesNode',
     # Causal types
     'EDGE_T',
     'NODE_T',
