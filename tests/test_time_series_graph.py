@@ -266,6 +266,12 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         tsdag = TimeSeriesCausalGraph.from_adjacency_matrices(matrices, variables)
         self.assertEqual(len(tsdag.edges), adj_mat_lag_1.sum())
 
+        # test with mismatch sizes
+        matrices = {0: numpy.eye(3), -1: numpy.eye(4)}
+        variables = ['X1', 'X2', 'X3']
+        with self.assertRaises(AssertionError):
+            _ = TimeSeriesCausalGraph.from_adjacency_matrices(matrices, variables)
+
     def test_summary_graph(self):
         summary_graph = self.tsdag.get_summary_graph()
         # the graph should be  X3 <- X1 -> X2

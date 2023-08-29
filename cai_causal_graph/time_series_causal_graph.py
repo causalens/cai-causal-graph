@@ -757,9 +757,14 @@ class TimeSeriesCausalGraph(CausalGraph):
         assert isinstance(adjacency_matrices, dict)
         # keys must be integers or str that can be converted to integers
         assert all(isinstance(key, (int, str)) and int(key) == key for key in adjacency_matrices)
+        assert all(isinstance(adj, numpy.ndarray) for adj in adjacency_matrices.values())
 
-        # get the shape of the adjacency matrices (get the first key as 0 may not be present)
-        shape = adjacency_matrices[next(iter(adjacency_matrices))].shape
+        # Confirm shape of all adjacency matrices are the same.
+        shapes = [adj.shape for adj in adjacency_matrices.values()]
+        assert (
+            len(set(shapes)) == 1
+        ), f'The shape of all the adjacency matrices must be the same. Got the following shapes: {list(set(shapes))}.'
+        shape = shapes[0]
 
         if variable_names is not None:
             variable_names_str: List[Union[str, int]] = []
