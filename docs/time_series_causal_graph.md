@@ -334,5 +334,5 @@ maxlag = ts_cg.variables
 ```
 
 ## Other methods
-For all the other methods, please refer to `cai_causal_graph.causal_graph.CausalGraph`,
+For all the other base properties and methods (e.g. how to query nodes and edges), please refer to the documentation of `cai_causal_graph.causal_graph.CausalGraph`,
 from which `cai_causal_graph.causal_graph.TimeSeriesCausalGraph` inherits all the fonctionalities.
