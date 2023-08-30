@@ -180,16 +180,22 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
         graph: CausalGraph = CausalGraph.from_adjacency_matrix(adjacency=adjacency, node_names=node_names)
         return Skeleton(graph=graph)
 
-    def to_dict(self) -> dict:
-        """Serialize the `cai_causal_graph.causal_graph.Skeleton` instance to a dictionary."""
-        nodes = {node.identifier: node.to_dict() for node in self.nodes}
+    def to_dict(self, include_meta: bool = True) -> dict:
+        """
+        Serialize the `cai_causal_graph.causal_graph.Skeleton` instance to a dictionary.
 
-        edges: Dict[str, Dict[str, dict]] = {}
+        :param include_meta: Whether to include meta information about the skeleton in the dictionary. Default is
+            `True`.
+        :return: The dictionary representation of the `cai_causal_graph.causal_graph.Skeleton` instance.
+        """
+        nodes = {node.identifier: node.to_dict(include_meta=include_meta) for node in self.nodes}
+
+        edges: Dict[str, Dict[str, dict]] = dict()
         for edge in self.edges:
             source, destination = edge.get_edge_pair()
             if source not in edges:
                 edges[source] = dict()
-            edges[source][destination] = edge.to_dict()
+            edges[source][destination] = edge.to_dict(include_meta=include_meta)
 
         return {
             'nodes': nodes,
@@ -1585,17 +1591,18 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
     def to_dict(self, include_meta: bool = True) -> dict:
         """
-        Serialize a `cai_causal_graph.causal_graph.CausalGraph` instance by converting it to a dictionary.
+        Serialize a `cai_causal_graph.causal_graph.CausalGraph` instance to a dictionary.
 
-        :param include_meta: whether to include meta information about the graph in the dictionary.
+        :param include_meta: Whether to include meta information about the graph in the dictionary. Default is `True`.
+        :return: The dictionary representation of the `cai_causal_graph.causal_graph.CausalGraph` instance.
         """
-        nodes = {node.identifier: node.to_dict(include_meta=include_meta) for node in self.get_nodes(None)}
+        nodes = {node.identifier: node.to_dict(include_meta=include_meta) for node in self.nodes}
 
-        edges: Dict[str, Dict[str, dict]] = {}
+        edges: Dict[str, Dict[str, dict]] = dict()
         for edge in self.edges:
             source, destination = edge.get_edge_pair()
             if source not in edges:
-                edges[source] = {}
+                edges[source] = dict()
             edges[source][destination] = edge.to_dict(include_meta=include_meta)
 
         return {
