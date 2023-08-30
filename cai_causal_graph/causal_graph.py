@@ -174,7 +174,7 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
 
     @staticmethod
     def from_adjacency_matrix(
-            adjacency: numpy.ndarray, node_names: Optional[List[Union[NodeLike, int]]] = None
+        adjacency: numpy.ndarray, node_names: Optional[List[Union[NodeLike, int]]] = None
     ) -> Skeleton:
         """Instantiate a `cai_causal_graph.causal_graph.Skeleton` object from an adjacency matrix."""
         graph: CausalGraph = CausalGraph.from_adjacency_matrix(adjacency=adjacency, node_names=node_names)
@@ -1734,7 +1734,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
     @staticmethod
     def from_adjacency_matrix(
-            adjacency: numpy.ndarray, node_names: Optional[List[Union[NodeLike, int]]] = None
+        adjacency: numpy.ndarray, node_names: Optional[List[Union[NodeLike, int]]] = None
     ) -> CausalGraph:
         """
         Construct a `cai_causal_graph.causal_graph.CausalGraph` instance from an adjacency matrix and optionally a list
