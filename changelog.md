@@ -2,13 +2,6 @@
 
 ## NEXT
 
-- Added the `cai_causal_graph.graph_components.TimeSeriesNode` class to extend the
-  `cai_causal_graph.graph_components.Node` class to represent time information on the node.
-  The following properties were added:
-  - `variable_name`: The variable name of the time series node. For example, if the identifier of the time series node
-    is `'X1 lag(n=1)'`, i.e., it is a lagged version of the variable `'X1'`, then `variable_name` would be `'X1'`.
-  - `time_lag`: The time lag of the time series node. For example, if the identifier of the time series node
-    is `'X1 lag(n=1)'`, i.e., it is a lagged version of the variable `'X1'`, then `time_lag` would be `-1`.
 - Added the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class to represent a time series of
   causal graph. `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` is aware of the time relationships
   between the nodes in the graph while `cai_causal_graph.causal_graph.CausalGraph` is not. Moreover, the
@@ -33,6 +26,13 @@
 - The `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_adjacency_matrices` method was added to
   instantiate an instance of `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` from a dictionary of
   adjacency matrices where the keys are the time lags.
+- Added the `cai_causal_graph.graph_components.TimeSeriesNode` class to extend the
+  `cai_causal_graph.graph_components.Node` class to represent time information on the node.
+  The following properties were added:
+  - `variable_name`: The variable name of the time series node. For example, if the identifier of the time series node
+    is `'X1 lag(n=1)'`, i.e., it is a lagged version of the variable `'X1'`, then `variable_name` would be `'X1'`.
+  - `time_lag`: The time lag of the time series node. For example, if the identifier of the time series node
+    is `'X1 lag(n=1)'`, i.e., it is a lagged version of the variable `'X1'`, then `time_lag` would be `-1`.
 
 ## 0.1.3
 
