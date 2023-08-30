@@ -19,7 +19,7 @@ import unittest
 import numpy
 
 from cai_causal_graph import EDGE_T, CausalGraph, TimeSeriesCausalGraph
-from cai_causal_graph.time_series_causal_graph import TimeSeriesNode
+from cai_causal_graph.graph_components import TimeSeriesNode
 from cai_causal_graph.utils import extract_names_and_lags, get_variable_name_and_lag
 
 

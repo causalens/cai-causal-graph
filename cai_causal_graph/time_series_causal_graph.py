@@ -19,13 +19,13 @@ from __future__ import annotations
 import logging
 from copy import deepcopy
 from functools import wraps
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy
 
 from cai_causal_graph import CausalGraph
 from cai_causal_graph.exceptions import CausalGraphErrors
-from cai_causal_graph.graph_components import Edge, Node
+from cai_causal_graph.graph_components import Edge, Node, TimeSeriesNode
 from cai_causal_graph.interfaces import HasIdentifier, HasMetadata
 from cai_causal_graph.type_definitions import EDGE_T, TIME_LAG, VARIABLE_NAME, NodeLike, NodeVariableType
 from cai_causal_graph.utils import get_name_with_lag, get_variable_name_and_lag
@@ -51,77 +51,6 @@ def _reset_attributes(func):
         return function
 
     return wrapper
-
-
-class TimeSeriesNode(Node):
-    """
-    Time series node.
-
-    A node in a time series causal graph will have additional metadata and attributes that gives the time information
-    of the node together with the variable name.
-
-    The two additional metadata are:
-    - `cai_causal_graph.type_definitions.TIME_LAG`: the time difference with respect to the reference time 0
-    - `cai_causal_graph.type_definitions.VARIABLE_NAME`: the name of the variable (without the lag information)
-    """
-
-    def __init__(
-        self,
-        identifier: Optional[NodeLike] = None,
-        time_lag: Optional[int] = None,
-        variable_name: Optional[str] = None,
-        meta: Optional[Dict[str, Any]] = None,
-        variable_type: NodeVariableType = NodeVariableType.UNSPECIFIED,
-    ):
-        """
-        Initialize the time series node.
-
-        :param identifier: the identifier of the node. If the identifier is provided, the time_lag and
-            variable_name will be extracted from the identifier. Default is None.
-        :param time_lag: the time lag of the node. If `time_lag` is provided, then `variable_name` must be provided
-            to set the identifier. If both `time_lag` and `variable_name` are provided, the identifier must be None.
-            Default is None.
-        :param variable_name: the variable name of the node. If `variable_name` is provided, then `time_lag` must be
-            provided to set the identifier. If both `time_lag` and `variable_name` are provided, the identifier must
-            be None. Default is None.
-        :param meta: the metadata of the node. Default is None.
-        :param variable_type: the variable type of the node. Default is NodeVariableType.UNSPECIFIED.
-        """
-        if time_lag is not None and variable_name is not None:
-            assert identifier is None, 'If time_lag and variable_name are provided, identifier must be None.'
-            identifier = get_name_with_lag(variable_name, time_lag)
-        elif identifier is not None:
-            assert (
-                time_lag is None and variable_name is None
-            ), 'If identifier is provided, `time_lag` and `variable_name` must be None.'
-            identifier = Node.identifier_from(identifier)
-            variable_name, time_lag = get_variable_name_and_lag(identifier)
-        else:
-            raise ValueError(
-                'Either identifier or both time_lag and variable_name must be provided to initialize a node.'
-            )
-
-        # populate the metadata for each node
-        if meta is not None:
-            meta.update({TIME_LAG: time_lag, VARIABLE_NAME: variable_name})
-        else:
-            meta = {TIME_LAG: time_lag, VARIABLE_NAME: variable_name}
-
-        # populate the metadata for each node
-        super().__init__(identifier, meta, variable_type)
-
-    @property
-    def time_lag(self) -> int:
-        """Return the time lag of the node from the metadata."""
-        return self.meta.get(TIME_LAG, 0)
-
-    @property
-    def variable_name(self) -> Optional[str]:
-        """Return the variable name of the node from the metadata."""
-        return self.meta.get(VARIABLE_NAME, None)
-
-    def __repr__(self) -> str:
-        return super().__repr__().replace('Node', 'TimeSeriesNode')
 
 
 class TimeSeriesCausalGraph(CausalGraph):
