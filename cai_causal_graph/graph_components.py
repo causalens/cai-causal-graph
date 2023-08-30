@@ -174,7 +174,7 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         """Return a string description of the object."""
         type_string = f', type="{self.variable_type}"' if self.variable_type != NodeVariableType.UNSPECIFIED else ''
 
-        return f'Node("{self.identifier}"{type_string})'
+        return f'{self.__class__.__name__}("{self.identifier}"{type_string})'
 
     def details(self) -> str:
         """Return a detailed string description of the object."""
@@ -260,9 +260,6 @@ class TimeSeriesNode(Node):
     def variable_name(self) -> Optional[str]:
         """Return the variable name of the node from the metadata."""
         return self.meta.get(VARIABLE_NAME, None)
-
-    def __repr__(self) -> str:
-        return super().__repr__().replace('Node', 'TimeSeriesNode')
 
 
 class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
@@ -383,7 +380,10 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
 
     def __repr__(self) -> str:
         """Return a string description of the object."""
-        return f'Edge("{self.source.identifier}", "{self.destination.identifier}", type={self._edge_type})'
+        return (
+            f'{self.__class__.__name__}("{self.source.identifier}", "{self.destination.identifier}", '
+            f'type={self._edge_type})'
+        )
 
     def details(self) -> str:
         """Return a detailed string description of the object."""

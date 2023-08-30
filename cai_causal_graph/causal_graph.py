@@ -1795,7 +1795,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
     def __repr__(self) -> str:
         """Return a string description of the `cai_causal_graph.causal_graph.CausalGraph` instance."""
         return (
-            f'CausalGraph(num_nodes={len(self.nodes)}, num_edges={len(self.edges)}, id={self.__hash__()})\n'
+            f'{self.__class__.__name__}(num_nodes={len(self.nodes)}, num_edges={len(self.edges)}, id={self.__hash__()})'
+            f'\n'
             f'Nodes: {self.nodes}\nEdges: {self.edges}'
         )
 
