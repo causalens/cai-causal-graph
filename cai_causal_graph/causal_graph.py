@@ -887,7 +887,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         return self._get_edges_by_type(EDGE_T.UNDIRECTED_EDGE)
 
     def get_bidirected_edges(self) -> List[Edge]:
-        """Returns a list of bidirectional edges, e.g. ('X' <> 'Y'),  in the causal graph."""
+        """Returns a list of bidirectional edges, e.g. ('X' <-> 'Y'),  in the causal graph."""
         return self._get_edges_by_type(EDGE_T.BIDIRECTED_EDGE)
 
     def get_unknown_edges(self) -> List[Edge]:
