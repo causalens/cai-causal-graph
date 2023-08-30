@@ -23,7 +23,7 @@ __all__ = [
     'NODE_T',
 ]
 
-__version__ = '0.1.2'
+__version__ = '0.1.3.dev0'
 
 from cai_causal_graph.causal_graph import CausalGraph, Skeleton
 from cai_causal_graph.type_definitions import EDGE_T, NODE_T
