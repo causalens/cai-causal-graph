@@ -49,9 +49,7 @@ The `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class exte
 If you want to convert a `cai_causal_graph.causal_graph.CausalGraph` to a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`, you can use the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_causal_graph` method as shown below.
 
 ```python
-
-from cai_causal_graph import CausalGraph
-from cai_causal_graph import TimeSeriesCausalGraph
+from cai_causal_graph import CausalGraph, TimeSeriesCausalGraph
 
 # create the causal graph with lagged nodes to show the difference
 causal_graph = CausalGraph()
@@ -66,14 +64,10 @@ time_series_causal_graph = TimeSeriesCausalGraph.from_causal_graph(causal_graph)
 
 The difference between the two graphs is that the `TimeSeriesCausalGraph` is now aware of the time lags of the nodes and understands that `X1 lag(n=1)` and `X1` refer to the same variable.
 
-Moreover, `TimeSeriesCausalGraph` can allow to extend the minimal graph backwards and forward in time using the method `.extend_graph(backward_steps: Optional[int], forward_steps: Optional[int])`. For instance, if you want to extend the graph backwards in time up time time -2 (backwards) you can do the following:
+Moreover, `TimeSeriesCausalGraph` provides the capability to extend the minimal graph backwards and forward in time using the method `.extend_graph(backward_steps: Optional[int], forward_steps: Optional[int])`. For instance, if you want to extend the graph backwards in time up time time -2 (backwards) you can do the following:
 
 ```python
-from cai_causal_graph import CausalGraph
-from cai_causal_graph import TimeSeriesCausalGraph
-
-# use previous time causal graph defined above
-
+# Using the time causal graph defined above.
 time_series_causal_graph.extend_graph(backward_steps=2)
 
 # the graph now contains the following nodes
@@ -82,6 +76,3 @@ time_series_causal_graph.extend_graph(backward_steps=2)
 # and the following edges
 # X1 lag(n=1) -> X2, X2 lag(n=1) -> X2, X1 lag(n=2) -> X2 lag(n=1), X2 lag(n=2) -> X2 lag(n=1)
 ```
-
-
-
