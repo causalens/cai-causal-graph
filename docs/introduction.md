@@ -57,7 +57,7 @@ likely to exist or selection bias is likely to be present. Specifically, _MAGs_ 
 `A <> B`, which implies that there is a latent confounder between the respective variables. A _Partial Ancestral Graph_ (_PAG_) 
 describes an equivalence class of _MAGs_. _PAGs_ may also contain "wild-card" or "circle" edges `A -o B`, which can 
 either be a directed or undirected arrow head, i.e. `A -o B` can be  resolved to `A -- B` or `A -> B`. The `o` end is r
-eferenced to as "unknown" in this package. See `cai_causal_graph.type_definitions.EDGE_T` for all the supported edge 
+eferenced to as "unknown" in this package. See `cai_causal_graph.type_definitions.EdgeType` for all the supported edge 
 types. Similar to a _CPDAG_, a _PAG_ can represent  a number of _DAGs_. Therefore, _PAGs_, _CPDAGs_ and _DAGs_ can be 
 thought of in a hierarchical way.
 

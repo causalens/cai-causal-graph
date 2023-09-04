@@ -15,15 +15,23 @@ limitations under the License.
 """
 
 __all__ = [
+    '__version__',
     # Causal Graph and components
     'CausalGraph',
     'Skeleton',
+    'TimeSeriesCausalGraph',
     # Causal types
-    'EDGE_T',
-    'NODE_T',
+    'EdgeType',
+    'NodeVariableType',
+    'EDGE_T',  # Keep for backwards compatibility.
+    'NODE_T',  # Keep for backwards compatibility.
+    # Time series specific tags
+    'TIME_LAG',
+    'VARIABLE_NAME',
 ]
 
-__version__ = '0.1.3'
+__version__ = '0.2.0.dev0'
 
 from cai_causal_graph.causal_graph import CausalGraph, Skeleton
-from cai_causal_graph.type_definitions import EDGE_T, NODE_T
+from cai_causal_graph.time_series_causal_graph import TimeSeriesCausalGraph
+from cai_causal_graph.type_definitions import EDGE_T, NODE_T, TIME_LAG, VARIABLE_NAME, EdgeType, NodeVariableType
