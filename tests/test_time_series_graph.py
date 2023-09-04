@@ -183,8 +183,12 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         self.assertEqual(ts_cg.get_node('X2 lag(n=1)').time_lag, -1)
 
         # confirm we cannot add an edge going into the past.
-        self.assertRaises(ValueError, ts_cg.add_edge('X1 lag(n=1)', 'X1 lag(n=2)'))
-        self.assertRaises(ValueError, ts_cg.add_edge('X1 lag(n=1)', 'X2 lag(n=2)', edge_type=EdgeType.DIRECTED_EDGE))
+        with self.assertRaises(ValueError):
+            ts_cg.add_edge('X1 lag(n=1)', 'X1 lag(n=2)')
+        with self.assertRaises(ValueError):
+            ts_cg.add_edge('X1 lag(n=1)', 'X2 lag(n=2)', edge_type=EdgeType.DIRECTED_EDGE)
+        with self.assertRaises(ValueError):
+            ts_cg.add_edge('X1 future(n=1)', 'X3')
 
     def test_replace_node(self):
         ts_cg = TimeSeriesCausalGraph()
@@ -233,6 +237,15 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
             '<X1 lag(n=2)>_<X2 lag(n=2)>_<X3 lag(n=2)>_<X1 lag(n=1)>_<X2 lag(n=1)>_<X3 lag(n=1)>_<X2>_<X3>_<X1>',
         )
         self.assertNotEqual(self.tsdag_1, self.dag_1)
+
+        # Bad causal graph that has arrows going back in time. Confirm it raises when we try to build TS graph.
+        cg = CausalGraph()
+        nodes = ['A', 'B', 'A lag(n=1)', 'B future(n=1)']
+        cg.add_nodes_from(nodes)
+        cg.add_edge('A lag(n=1)', 'A')
+        cg.add_edge('B future(n=1)', 'B')
+        with self.assertRaises(ValueError):
+            TimeSeriesCausalGraph.from_causal_graph(cg)
 
     def test_from_adjacency_matrix(self):
         # test with the adjacency matrix corresponding to th minimal tsdag
