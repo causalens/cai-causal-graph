@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.2.0
 
 - Added the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class to represent a time series causal
   graph. `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` is aware of the time relationships between
