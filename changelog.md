@@ -2,9 +2,9 @@
 
 ## NEXT
 
-- Added the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class to represent a time series of
-  causal graph. `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` is aware of the time relationships
-  between the nodes in the graph while `cai_causal_graph.causal_graph.CausalGraph` is not. Moreover, the
+- Added the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class to represent a time series causal
+  graph. `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` is aware of the time relationships between
+  the nodes in the graph while `cai_causal_graph.causal_graph.CausalGraph` is not. Moreover, the
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class has three new representations:
   - The minimal graph, which can be obtained via the
     `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph` method, defines the graph with

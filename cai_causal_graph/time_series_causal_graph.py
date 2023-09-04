@@ -19,7 +19,7 @@ from __future__ import annotations
 import logging
 from copy import deepcopy
 from functools import wraps
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy
 
@@ -33,16 +33,15 @@ from cai_causal_graph.utils import get_name_with_lag, get_variable_name_and_lag
 logger = logging.getLogger(__name__)
 
 
-# TODO: we can do one general for many other things as well
-def _reset_attributes(func):
+def _reset_ts_graph_attributes(func: Callable) -> Callable:
     """
-    Decorator to reset attributes such as summary graph, minimal graph, etc.
+    Decorator to reset attributes of TimeSeriesCausalGraph such as summary graph, minimal graph, etc.
 
-    Whenever a function is called that changes the graph, we need to reset the summary graph etc.
+    Whenever a function is called that changes the graph, we need to reset these attributes.
     """
-    # TODO: make this more clever as it is not said that we need to reset the summary graph etc
+    # TODO - CAUSALAI-3369: improve this decorator to remove need to reset the summary graph and other attributes
     @wraps(func)
-    def wrapper(self: TimeSeriesCausalGraph, *args, **kwargs):
+    def wrapper(self: TimeSeriesCausalGraph, *args, **kwargs) -> Any:
         function = func(self, *args, **kwargs)
         self._minimal_graph = None
         self._summary_graph = None
@@ -73,8 +72,8 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         Initialize the time series causal graph.
 
-        :param input_list: list of input nodes. Default is None.
-        :param output_list: list of output nodes. Default is None.
+        :param input_list: list of input nodes. Default is `None`.
+        :param output_list: list of output nodes. Default is `None`.
         :param fully_connected: if `True`, the graph will be fully connected from inputs to outputs.
             Default is `False`.
 
@@ -99,6 +98,17 @@ class TimeSeriesCausalGraph(CausalGraph):
             >>> # but it is aware of the time information so 'X1 lag(n=1)' and 'X1' represent the same
             >>> # variable but at different times.
             >>> ts_cg = TimeSeriesCausalGraph.from_causal_graph(cg)
+
+        :param input_list: List of objects coercable to `cai_causal_graph.graph_components.TimeSeriesNode`. Each
+            element is treated as an input node, if `full_connected` parameter is `True`. Otherwise, the nodes will
+            simply be added to the graph with no edges.
+        :param output_list:  List of objects coercable to `cai_causal_graph.graph_components.TimeSeriesNode`. Each
+            element is treated as an output node, if `fully_connected` parameter is `True`. Otherwise, the nodes will
+            simply be added to the graph with no edges.
+        :param fully_connected: If set to `True`, create a fully-connected bipartite directed graph, with all
+            inputs connected to all outputs. If no `input_list` and no `output_list` is provided, an empty graph will
+            be created. If either or both are provided, but this is `False` (default), then the nodes will be added but
+            not connected by edges.
         """
         super().__init__(input_list, output_list, fully_connected)
 
@@ -148,9 +158,10 @@ class TimeSeriesCausalGraph(CausalGraph):
 
     def copy(self, include_meta: bool = True) -> TimeSeriesCausalGraph:
         """
-        Return a copy of the graph.
+        Return a copy of the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` instance.
 
-        :param include_meta: if True, the metadata will be copied as well. Default is True.
+        :param include_meta: if `True` (default), the metadata will be copied as well.
+        :return: A copy of the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` instance.
         """
         graph = super().copy(include_meta=include_meta)
         # cast the graph to TimeSeriesCausalGraph to have the correct metadata
@@ -452,7 +463,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         node = TimeSeriesNode(variable_name=node.variable_name, time_lag=lag, meta=meta)
         return node
 
-    @_reset_attributes
+    @_reset_ts_graph_attributes
     def add_node(
         self,
         /,
@@ -513,7 +524,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         return node
 
-    @_reset_attributes
+    @_reset_ts_graph_attributes
     def replace_node(
         self,
         /,
@@ -550,7 +561,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         super().replace_node(node_id, new_node_id, variable_type=variable_type, meta=meta)
 
-    @_reset_attributes
+    @_reset_ts_graph_attributes
     def delete_node(self, identifier: NodeLike):
         """
         Delete a node from the graph.
@@ -559,7 +570,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         super().delete_node(identifier)
 
-    @_reset_attributes
+    @_reset_ts_graph_attributes
     def delete_edge(self, source: NodeLike, destination: NodeLike):
         """
         Delete an edge from the graph.
@@ -568,7 +579,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         super().delete_edge(source, destination)
 
-    @_reset_attributes
+    @_reset_ts_graph_attributes
     def add_edge(
         self,
         /,

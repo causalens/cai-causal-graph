@@ -346,14 +346,14 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             >>> causal_graph_dict = causal_graph.to_dict()
 
         :param input_list: List of objects coercable to `cai_causal_graph.graph_components.Node`. Each element is
-            treated as an input node, if `full_connected` parameter is True. Otherwise, the nodes will simply be
+            treated as an input node, if `full_connected` parameter is `True`. Otherwise, the nodes will simply be
             added to the graph with no edges.
         :param output_list:  List of objects coercable to `cai_causal_graph.graph_components.Node`. Each element is
-            treated as an output node, if `fully_connected` parameter is True. Otherwise, the nodes will simply be
+            treated as an output node, if `fully_connected` parameter is `True`. Otherwise, the nodes will simply be
             added to the graph with no edges.
-        :param fully_connected: If set to True (default), create a fully-connected bipartite directed graph, with all
+        :param fully_connected: If set to `True` (default), create a fully-connected bipartite directed graph, with all
             inputs connected to all outputs. If no `input_list` and no `output_list` is provided, an empty graph will
-            be created. If either are both are provided, but this is False, then the nodes will be added but not
+            be created. If either or both are provided, but this is `False`, then the nodes will be added but not
             connected by edges.
         """
         self._nodes_by_identifier: Dict[str, Node] = dict()
@@ -1797,7 +1797,12 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         return graph
 
     def copy(self, include_meta: bool = True) -> CausalGraph:
-        """Copy a `cai_causal_graph.causal_graph.CausalGraph` instance."""
+        """
+        Return a copy of the `cai_causal_graph.causal_graph.CausalGraph` instance.
+
+        :param include_meta: if `True` (default), the metadata will be copied as well.
+        :return: A copy of the `cai_causal_graph.causal_graph.CausalGraph` instance.
+        """
         graph_dict = self.to_dict(include_meta=include_meta)
         return CausalGraph.from_dict(graph_dict)
 
