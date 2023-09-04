@@ -28,21 +28,23 @@ causal_graph.add_edge('B', 'E')  # if the node does not exist, it gets added aut
 
 Any edge added to causal graph will, by default, be a directed edge. It is, however, possible to specify different
 edge types via the `edge_type` argument. For a full list of edge types, see
-`cai_causal_graph.type_definitions.EDGE_T`. For instance, you can add an undirected edge `A -- C`, as shown below.
+`cai_causal_graph.type_definitions.EdgeType`. For instance, you can add an undirected edge `A -- C`, as shown below.
 
 ```python
-from cai_causal_graph import EDGE_T
+from cai_causal_graph import EdgeType
 
 # add an undirected edge between A and C
-causal_graph.add_edge('A', 'C', edge_type=EDGE_T.UNDIRECTED_EDGE)
+causal_graph.add_edge('A', 'C', edge_type=EdgeType.UNDIRECTED_EDGE)
 ```
 
 ## Time Series Causal Graphs
 
-The `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class extends the 
-`cai_causal_graph.causal_graph.CausalGraph` class to deal with time series representations of causal graphs. The main differences with respect to the `cai_causal_graph.causal_graph.CausalGraph` class are:
+The `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class extends the
+`cai_causal_graph.causal_graph.CausalGraph` class to deal with time series representations of causal graphs. The main 
+differences with respect to the `cai_causal_graph.causal_graph.CausalGraph` class are:
 - each node is associated with a `variable_name` and a `time_lag` attribute.
-- a new `from_adjacency_matrices` method to create a `TimeSeriesCausalGraph` from a dictionary of adjacency matrices where the keys are the time lags.
+- a new `from_adjacency_matrices` method to create a `TimeSeriesCausalGraph` from a dictionary of adjacency matrices 
+  where the keys are the time lags.
 
 `TimeSeriesCausalGraph` is aware of the time lags of the variables and can be extended backwards and forward in time.
 

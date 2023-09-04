@@ -33,6 +33,7 @@
     is `'X1 lag(n=1)'`, i.e., it is a lagged version of the variable `'X1'`, then `variable_name` would be `'X1'`.
   - `time_lag`: The time lag of the time series node. For example, if the identifier of the time series node
     is `'X1 lag(n=1)'`, i.e., it is a lagged version of the variable `'X1'`, then `time_lag` would be `-1`.
+- Renamed `EdgeTypeEnum` to `cai_causal_graph.type_definitions.EdgeType`.
 
 ## 0.1.3
 

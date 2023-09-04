@@ -27,7 +27,7 @@ from cai_causal_graph import CausalGraph
 from cai_causal_graph.exceptions import CausalGraphErrors
 from cai_causal_graph.graph_components import Edge, Node, TimeSeriesNode
 from cai_causal_graph.interfaces import HasIdentifier, HasMetadata
-from cai_causal_graph.type_definitions import EDGE_T, TIME_LAG, VARIABLE_NAME, NodeLike, NodeVariableType
+from cai_causal_graph.type_definitions import TIME_LAG, VARIABLE_NAME, EdgeType, NodeLike, NodeVariableType
 from cai_causal_graph.utils import get_name_with_lag, get_variable_name_and_lag
 
 logger = logging.getLogger(__name__)
@@ -84,16 +84,16 @@ class TimeSeriesCausalGraph(CausalGraph):
             >>>
             >>> # How to initialize a TimeSeriesCausalGraph directly
             >>> ts_cg = TimeSeriesCausalGraph()
-            >>> ts_cg.add_edge('X1 lag(n=1)', 'X1', edge_type=EDGE_T.DIRECTED_EDGE)
-            >>> ts_cg.add_edge('X2 lag(n=1)', 'X2', edge_type=EDGE_T.DIRECTED_EDGE)
-            >>> ts_cg.add_edge('X1', 'X3', edge_type=EDGE_T.DIRECTED_EDGE)
+            >>> ts_cg.add_edge('X1 lag(n=1)', 'X1', edge_type=EdgeType.DIRECTED_EDGE)
+            >>> ts_cg.add_edge('X2 lag(n=1)', 'X2', edge_type=EdgeType.DIRECTED_EDGE)
+            >>> ts_cg.add_edge('X1', 'X3', edge_type=EdgeType.DIRECTED_EDGE)
             >>>
             >>>
             >>> # How to initialize a TimeSeriesCausalGraph from a CausalGraph
             >>> cg = CausalGraph()
-            >>> cg.add_edge('X1 lag(n=1)', 'X1', edge_type=EDGE_T.DIRECTED_EDGE)
-            >>> cg.add_edge('X2 lag(n=1)', 'X2', edge_type=EDGE_T.DIRECTED_EDGE)
-            >>> cg.add_edge('X1', 'X3', edge_type=EDGE_T.DIRECTED_EDGE)
+            >>> cg.add_edge('X1 lag(n=1)', 'X1', edge_type=EdgeType.DIRECTED_EDGE)
+            >>> cg.add_edge('X2 lag(n=1)', 'X2', edge_type=EdgeType.DIRECTED_EDGE)
+            >>> cg.add_edge('X1', 'X3', edge_type=EdgeType.DIRECTED_EDGE)
             >>>
             >>> # The time series causal graph will have the same nodes and edges as the causal graph,
             >>> # but it is aware of the time information so 'X1 lag(n=1)' and 'X1' represent the same
@@ -575,7 +575,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         source: Optional[NodeLike] = None,
         destination: Optional[NodeLike] = None,
         *,
-        edge_type: EDGE_T = EDGE_T.DIRECTED_EDGE,
+        edge_type: EdgeType = EdgeType.DIRECTED_EDGE,
         meta: Optional[dict] = None,
         edge: Optional[Edge] = None,
         **kwargs,
@@ -767,11 +767,11 @@ class TimeSeriesCausalGraph(CausalGraph):
                 edge.destination.meta[TIME_LAG],
             )
 
-            if edge.get_edge_type() == EDGE_T.DIRECTED_EDGE:
+            if edge.get_edge_type() == EdgeType.DIRECTED_EDGE:
                 adjacency_matrices[source_lag][
                     self.variables.index(source_variable_name), self.variables.index(destination_variable_name)
                 ] = 1
-            elif edge.get_edge_type() == EDGE_T.UNDIRECTED_EDGE:
+            elif edge.get_edge_type() == EdgeType.UNDIRECTED_EDGE:
                 adjacency_matrices[source_lag][
                     self.variables.index(source_variable_name), self.variables.index(destination_variable_name)
                 ] = 1

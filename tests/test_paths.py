@@ -15,9 +15,8 @@ limitations under the License.
 """
 import unittest
 
-from cai_causal_graph import CausalGraph
+from cai_causal_graph import CausalGraph, EdgeType
 from cai_causal_graph.graph_components import Node
-from cai_causal_graph.type_definitions import EDGE_T
 
 
 class TestTopologicalOrder(unittest.TestCase):
@@ -217,8 +216,8 @@ class TestDirectedPathExists(unittest.TestCase):
         g = CausalGraph()
         g.add_edge('a', 'b')
         g.add_edge('b', 'c')
-        g.add_edge('b', 'd', edge_type=EDGE_T.UNDIRECTED_EDGE)
-        g.add_edge('c', 'e', edge_type=EDGE_T.UNDIRECTED_EDGE)
+        g.add_edge('b', 'd', edge_type=EdgeType.UNDIRECTED_EDGE)
+        g.add_edge('c', 'e', edge_type=EdgeType.UNDIRECTED_EDGE)
         g.add_edge('d', 'e')
 
         self.assertTrue(g.directed_path_exists('a', 'b'))
