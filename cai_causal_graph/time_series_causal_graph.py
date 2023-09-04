@@ -72,11 +72,6 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         Initialize the time series causal graph.
 
-        :param input_list: list of input nodes. Default is `None`.
-        :param output_list: list of output nodes. Default is `None`.
-        :param fully_connected: if `True`, the graph will be fully connected from inputs to outputs.
-            Default is `False`.
-
         Example usage:
             >>> from cai_causal_graph import CausalGraph, TimeSeriesCausalGraph
             >>>
@@ -847,8 +842,8 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         Return the variables in the graph.
 
-        Variables differ from nodes in that they do not contain the lag.
-        For example, if the graph contains the node "X1 lag(n=2)", the variable is "X1".
+        Variables differ from nodes in that they do not contain the lag. For example, if the graph contains the node
+        'X1 lag(n=2)', the variable is 'X1'.
         """
         if self._variables is None:
             variables = []

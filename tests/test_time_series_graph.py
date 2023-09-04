@@ -153,6 +153,21 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
         self.tsdag_3 = TimeSeriesCausalGraph.from_causal_graph(causal_graph_3)
 
+    def test_constructor(self):
+        input_nodes = ['A lag(n=2)', 'A lag(n=1)', 'B']
+        output_nodes = ['A', 'B future(n=1)']
+
+        # Just confirm this does not raise.
+        ts_graph = TimeSeriesCausalGraph(input_list=input_nodes, output_list=output_nodes, fully_connected=False)
+
+        # Again confirm this does not raise.
+        ts_graph = TimeSeriesCausalGraph(input_list=input_nodes, output_list=output_nodes, fully_connected=True)
+
+        # Now add a bad node and it should fail.
+        input_nodes.append('A future(n=1)')
+        with self.assertRaises(ValueError):
+            ts_graph = TimeSeriesCausalGraph(input_list=input_nodes, output_list=output_nodes, fully_connected=True)
+
     def test_time_series_nodes(self):
         tsnode = TimeSeriesNode(variable_name='X1', time_lag=-1)
         tsnode_1 = TimeSeriesNode('X2 lag(n=1)')
