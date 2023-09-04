@@ -182,6 +182,10 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         self.assertEqual(ts_cg.get_node('X1 lag(n=1)').time_lag, -1)
         self.assertEqual(ts_cg.get_node('X2 lag(n=1)').time_lag, -1)
 
+        # confirm we cannot add an edge going into the past.
+        self.assertRaises(ValueError, ts_cg.add_edge('X1 lag(n=1)', 'X1 lag(n=2)'))
+        self.assertRaises(ValueError, ts_cg.add_edge('X1 lag(n=1)', 'X2 lag(n=2)', edge_type=EdgeType.DIRECTED_EDGE))
+
     def test_replace_node(self):
         ts_cg = TimeSeriesCausalGraph()
         ts_cg.add_edge('X1 lag(n=1)', 'X2 lag(n=1)', edge_type=EdgeType.DIRECTED_EDGE)

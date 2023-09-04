@@ -39,7 +39,7 @@ def _reset_ts_graph_attributes(func: Callable) -> Callable:
 
     Whenever a function is called that changes the graph, we need to reset these attributes.
     """
-    # TODO - CAUSALAI-3369: improve this decorator to remove need to reset the summary graph and other attributes
+    # TODO - CAUSALAI-3369: Improve this decorator to remove need to reset the summary graph and other attributes
     @wraps(func)
     def wrapper(self: TimeSeriesCausalGraph, *args, **kwargs) -> Any:
         function = func(self, *args, **kwargs)
@@ -56,8 +56,8 @@ class TimeSeriesCausalGraph(CausalGraph):
     """
     A causal graph for time series data.
 
-    The node in a time series causal graph will have additional metadata that
-    gives the time information of the node together with the variable name.
+    The node in a time series causal graph will have additional metadata that provides the time information of the
+    node together with the variable name.
     The two additional metadata are:
     - `cai_causal_graph.type_definitions.TIME_LAG`: the time difference with respect to the reference time 0
     - `cai_causal_graph.type_definitions.VARIABLE_NAME`: the name of the variable (without the lag information)
@@ -179,11 +179,13 @@ class TimeSeriesCausalGraph(CausalGraph):
             - X1(t-2)-> X1(t-1) -> X2(t-1) -> X2(t), X1(t) -> X2(t), X1(t-1) -> X2(t-1)
         Minimal graph:
             - X1(t-1) -> X1(t) -> X2(t)
+
+        :return: The minimal graph as a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` object.
         """
         minimal_cg = TimeSeriesCausalGraph()
 
         for edge in self.get_edges():
-            # get the relative time delta
+            # get the relative time delta; asserts are needed for linting
             assert isinstance(edge.source, TimeSeriesNode)
             assert isinstance(edge.destination, TimeSeriesNode)
             assert isinstance(edge.source.time_lag, int)
@@ -217,9 +219,9 @@ class TimeSeriesCausalGraph(CausalGraph):
 
     def is_minimal_graph(self) -> bool:
         """
-        Return True if the graph is minimal.
+        Return `True` if the graph is minimal.
 
-        See `get_minimal_graph` for more details.
+        See `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph` for more details.
         """
         return self == self.get_minimal_graph()
 
@@ -237,7 +239,7 @@ class TimeSeriesCausalGraph(CausalGraph):
             - if A and B have different directions, make it bi-directed
             - if one of the two is already bi-directed, keep it bi-directed
 
-        :return: The summary graph as a `CausalGraph` object.
+        :return: The summary graph as a `cai_causal_graph.causal_graph.CausalGraph` object.
         """
         if self._summary_graph is None:
             summary_graph = CausalGraph()
@@ -609,6 +611,17 @@ class TimeSeriesCausalGraph(CausalGraph):
             if isinstance(destination, HasMetadata):
                 destination_meta = destination.get_metadata()
             destination = self.add_node(destination, meta=destination_meta)
+
+        # For directed edge, confirm time of destination is greater than or equal to time of source.
+        if edge_type == EdgeType.DIRECTED_EDGE:
+            time_source = self.get_node(source).time_lag
+            time_destination = self.get_node(destination).time_lag
+            if time_destination < time_source:
+                raise ValueError(
+                    f'For a directed edge, the time at the destination must be greater than or equal to the time at '
+                    f'the source. The time lag for the source and destination are {time_source} and '
+                    f'{time_destination}, respectively.'
+                )
 
         edge = super().add_edge(source, destination, edge_type=edge_type, meta=meta, edge=edge, **kwargs)
 
