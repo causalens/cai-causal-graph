@@ -249,6 +249,7 @@ class TimeSeriesNode(Node):
 
         # populate the metadata for each node
         if meta is not None:
+            meta = meta.copy()
             meta.update({TIME_LAG: time_lag, VARIABLE_NAME: variable_name})
         else:
             meta = {TIME_LAG: time_lag, VARIABLE_NAME: variable_name}
@@ -259,12 +260,18 @@ class TimeSeriesNode(Node):
     @property
     def time_lag(self) -> int:
         """Return the time lag of the node from the metadata."""
-        return self.meta.get(TIME_LAG, 0)
+        lag = self.meta.get(TIME_LAG)
+        if lag is None:
+            raise ValueError(f'The time lag for node {self.identifier} is not set.')
+        return lag
 
     @property
-    def variable_name(self) -> Optional[str]:
+    def variable_name(self) -> str:
         """Return the variable name of the node from the metadata."""
-        return self.meta.get(VARIABLE_NAME, None)
+        name = self.meta.get(VARIABLE_NAME)
+        if name is None:
+            raise ValueError(f'The variable name for node {self.identifier} is not set.')
+        return name
 
 
 class Edge(HasIdentifier, HasMetadata, CanDictSerialize):

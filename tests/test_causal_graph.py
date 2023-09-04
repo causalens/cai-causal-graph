@@ -21,8 +21,8 @@ import networkx
 import numpy
 import pandas
 
-from cai_causal_graph import __version__ as VERSION
 from cai_causal_graph import CausalGraph, EdgeType, NodeVariableType
+from cai_causal_graph import __version__ as VERSION
 from cai_causal_graph.exceptions import CausalGraphErrors
 
 

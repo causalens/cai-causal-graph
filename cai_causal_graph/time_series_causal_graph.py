@@ -128,7 +128,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         # now check the metadata timedelta in the nodes
         for node in self.get_nodes():
             other_node = other.get_node(node.identifier)
-            assert isinstance(other_node, TimeSeriesNode)
+            assert isinstance(other_node, TimeSeriesNode)  # for linting
 
             # check the variable name
             node_metadata_variable = node.variable_name
