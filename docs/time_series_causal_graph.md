@@ -142,9 +142,9 @@ In other words, it is a graph that has no edges whose destination is not time de
 
 Example:
 Input graph:
-    - X1(t-2)-> X1(t-1) -> X2(t-1) -> X2(t), X1(t) -> X2(t), X1(t-1) -> X2(t-1)
+    - X1(t-2)-> X1(t-1) -> X2(t-1) -> X2(t), X1(t) -> X2(t), X2(t-2) -> X2(t-1)
 Minimal graph:
-    - X1(t-1) -> X1(t) -> X2(t)
+    - X1(t-1) -> X1(t) -> X2(t), X2(t-1) -> X2
 
 ```python
 from cai_causal_graph import TimeSeriesCausalGraph
@@ -170,6 +170,17 @@ ts_cg: TimeSeriesCausalGraph
 
 summary_graph = ts_cg.get_summary_graph()
 ```
+
+## Example
+Time series causal graph.
+![ts_cg](images/ts_cg.png)
+
+Minimal graph.
+![ts_minimal_graph](images/ts_minimal_graph.png)
+
+Summary graph.
+![ts_summary_graph](images/ts_summary_graph.png)
+
 
 ## Extended graph
 You can extend the graph in time by adding nodes for each variable at each time step from `backward_steps` to
