@@ -140,11 +140,6 @@ edges = [
 The minimal graph is the graph with the minimal number of edges that is equivalent to the original graph.
 In other words, it is a graph that has no edges whose destination is not time delta 0.
 
-Example:
-Input graph:
-    - X1(t-2)-> X1(t-1) -> X2(t-1) -> X2(t), X1(t) -> X2(t), X2(t-2) -> X2(t-1)
-Minimal graph:
-    - X1(t-1) -> X1(t) -> X2(t), X2(t-1) -> X2
 
 ```python
 from cai_causal_graph import TimeSeriesCausalGraph
@@ -173,12 +168,15 @@ summary_graph = ts_cg.get_summary_graph()
 
 ## Example
 Time series causal graph.
+X1(t-2)-> X1(t-1) -> X2(t-1) -> X2(t), X1(t) -> X2(t), X2(t-2) -> X2(t-1)
 ![ts_cg](images/ts_cg.png)
 
 Minimal graph.
+X1(t-1) -> X1(t) -> X2(t), X2(t-1) -> X2
 ![ts_minimal_graph](images/ts_minimal_graph.png)
 
 Summary graph.
+X1 -> X2
 ![ts_summary_graph](images/ts_summary_graph.png)
 
 
