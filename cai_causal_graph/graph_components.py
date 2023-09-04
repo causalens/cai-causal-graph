@@ -15,6 +15,7 @@ limitations under the License.
 """
 from __future__ import annotations
 
+import logging
 from copy import deepcopy
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -22,6 +23,8 @@ from cai_causal_graph.exceptions import CausalGraphErrors
 from cai_causal_graph.interfaces import CanDictSerialize, HasIdentifier, HasMetadata
 from cai_causal_graph.type_definitions import TIME_LAG, VARIABLE_NAME, EdgeType, NodeLike, NodeVariableType
 from cai_causal_graph.utils import get_name_with_lag, get_variable_name_and_lag
+
+logger = logging.getLogger(__name__)
 
 
 class Node(HasIdentifier, HasMetadata, CanDictSerialize):
@@ -250,6 +253,20 @@ class TimeSeriesNode(Node):
         # populate the metadata for each node
         if meta is not None:
             meta = meta.copy()
+            meta_time_lag = meta.get(TIME_LAG)
+            meta_variable_name = meta.get(VARIABLE_NAME)
+            if meta_time_lag is not None and meta_time_lag != time_lag:
+                logger.warning(
+                    'The current time lag in the meta (%d) will be overwritten to the newly provided value (%d).',
+                    meta_time_lag,
+                    time_lag,
+                )
+            if meta_variable_name is not None and meta_variable_name != variable_name:
+                logger.warning(
+                    'The current variable name in the meta (%s) will be overwritten to the newly provided value (%s).',
+                    meta_variable_name,
+                    variable_name,
+                )
             meta.update({TIME_LAG: time_lag, VARIABLE_NAME: variable_name})
         else:
             meta = {TIME_LAG: time_lag, VARIABLE_NAME: variable_name}
