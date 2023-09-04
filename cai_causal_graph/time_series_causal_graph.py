@@ -614,8 +614,12 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         # For directed edge, confirm time of destination is greater than or equal to time of source.
         if edge_type == EdgeType.DIRECTED_EDGE:
-            time_source = self.get_node(source).time_lag
-            time_destination = self.get_node(destination).time_lag
+            source_node = self.get_node(source)  # type: ignore
+            destination_node = self.get_node(destination)  # type: ignore
+            assert isinstance(source_node, TimeSeriesNode)  # for linting
+            assert isinstance(destination_node, TimeSeriesNode)  # for linting
+            time_source = source_node.time_lag
+            time_destination = destination_node.time_lag
             if time_destination < time_source:
                 raise ValueError(
                     f'For a directed edge, the time at the destination must be greater than or equal to the time at '
@@ -669,7 +673,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         :param adjacency: A square binary numpy adjacency array.
         :param node_names: A list of strings, `cai_causal_graph.interfaces.HasIdentifier`, and/or integers which can be
-            coerced to `cai_causal_graph.graph_components.Node`.
+            coerced to `cai_causal_graph.graph_components.TimeSeriesNode`.
         :return: A `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` object.
         """
         graph = CausalGraph.from_adjacency_matrix(adjacency, node_names=node_names)
@@ -712,7 +716,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         :return: A time series causal graph.
         """
         assert isinstance(adjacency_matrices, dict)
-        # keys must be integers or str that can be converted to integers
+        # Keys must be integers or str that can be converted to integers as they represent the time deltas.
         assert all(isinstance(key, (int, str)) and int(key) == key for key in adjacency_matrices)
         assert all(isinstance(adj, numpy.ndarray) for adj in adjacency_matrices.values())
 
