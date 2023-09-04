@@ -257,14 +257,16 @@ class TimeSeriesNode(Node):
             meta_variable_name = meta.get(VARIABLE_NAME)
             if meta_time_lag is not None and meta_time_lag != time_lag:
                 logger.warning(
-                    'The current time lag in the meta (%d) will be overwritten to the newly provided value (%d).',
+                    'The current time lag in the meta (%d) for node %s will be overwritten to the newly provided value (%d).',
                     meta_time_lag,
+                    identifier,
                     time_lag,
                 )
             if meta_variable_name is not None and meta_variable_name != variable_name:
                 logger.warning(
-                    'The current variable name in the meta (%s) will be overwritten to the newly provided value (%s).',
+                    'The current variable name in the meta (%s) for node %s will be overwritten to the newly provided value (%s).',
                     meta_variable_name,
+                    identifier,
                     variable_name,
                 )
             meta.update({TIME_LAG: time_lag, VARIABLE_NAME: variable_name})

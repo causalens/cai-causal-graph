@@ -613,9 +613,9 @@ class TimeSeriesCausalGraph(CausalGraph):
             destination = self.add_node(destination, meta=destination_meta)
 
         # For directed edge, confirm time of destination is greater than or equal to time of source.
-        if edge_type == EdgeType.DIRECTED_EDGE:
-            source_node = self.get_node(source)  # type: ignore
-            destination_node = self.get_node(destination)  # type: ignore
+        if edge is not None and edge.get_edge_type() == EdgeType.DIRECTED_EDGE:
+            source_node = edge.source
+            destination_node = edge.destination
             assert isinstance(source_node, TimeSeriesNode)  # for linting
             assert isinstance(destination_node, TimeSeriesNode)  # for linting
             time_source = source_node.time_lag
@@ -626,6 +626,23 @@ class TimeSeriesCausalGraph(CausalGraph):
                     f'the source. The time lag for the source and destination are {time_source} and '
                     f'{time_destination}, respectively.'
                 )
+        elif edge_type == EdgeType.DIRECTED_EDGE:
+            # Check these are not None before trying to get node.
+            assert source is not None
+            assert destination is not None
+            source_node = self.get_node(source)
+            destination_node = self.get_node(destination)
+            assert isinstance(source_node, TimeSeriesNode)  # for linting
+            assert isinstance(destination_node, TimeSeriesNode)  # for linting
+            time_source = source_node.time_lag
+            time_destination = destination_node.time_lag
+            if time_destination < time_source:
+                raise ValueError(
+                    f'For a directed edge, the time at the destination must be greater than or equal to the time at '
+                    f'the source. The time lag for the source and destination are {time_source} and '
+                    f'{time_destination}, respectively.'
+                )
+        # No else needed as we don't need to check time direction for other edge types.
 
         edge = super().add_edge(source, destination, edge_type=edge_type, meta=meta, edge=edge, **kwargs)
 
