@@ -134,7 +134,7 @@ class TestCausalGraphSerialization(unittest.TestCase):
         graph_as_dict_withmeta = self.fully_connected_graph.to_dict(include_meta=True)
         self.assertIn('meta', graph_as_dict_withmeta['nodes']['x'].keys())
 
-        # test with a custom metadatan
+        # test with a custom metadata
         newg = self.fully_connected_graph.copy()
         newg.add_node('xm', variable_type=NodeVariableType.CONTINUOUS, meta={'test': 'test'})
         graph_as_dict_withmeta = newg.to_dict(include_meta=True)

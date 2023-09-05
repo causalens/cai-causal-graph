@@ -292,6 +292,20 @@ class TimeSeriesNode(Node):
             raise ValueError(f'The variable name for node {self.identifier} is not set.')
         return name
 
+    def __eq__(self, other: object) -> bool:
+        """
+        Check if a node is equal to another node.
+
+        This method checks for the node identifier, variable name, and time lag, but ignores variable type,
+        inbound/outbound edges, and any other metadata.
+        """
+        if not isinstance(other, TimeSeriesNode):
+            return False
+        # As TimeSeriesNode is a subclass of Node, we can use the Node.__eq__ method and then check for the properties
+        if not super().__eq__(other):
+            return False
+        return self.variable_name == other.variable_name and self.time_lag == other.time_lag
+
 
 class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
     """A utility class that manages the state of an edge."""

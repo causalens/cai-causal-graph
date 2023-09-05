@@ -125,9 +125,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         # now check if the graphs are equal. Since TimeSeriesCausalGraph is a subclass of CausalGraph,
         # we can use the CausalGraph.__eq__ method and then check for the metadata
-        are_equal = super().__eq__(other)
-        # no need to check the metadata if the graphs are not equal
-        if not are_equal:
+        if not super().__eq__(other):
             return False
 
         # now check the metadata timedelta in the nodes

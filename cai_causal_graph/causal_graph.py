@@ -82,7 +82,7 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
 
         return True
 
-    def __ne__(self, other: Any) -> bool:
+    def __ne__(self, other: object) -> bool:
         """Check if the skeleton is not equal to another skeleton."""
         return not (self == other)
 

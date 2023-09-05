@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import json
 import unittest
 
 import numpy
@@ -248,6 +249,11 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
             self.ground_truth_minimal_graph_1,
             self.ground_truth_minimal_graph_3,
         ]:
+            graph_as_dict = tscg.to_dict()
+            graph_as_dict_2 = dict(tscg)
+            self.assertDictEqual(graph_as_dict, graph_as_dict_2)
+            self.assertIsInstance(json.dumps(graph_as_dict), str)
+
             reconstruction = TimeSeriesCausalGraph.from_dict(tscg.to_dict())
 
             # Check that their dict representations are the same.
@@ -255,6 +261,44 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
             # Also confirm that equality method works.
             self.assertEqual(tscg, reconstruction)
+
+        # test with include_metadata=False
+        graph_as_dict_nometa = self.tsdag.to_dict(include_meta=False)
+        self.assertNotIn('meta', graph_as_dict_nometa['nodes']['X3 lag(n=1)'].keys())
+        # confirm node info is still correct on reconstruction
+        self.assertEqual(TimeSeriesCausalGraph.from_dict(graph_as_dict_nometa).get_node('X3 lag(n=1)').time_lag, -1)
+        self.assertEqual(
+            TimeSeriesCausalGraph.from_dict(graph_as_dict_nometa).get_node('X3 lag(n=1)').variable_name, 'X3'
+        )
+
+        graph_as_dict_withmeta = self.tsdag.to_dict(include_meta=True)
+        self.assertIn('meta', graph_as_dict_withmeta['nodes']['X3 lag(n=1)'].keys())
+        # confirm node info is still correct on reconstruction
+        self.assertEqual(TimeSeriesCausalGraph.from_dict(graph_as_dict_withmeta).get_node('X3 lag(n=1)').time_lag, -1)
+        self.assertEqual(
+            TimeSeriesCausalGraph.from_dict(graph_as_dict_withmeta).get_node('X3 lag(n=1)').variable_name, 'X3'
+        )
+
+        # test with a custom metadata
+        newg = self.tsdag.copy()
+        newg.add_node('xm future(n=2)', variable_type=NodeVariableType.CONTINUOUS, meta={'test': 'test'})
+        graph_as_dict_withmeta = newg.to_dict(include_meta=True)
+        # test that the metadata is in the dict
+        self.assertIn('test', graph_as_dict_withmeta['nodes']['xm future(n=2)']['meta'].keys())
+        # confirm node info is still correct on reconstruction
+        self.assertEqual(TimeSeriesCausalGraph.from_dict(graph_as_dict_withmeta).get_node('xm future(n=2)').time_lag, 2)
+        self.assertEqual(
+            TimeSeriesCausalGraph.from_dict(graph_as_dict_withmeta).get_node('xm future(n=2)').variable_name, 'xm'
+        )
+
+        graph_as_dict_nometa = newg.to_dict(include_meta=False)
+        # test that the metadata is not in the dict
+        self.assertNotIn('meta', graph_as_dict_nometa['nodes']['xm future(n=2)'].keys())
+        # confirm node info is still correct on reconstruction
+        self.assertEqual(TimeSeriesCausalGraph.from_dict(graph_as_dict_nometa).get_node('xm future(n=2)').time_lag, 2)
+        self.assertEqual(
+            TimeSeriesCausalGraph.from_dict(graph_as_dict_nometa).get_node('xm future(n=2)').variable_name, 'xm'
+        )
 
     def test_from_causal_graph(self):
         # dag
