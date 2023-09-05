@@ -484,3 +484,19 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         extended_graph_3.add_edge('F future(n=1)', 'F future(n=2)', edge_type=EdgeType.DIRECTED_EDGE)
 
         self.assertEqual(extended_dag_3, extended_graph_3)
+
+    def test_repr(self):
+        # test the representation of the graph does not raise an error
+        self.ground_truth_minimal_graph_1.__repr__()
+
+    def test_add_time_edge(self):
+
+        # test adding a time edge to a graph
+        tsgraph = TimeSeriesCausalGraph()
+        tsgraph.add_time_edge('A', -1, 'B', 2)
+
+        # create the ground truth graph
+        ground_truth_graph = TimeSeriesCausalGraph()
+        ground_truth_graph.add_edge('A lag(n=1)', 'B future(n=2)', edge_type=EdgeType.DIRECTED_EDGE)
+
+        self.assertEqual(tsgraph, ground_truth_graph)

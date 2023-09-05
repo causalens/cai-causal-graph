@@ -643,6 +643,46 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         return edge
 
+    @_reset_ts_graph_attributes
+    def add_time_edge(
+        self,
+        /,
+        source_variable: str,
+        source_time: int,
+        destination_variable: str,
+        destination_time: int,
+        *,
+        meta: Optional[dict] = None,
+        **kwargs,
+    ) -> Edge:
+        """
+        Add a time edge to the graph from the variable at the source time to the variable at the destination time.
+
+        :param source_variable: The name of the source variable.
+        :param source_time: The time of the source variable.
+        :param destination_variable: The name of the destination variable.
+        :param destination_time: The time of the destination variable.
+        :param meta: The metadata for the edge.
+        :param kwargs: Additional keyword arguments to pass to the `cai_causal_graph.causal_graph.CausalGraph.add_edge`
+            method.
+        :return: The edge that was added.
+
+        Example:
+            - `add_time_edge('x', -2, 'x', 2)` will add an edge from the variable `x` at time -2 to the variable `x` at
+                time 2.
+        """
+
+        assert source_variable is not None
+        assert source_time is not None
+        assert destination_variable is not None
+        assert destination_time is not None
+
+        source = get_name_with_lag(source_variable, source_time)
+        destination = get_name_with_lag(destination_variable, destination_time)
+
+        return self.add_edge(source, destination, meta=meta, **kwargs)
+
+
     @classmethod
     def from_causal_graph(cls, causal_graph: CausalGraph) -> TimeSeriesCausalGraph:
         """
@@ -654,6 +694,14 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
 
         sepsets = deepcopy(causal_graph._sepsets)
+
+        # raise if the causal graph has any edges that are not directed edges
+        for edge in causal_graph.get_edges():
+            if edge.get_edge_type() != EdgeType.DIRECTED_EDGE:
+                raise ValueError(
+                    f'The causal graph must only have directed edges. The edge from {edge.source} to '
+                    f'{edge.destination} is not a directed edge.'
+                )
 
         # copy nodes and make them TimeSeriesNodes
         ts_cg = cls()
@@ -864,3 +912,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         # check all nodes are TimeSeriesNode
         assert all(isinstance(node, TimeSeriesNode) for node in nodes)
         return nodes  # type: ignore
+
+    def __hash__(self) -> int:
+        """Return a hash representation of the graph."""
+        return hash(repr(self.to_dict()))
