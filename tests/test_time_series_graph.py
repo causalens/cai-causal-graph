@@ -187,9 +187,47 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         ts_cg = TimeSeriesCausalGraph()
         ts_cg.add_node('X1 lag(n=1)')
         self.assertEqual(ts_cg.get_node('X1 lag(n=1)').time_lag, -1)
+        self.assertEqual(ts_cg.get_node('X1 lag(n=1)').variable_name, 'X1')
+        self.assertEqual(ts_cg.get_node('X1 lag(n=1)').identifier, 'X1 lag(n=1)')
 
         ts_cg.add_node(variable_name='X1', time_lag=-2)
         self.assertEqual(ts_cg.get_node('X1 lag(n=2)').time_lag, -2)
+        self.assertEqual(ts_cg.get_node('X1 lag(n=2)').variable_name, 'X1')
+        self.assertEqual(ts_cg.get_node('X1 lag(n=2)').identifier, 'X1 lag(n=2)')
+
+        node = ts_cg.add_node('X2')
+        self.assertIsInstance(node, TimeSeriesNode)
+        self.assertEqual(node.time_lag, 0)
+        self.assertEqual(node.variable_name, 'X2')
+        self.assertEqual(node.identifier, 'X2')
+
+        node = ts_cg.add_node('X3 future(n=2)')
+        self.assertIsInstance(node, TimeSeriesNode)
+        self.assertEqual(node.time_lag, 2)
+        self.assertEqual(node.variable_name, 'X3')
+        self.assertEqual(node.identifier, 'X3 future(n=2)')
+
+        node = ts_cg.add_node(variable_name='X3', time_lag=3)
+        self.assertIsInstance(node, TimeSeriesNode)
+        self.assertEqual(node.time_lag, 3)
+        self.assertEqual(node.variable_name, 'X3')
+        self.assertEqual(node.identifier, 'X3 future(n=3)')
+
+        node = ts_cg.add_node(variable_name='X4', time_lag=0)
+        self.assertIsInstance(node, TimeSeriesNode)
+        self.assertEqual(node.time_lag, 0)
+        self.assertEqual(node.variable_name, 'X4')
+        self.assertEqual(node.identifier, 'X4')
+
+        # check equality
+        ts_cg2 = TimeSeriesCausalGraph()
+        node2 = ts_cg2.add_node(None, 'X1', -1)
+        self.assertEqual(ts_cg.get_node('X1 lag(n=1)'), node2)
+        self.assertNotEqual(node, node2)
+
+        cg = CausalGraph()
+        node = cg.add_node('X1 lag(n=1)')
+        self.assertNotEqual(node, node2)  # different types so should be unequal
 
     def test_add_edge(self):
         ts_cg = TimeSeriesCausalGraph()

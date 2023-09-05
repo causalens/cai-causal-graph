@@ -306,6 +306,10 @@ class TimeSeriesNode(Node):
             return False
         return self.variable_name == other.variable_name and self.time_lag == other.time_lag
 
+    def __hash__(self) -> int:
+        """Return a hash value of the node identifier."""
+        return super().__hash__()
+
 
 class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
     """A utility class that manages the state of an edge."""
