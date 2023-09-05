@@ -329,8 +329,6 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         Check if the edge is equal to another edge.
 
         This method checks for the edge source, destination, and type but ignores any metadata.
-
-        :param other: The other edge to compare to.
         """
         if not isinstance(other, Edge):
             return False
