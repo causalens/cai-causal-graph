@@ -15,9 +15,8 @@ limitations under the License.
 """
 import unittest
 
-from cai_causal_graph.causal_graph import CausalGraph
+from cai_causal_graph import CausalGraph, EdgeType
 from cai_causal_graph.exceptions import CausalGraphErrors
-from cai_causal_graph.type_definitions import EDGE_T
 
 
 class TestCausalGraphEdgeTypes(unittest.TestCase):
@@ -28,46 +27,46 @@ class TestCausalGraphEdgeTypes(unittest.TestCase):
         # define a DAG
         self.dag = CausalGraph()
         self.dag.add_nodes_from(self.nodes)
-        self.dag.add_edge('b', 'a', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.dag.add_edge('b', 'c', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.dag.add_edge('a', 'c', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.dag.add_edge('c', 'f', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.dag.add_edge('f', 'd', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.dag.add_edge('f', 'e', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.dag.add_edge('e', 'd', edge_type=EDGE_T.DIRECTED_EDGE)
+        self.dag.add_edge('b', 'a', edge_type=EdgeType.DIRECTED_EDGE)
+        self.dag.add_edge('b', 'c', edge_type=EdgeType.DIRECTED_EDGE)
+        self.dag.add_edge('a', 'c', edge_type=EdgeType.DIRECTED_EDGE)
+        self.dag.add_edge('c', 'f', edge_type=EdgeType.DIRECTED_EDGE)
+        self.dag.add_edge('f', 'd', edge_type=EdgeType.DIRECTED_EDGE)
+        self.dag.add_edge('f', 'e', edge_type=EdgeType.DIRECTED_EDGE)
+        self.dag.add_edge('e', 'd', edge_type=EdgeType.DIRECTED_EDGE)
 
         # define a CPDAG
         self.cpdag = CausalGraph()
         self.cpdag.add_nodes_from(self.nodes)
-        self.cpdag.add_edge('b', 'a', edge_type=EDGE_T.UNDIRECTED_EDGE)
-        self.cpdag.add_edge('b', 'c', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.cpdag.add_edge('a', 'c', edge_type=EDGE_T.UNDIRECTED_EDGE)
-        self.cpdag.add_edge('c', 'f', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.cpdag.add_edge('f', 'd', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.cpdag.add_edge('f', 'e', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.cpdag.add_edge('e', 'd', edge_type=EDGE_T.UNDIRECTED_EDGE)
+        self.cpdag.add_edge('b', 'a', edge_type=EdgeType.UNDIRECTED_EDGE)
+        self.cpdag.add_edge('b', 'c', edge_type=EdgeType.DIRECTED_EDGE)
+        self.cpdag.add_edge('a', 'c', edge_type=EdgeType.UNDIRECTED_EDGE)
+        self.cpdag.add_edge('c', 'f', edge_type=EdgeType.DIRECTED_EDGE)
+        self.cpdag.add_edge('f', 'd', edge_type=EdgeType.DIRECTED_EDGE)
+        self.cpdag.add_edge('f', 'e', edge_type=EdgeType.DIRECTED_EDGE)
+        self.cpdag.add_edge('e', 'd', edge_type=EdgeType.UNDIRECTED_EDGE)
 
         # define a MAG
         self.mag = CausalGraph()
         self.mag.add_nodes_from(self.nodes)
-        self.mag.add_edge('b', 'a', edge_type=EDGE_T.UNDIRECTED_EDGE)
-        self.mag.add_edge('b', 'c', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.mag.add_edge('a', 'c', edge_type=EDGE_T.UNDIRECTED_EDGE)
-        self.mag.add_edge('c', 'f', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.mag.add_edge('f', 'd', edge_type=EDGE_T.BIDIRECTED_EDGE)
-        self.mag.add_edge('f', 'e', edge_type=EDGE_T.BIDIRECTED_EDGE)
-        self.mag.add_edge('e', 'd', edge_type=EDGE_T.UNDIRECTED_EDGE)
+        self.mag.add_edge('b', 'a', edge_type=EdgeType.UNDIRECTED_EDGE)
+        self.mag.add_edge('b', 'c', edge_type=EdgeType.DIRECTED_EDGE)
+        self.mag.add_edge('a', 'c', edge_type=EdgeType.UNDIRECTED_EDGE)
+        self.mag.add_edge('c', 'f', edge_type=EdgeType.DIRECTED_EDGE)
+        self.mag.add_edge('f', 'd', edge_type=EdgeType.BIDIRECTED_EDGE)
+        self.mag.add_edge('f', 'e', edge_type=EdgeType.BIDIRECTED_EDGE)
+        self.mag.add_edge('e', 'd', edge_type=EdgeType.UNDIRECTED_EDGE)
 
         # define a PAG
         self.pag = CausalGraph()
         self.pag.add_nodes_from(self.nodes)
-        self.pag.add_edge('b', 'a', edge_type=EDGE_T.UNKNOWN_UNDIRECTED_EDGE)
-        self.pag.add_edge('b', 'c', edge_type=EDGE_T.UNKNOWN_DIRECTED_EDGE)
-        self.pag.add_edge('a', 'c', edge_type=EDGE_T.UNDIRECTED_EDGE)
-        self.pag.add_edge('c', 'f', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.pag.add_edge('f', 'd', edge_type=EDGE_T.BIDIRECTED_EDGE)
-        self.pag.add_edge('f', 'e', edge_type=EDGE_T.BIDIRECTED_EDGE)
-        self.pag.add_edge('e', 'd', edge_type=EDGE_T.UNDIRECTED_EDGE)
+        self.pag.add_edge('b', 'a', edge_type=EdgeType.UNKNOWN_UNDIRECTED_EDGE)
+        self.pag.add_edge('b', 'c', edge_type=EdgeType.UNKNOWN_DIRECTED_EDGE)
+        self.pag.add_edge('a', 'c', edge_type=EdgeType.UNDIRECTED_EDGE)
+        self.pag.add_edge('c', 'f', edge_type=EdgeType.DIRECTED_EDGE)
+        self.pag.add_edge('f', 'd', edge_type=EdgeType.BIDIRECTED_EDGE)
+        self.pag.add_edge('f', 'e', edge_type=EdgeType.BIDIRECTED_EDGE)
+        self.pag.add_edge('e', 'd', edge_type=EdgeType.UNDIRECTED_EDGE)
 
     def test_causal_graph_identifiers(self):
         # check that the identifiers are what we would expect from a DAG and other graph types
@@ -120,7 +119,7 @@ class TestCausalGraphEdgeTypes(unittest.TestCase):
         self.assertEqual(len(self.dag.get_nodes()), 7)
 
         # add an edge to the new node
-        self.dag.add_edge('a', 'x', edge_type=EDGE_T.DIRECTED_EDGE)
+        self.dag.add_edge('a', 'x', edge_type=EdgeType.DIRECTED_EDGE)
         self.assertEqual(len(self.dag.get_edges()), 8)
 
         # delete node
@@ -133,7 +132,7 @@ class TestCausalGraphEdgeTypes(unittest.TestCase):
         edge = self.dag.get_edge('b', 'a')
         self.assertEqual(edge.identifier, "('b', 'a')")
         self.assertEqual(edge.descriptor, '(b -> a)')
-        edge_with_type = self.dag.get_edge('b', 'a', edge_type=EDGE_T.DIRECTED_EDGE)
+        edge_with_type = self.dag.get_edge('b', 'a', edge_type=EdgeType.DIRECTED_EDGE)
         self.assertEqual(edge.identifier, edge_with_type.identifier)
         self.assertEqual(edge.descriptor, edge_with_type.descriptor)
 
@@ -141,7 +140,7 @@ class TestCausalGraphEdgeTypes(unittest.TestCase):
         with self.assertRaises(CausalGraphErrors.EdgeDoesNotExistError):
             self.dag.get_edge('a', 'b')
         with self.assertRaises(CausalGraphErrors.EdgeDoesNotExistError):
-            self.dag.get_edge('b', 'a', edge_type=EDGE_T.UNDIRECTED_EDGE)
+            self.dag.get_edge('b', 'a', edge_type=EdgeType.UNDIRECTED_EDGE)
         with self.assertRaises(CausalGraphErrors.EdgeDoesNotExistError):
             self.dag.get_edge('x', 'y')
 
@@ -152,7 +151,7 @@ class TestCausalGraphEdgeTypes(unittest.TestCase):
         edge = self.cpdag.get_edge('b', 'a')
         self.assertEqual(edge.identifier, "('b', 'a')")
         self.assertEqual(edge.descriptor, '(b -- a)')
-        edge_with_type = self.cpdag.get_edge('b', 'a', edge_type=EDGE_T.UNDIRECTED_EDGE)
+        edge_with_type = self.cpdag.get_edge('b', 'a', edge_type=EdgeType.UNDIRECTED_EDGE)
         self.assertEqual(edge.identifier, edge_with_type.identifier)
         self.assertEqual(edge.descriptor, edge_with_type.descriptor)
 
@@ -191,13 +190,13 @@ class TestCausalGraphEdgeTypes(unittest.TestCase):
 
     def test_add_and_remove_edges(self):
         # add edge and check that it is correctly added
-        self.dag.add_edge('x', 'a', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.dag.add_edge('x', 'y', edge_type=EDGE_T.DIRECTED_EDGE)
+        self.dag.add_edge('x', 'a', edge_type=EdgeType.DIRECTED_EDGE)
+        self.dag.add_edge('x', 'y', edge_type=EdgeType.DIRECTED_EDGE)
         self.assertEqual(len(self.dag.get_nodes()), 8)
         self.assertEqual(len(self.dag.get_edges()), 9)
 
         # remove edge
-        self.dag.remove_edge('x', 'y', edge_type=EDGE_T.DIRECTED_EDGE)
+        self.dag.remove_edge('x', 'y', edge_type=EdgeType.DIRECTED_EDGE)
         self.assertEqual(len(self.dag.get_nodes()), 8)
         self.assertEqual(len(self.dag.get_edges()), 8)
 
@@ -270,9 +269,9 @@ class TestCausalGraphEdgeTypes(unittest.TestCase):
         self.assertIn(source, self.dag.get_parents(destination))
         self.assertIn(destination, self.dag.get_children(source))
 
-        self.dag.change_edge_type(source=source, destination=destination, new_edge_type=EDGE_T.UNDIRECTED_EDGE)
+        self.dag.change_edge_type(source=source, destination=destination, new_edge_type=EdgeType.UNDIRECTED_EDGE)
         self.assertEqual(
-            self.dag.get_edge(source=source, destination=destination).get_edge_type(), EDGE_T.UNDIRECTED_EDGE
+            self.dag.get_edge(source=source, destination=destination).get_edge_type(), EdgeType.UNDIRECTED_EDGE
         )
         self.assertFalse(self.dag.is_dag())
 
@@ -284,10 +283,10 @@ class TestCausalGraphEdgeTypes(unittest.TestCase):
 
         source, destination = edge.source, edge.destination
 
-        self.dag.change_edge_type(source=source, destination=destination, new_edge_type=EDGE_T.DIRECTED_EDGE)
+        self.dag.change_edge_type(source=source, destination=destination, new_edge_type=EdgeType.DIRECTED_EDGE)
         self.assertEqual(
             self.dag.get_edge(source=source.identifier, destination=destination.identifier).get_edge_type(),
-            EDGE_T.DIRECTED_EDGE,
+            EdgeType.DIRECTED_EDGE,
         )
         self.assertTrue(self.dag.is_dag())
 
@@ -312,5 +311,5 @@ class TestCausalGraphEdgeTypes(unittest.TestCase):
 
         with self.assertRaises(CausalGraphErrors.EdgeDoesNotExistError):
             self.dag.change_edge_type(
-                source=source.identifier, destination=destination.identifier, new_edge_type=EDGE_T.DIRECTED_EDGE
+                source=source.identifier, destination=destination.identifier, new_edge_type=EdgeType.DIRECTED_EDGE
             )

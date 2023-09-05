@@ -22,7 +22,16 @@ from cai_causal_graph.interfaces import HasIdentifier
 
 
 class EdgeConstraint(IntEnum):
-    """Enumeration defining the types of edge constraints for domain knowledge."""
+    """
+    Enumeration defining the types of edge constraints for domain knowledge.
+
+    The enumeration members are:
+    - EdgeConstraint.NONE
+    - EdgeConstraint.UNDIRECTED_EDGE
+    - EdgeConstraint.FORWARD_DIRECTED_EDGE
+    - EdgeConstraint.BACKWARD_DIRECTED_EDGE
+    - EdgeConstraint.FORBIDDEN_EDGE
+    """
 
     NONE = 0  # This says no constraint, which is equivalent to saying it is unknown or maybe there is an edge.
     UNDIRECTED_EDGE = 1
@@ -31,8 +40,18 @@ class EdgeConstraint(IntEnum):
     FORBIDDEN_EDGE = 4
 
 
-class EdgeTypeEnum(str, Enum):
-    """Enumeration defining the types of edges the graph can contain."""
+class EdgeType(str, Enum):
+    """
+    Enumeration defining the types of edges the graph can contain.
+
+    The enumeration members are:
+    - EdgeType.UNDIRECTED_EDGE
+    - EdgeType.DIRECTED_EDGE
+    - EdgeType.BIDIRECTED_EDGE
+    - EdgeType.UNKNOWN_EDGE
+    - EdgeType.UNKNOWN_DIRECTED_EDGE
+    - EdgeType.UNKNOWN_UNDIRECTED_EDGE
+    """
 
     UNDIRECTED_EDGE = '--'
     DIRECTED_EDGE = '->'
@@ -47,7 +66,16 @@ class EdgeTypeEnum(str, Enum):
 
 
 class NodeVariableType(str, Enum):
-    """Enumeration defining the types of variable a node in a graph can represent."""
+    """
+    Enumeration defining the types of variable a node in a graph can represent.
+
+    The enumeration members are:
+    - NodeVariableType.UNSPECIFIED
+    - NodeVariableType.CONTINUOUS
+    - NodeVariableType.BINARY
+    - NodeVariableType.MULTICLASS
+    - NodeVariableType.ORDINAL
+    """
 
     UNSPECIFIED = 'unspecified'
     CONTINUOUS = 'continuous'
@@ -64,8 +92,8 @@ class NodeVariableType(str, Enum):
 NUMBER_T = Union[int, float, Real]  # see: https://github.com/python/mypy/issues/3186
 
 # Causal Structure Types
-EDGE_T = EdgeTypeEnum  # This should be the base one, it will allow for all that inherit from it.
-NODE_T = NodeVariableType  # This should be the base one, it will allow for all that inherit from it.
+EDGE_T = EdgeType  # Keep for backwards compatibility.
+NODE_T = NodeVariableType  # Keep for backwards compatibility.
 PAIR_T = Tuple[str, str]  # Defines a pair of variables. Can be used to query edges, paths, functions.
 NodeLike = Union[str, HasIdentifier]
 

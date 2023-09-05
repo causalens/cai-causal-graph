@@ -16,16 +16,16 @@ limitations under the License.
 
 import unittest
 
-from cai_causal_graph import EDGE_T, NODE_T
+from cai_causal_graph import EdgeType, NodeVariableType
 from cai_causal_graph.graph_components import Edge, Node
 
 
 class TestGraphComponents(unittest.TestCase):
     def test_serialization(self):
-        source = Node(identifier='a', meta={'color': 'blue'}, variable_type=NODE_T.BINARY)
-        destination = Node(identifier='b', meta={'color': 'green'}, variable_type=NODE_T.CONTINUOUS)
+        source = Node(identifier='a', meta={'color': 'blue'}, variable_type=NodeVariableType.BINARY)
+        destination = Node(identifier='b', meta={'color': 'green'}, variable_type=NodeVariableType.CONTINUOUS)
         edge = Edge(
-            source=source, destination=destination, edge_type=EDGE_T.UNKNOWN_DIRECTED_EDGE, meta={'color': 'red'}
+            source=source, destination=destination, edge_type=EdgeType.UNKNOWN_DIRECTED_EDGE, meta={'color': 'red'}
         )
         edge_dict = edge.to_dict()
         self.assertDictEqual(edge_dict['source'], source.to_dict())
