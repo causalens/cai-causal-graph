@@ -3,6 +3,7 @@
 ## NEXT
 
 - Fixed `repr` bug on `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`.
+- Added equality method for the `cai_causal_graph.graph_components.TimeSeriesNode` class.
 - Extended unit tests for `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` and
   `cai_causal_graph.graph_components.TimeSeriesNode` classes.
 
