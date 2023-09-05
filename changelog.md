@@ -1,5 +1,10 @@
 # Changelog
 
+## NEXT
+
+- Fixed `repr` bug on `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`.
+- Extended unit tests for `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`.
+
 ## 0.2.0
 
 - Added the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class to represent a time series causal

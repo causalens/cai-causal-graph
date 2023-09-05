@@ -845,6 +845,10 @@ class TestCausalGraphPrinting(unittest.TestCase):
         n = cg.add_node('a')
         e = cg.add_edge('a', 'b')
 
+        self.assertIsInstance(n.__hash__(), int)
+        self.assertIsInstance(e.__hash__(), int)
+        self.assertIsInstance(cg.__hash__(), int)
+
         self.assertIsInstance(n.__repr__(), str)
         self.assertIsInstance(e.__repr__(), str)
         self.assertIsInstance(cg.__repr__(), str)
@@ -858,6 +862,10 @@ class TestCausalGraphPrinting(unittest.TestCase):
 
         n = cg.add_node('a')
         e = cg.add_edge('a', 'b', edge_type=EdgeType.BIDIRECTED_EDGE)
+
+        self.assertIsInstance(n.__hash__(), int)
+        self.assertIsInstance(e.__hash__(), int)
+        self.assertIsInstance(cg.__hash__(), int)
 
         self.assertIsInstance(n.__repr__(), str)
         self.assertIsInstance(e.__repr__(), str)
@@ -947,5 +955,7 @@ class TestCausalGraphPrinting(unittest.TestCase):
         cg.add_node('a')
         cg.add_node('b', variable_type=NodeVariableType.CONTINUOUS)
 
+        self.assertEqual(cg['a'], cg.get_node('a'))
+        self.assertEqual(cg['b'], cg.get_node('b'))
         self.assertEqual(repr(cg['a']), 'Node("a")')
         self.assertEqual(repr(cg['b']), 'Node("b", type="continuous")')

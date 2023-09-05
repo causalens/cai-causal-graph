@@ -46,38 +46,45 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
         self._graph = graph
 
     def __eq__(self, other: object) -> bool:
-        """Return true if two skeletons are equal."""
+        """Return `True` if two skeletons are equal."""
         if not isinstance(other, Skeleton):
             return False
 
-        # check that the set of node names matches
+        # Check that the number of nodes and edges agrees
+        if len(self.nodes) != len(other.nodes) or len(self.edges) != len(other.edges):
+            return False
+
+        # Check that the set of node names matches
         if set(self._graph.get_node_names()) != set(other._graph.get_node_names()):
             return False
 
-        # check that the set of edges matches
+        # Check that the set of edges matches
         edge_pairs = {frozenset(e.get_edge_pair()) for e in self.edges}
         other_edge_pairs = {frozenset(e.get_edge_pair()) for e in other.edges}
         if edge_pairs != other_edge_pairs:
             return False
 
-        # check that edges and nodes are equivalent (ignores meta data)
+        # Check that edges and nodes are equivalent (ignores meta data)
         for node in self.nodes:
             if node != other.get_node(node.identifier):
                 return False
 
-        edge: Edge
         for edge in self.edges:
-            # symmetric edges, e.g. x -- y, should be the same as their reverse, e.g. y -- x
+            # Symmetric edges, e.g. x -- y, should be the same as their reverse, e.g. y -- x
             try:
                 other_edge = other.get_edge(edge.source.identifier, edge.destination.identifier)
             except AssertionError:  # get_edge raises AssertionError in this case
                 other_edge = other.get_edge(edge.destination.identifier, edge.source.identifier)
 
-            # check if equal
+            # Check if equal
             if edge != other_edge:
                 return False
 
         return True
+
+    def __ne__(self, other: Any) -> bool:
+        """Check if the skeleton is not equal to another skeleton."""
+        return not (self == other)
 
     @property
     def nodes(self) -> List[Node]:
@@ -276,7 +283,7 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
         edge_details = '\t' + '\n\t'.join([e.details().replace('\n', '\n\t') for e in self.edges])
         return f'{self.__repr__()}\n' f'Node Details:\n{node_details}\nEdge Details:\n{edge_details}'
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Return a hash representation of the `cai_causal_graph.causal_graph.Skeleton` instance."""
         return hash(repr(self.to_dict()))
 
@@ -403,33 +410,44 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """
         if not isinstance(other, CausalGraph):
             return False
+
+        # Check that the number of nodes and edges agrees
+        if len(self.nodes) != len(other.nodes) or len(self.edges) != len(other.edges):
+            return False
+
+        # Check that the set of node names matches
         if set(self.get_node_names()) != set(other.get_node_names()):
             return False
-        # check that the set of edges matches
+
+        # Check that the set of edges matches
         edge_pairs = {frozenset(e.get_edge_pair()) for e in self.edges}
         other_edge_pairs = {frozenset(e.get_edge_pair()) for e in other.edges}
         if edge_pairs != other_edge_pairs:
             return False
 
-        # check that edges and nodes are equivalent (ignores meta data)
+        # Check that edges and nodes are equivalent (ignores meta data)
         for node in self.nodes:
             if node != other.get_node(node.identifier):
                 return False
 
         for edge in self.edges:
-            # symmetric edges, e.g. x -- y, should be the same as their reverse, e.g. y -- x
+            # Symmetric edges, e.g. x -- y, should be the same as their reverse, e.g. y -- x
             try:
                 other_edge = other.get_edge(edge.source.identifier, edge.destination.identifier)
             # get_edge can raise KeyError when trying to index the dict of edges, but it can also raise
-            # _Errors.EdgeDoesNotExistError.
+            # CausalGraphErrors.EdgeDoesNotExistError.
             except (KeyError, CausalGraphErrors.EdgeDoesNotExistError):
                 other_edge = other.get_edge(edge.destination.identifier, edge.source.identifier)
 
-            # check if equal
+            # Check if equal
             if edge != other_edge:
                 return False
 
         return True
+
+    def __ne__(self, other: object) -> bool:
+        """Check if the graph is not equal to another graph."""
+        return not (self == other)
 
     @property
     def nodes(self) -> List[Node]:
@@ -1808,6 +1826,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
     def __repr__(self) -> str:
         """Return a string description of the `cai_causal_graph.causal_graph.CausalGraph` instance."""
+        a = 1
+        self.__hash__()
         return (
             f'{self.__class__.__name__}(num_nodes={len(self.nodes)}, num_edges={len(self.edges)}, id={self.__hash__()})'
             f'\n'
@@ -1820,6 +1840,6 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         edge_details = '\t' + '\n\t'.join([e.details().replace('\n', '\n\t') for e in self.edges])
         return f'{self.__repr__()}\n' f'Node Details:\n{node_details}\nEdge Details:\n{edge_details}'
 
-    def __hash__(self):
-        """Return a hash representation of the graph."""
+    def __hash__(self) -> int:
+        """Return a hash representation of the `cai_causal_graph.causal_graph.CausalGraph` instance."""
         return hash(repr(self.to_dict()))

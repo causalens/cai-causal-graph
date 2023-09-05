@@ -136,20 +136,18 @@ class TimeSeriesCausalGraph(CausalGraph):
             assert isinstance(other_node, TimeSeriesNode)  # for linting
 
             # check the variable name
-            node_metadata_variable = node.variable_name
-            other_node_metadata_variable = other_node.variable_name
-
-            if node_metadata_variable != other_node_metadata_variable:
+            if node.variable_name != other_node.variable_name:
                 return False
 
             # check the time delta
-            node_metadata_td = node.time_lag
-            other_node_metadata_td = other_node.time_lag
-
-            if node_metadata_td != other_node_metadata_td:
+            if node.time_lag != other_node.time_lag:
                 return False
 
         return True
+
+    def __ne__(self, other: object) -> bool:
+        """Check if the graph is not equal to another graph."""
+        return not (self == other)
 
     def copy(self, include_meta: bool = True) -> TimeSeriesCausalGraph:
         """
@@ -864,3 +862,9 @@ class TimeSeriesCausalGraph(CausalGraph):
         # check all nodes are TimeSeriesNode
         assert all(isinstance(node, TimeSeriesNode) for node in nodes)
         return nodes  # type: ignore
+
+    def __hash__(self) -> int:
+        """
+        Return a hash representation of the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` instance.
+        """
+        return super().__hash__()

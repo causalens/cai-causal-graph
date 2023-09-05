@@ -59,7 +59,7 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         # Switches to False if the node is deleted
         self._is_valid: bool = True
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Return a hash value of the node identifier."""
         return hash(self.identifier)
 
@@ -73,7 +73,7 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
             return False
         return self.identifier == other.identifier
 
-    def __ne__(self, other: Any) -> bool:
+    def __ne__(self, other: object) -> bool:
         """Check if the node is not equal to another node."""
         return not (self == other)
 
@@ -320,8 +320,8 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         # Switches to False if the edge is deleted
         self._valid: bool = True
 
-    def __hash__(self):
-        """Return a hash value of the node identifier."""
+    def __hash__(self) -> int:
+        """Return a hash value of the edge identifier."""
         return hash(self.identifier)
 
     def __eq__(self, other: object) -> bool:
@@ -345,7 +345,7 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
 
         return False
 
-    def __ne__(self, other: Any) -> bool:
+    def __ne__(self, other: object) -> bool:
         """Check if the edge is not equal to another edge."""
         return not (self == other)
 
