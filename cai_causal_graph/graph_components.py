@@ -59,7 +59,7 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         # Switches to False if the node is deleted
         self._is_valid: bool = True
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Return a hash value of the node identifier."""
         return hash(self.identifier)
 
@@ -73,7 +73,7 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
             return False
         return self.identifier == other.identifier
 
-    def __ne__(self, other: Any) -> bool:
+    def __ne__(self, other: object) -> bool:
         """Check if the node is not equal to another node."""
         return not (self == other)
 
@@ -292,6 +292,24 @@ class TimeSeriesNode(Node):
             raise ValueError(f'The variable name for node {self.identifier} is not set.')
         return name
 
+    def __eq__(self, other: object) -> bool:
+        """
+        Check if a node is equal to another node.
+
+        This method checks for the node identifier, variable name, and time lag, but ignores variable type,
+        inbound/outbound edges, and any other metadata.
+        """
+        if not isinstance(other, TimeSeriesNode):
+            return False
+        # As TimeSeriesNode is a subclass of Node, we can use the Node.__eq__ method and then check for the properties
+        if not super().__eq__(other):
+            return False
+        return self.variable_name == other.variable_name and self.time_lag == other.time_lag
+
+    def __hash__(self) -> int:
+        """Return a hash value of the node identifier."""
+        return super().__hash__()
+
 
 class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
     """A utility class that manages the state of an edge."""
@@ -320,8 +338,8 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         # Switches to False if the edge is deleted
         self._valid: bool = True
 
-    def __hash__(self):
-        """Return a hash value of the node identifier."""
+    def __hash__(self) -> int:
+        """Return a hash value of the edge identifier."""
         return hash(self.identifier)
 
     def __eq__(self, other: object) -> bool:
@@ -345,7 +363,7 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
 
         return False
 
-    def __ne__(self, other: Any) -> bool:
+    def __ne__(self, other: object) -> bool:
         """Check if the edge is not equal to another edge."""
         return not (self == other)
 

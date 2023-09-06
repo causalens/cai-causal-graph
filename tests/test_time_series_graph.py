@@ -14,11 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import json
 import unittest
 
 import numpy
 
-from cai_causal_graph import CausalGraph, EdgeType, TimeSeriesCausalGraph
+from cai_causal_graph import CausalGraph, EdgeType, NodeVariableType, TimeSeriesCausalGraph
+from cai_causal_graph.exceptions import CausalGraphErrors
 from cai_causal_graph.graph_components import TimeSeriesNode
 from cai_causal_graph.utils import extract_names_and_lags, get_variable_name_and_lag
 
@@ -185,9 +187,47 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         ts_cg = TimeSeriesCausalGraph()
         ts_cg.add_node('X1 lag(n=1)')
         self.assertEqual(ts_cg.get_node('X1 lag(n=1)').time_lag, -1)
+        self.assertEqual(ts_cg.get_node('X1 lag(n=1)').variable_name, 'X1')
+        self.assertEqual(ts_cg.get_node('X1 lag(n=1)').identifier, 'X1 lag(n=1)')
 
         ts_cg.add_node(variable_name='X1', time_lag=-2)
         self.assertEqual(ts_cg.get_node('X1 lag(n=2)').time_lag, -2)
+        self.assertEqual(ts_cg.get_node('X1 lag(n=2)').variable_name, 'X1')
+        self.assertEqual(ts_cg.get_node('X1 lag(n=2)').identifier, 'X1 lag(n=2)')
+
+        node = ts_cg.add_node('X2')
+        self.assertIsInstance(node, TimeSeriesNode)
+        self.assertEqual(node.time_lag, 0)
+        self.assertEqual(node.variable_name, 'X2')
+        self.assertEqual(node.identifier, 'X2')
+
+        node = ts_cg.add_node('X3 future(n=2)')
+        self.assertIsInstance(node, TimeSeriesNode)
+        self.assertEqual(node.time_lag, 2)
+        self.assertEqual(node.variable_name, 'X3')
+        self.assertEqual(node.identifier, 'X3 future(n=2)')
+
+        node = ts_cg.add_node(variable_name='X3', time_lag=3)
+        self.assertIsInstance(node, TimeSeriesNode)
+        self.assertEqual(node.time_lag, 3)
+        self.assertEqual(node.variable_name, 'X3')
+        self.assertEqual(node.identifier, 'X3 future(n=3)')
+
+        node = ts_cg.add_node(variable_name='X4', time_lag=0)
+        self.assertIsInstance(node, TimeSeriesNode)
+        self.assertEqual(node.time_lag, 0)
+        self.assertEqual(node.variable_name, 'X4')
+        self.assertEqual(node.identifier, 'X4')
+
+        # check equality
+        ts_cg2 = TimeSeriesCausalGraph()
+        node2 = ts_cg2.add_node(None, 'X1', -1)
+        self.assertEqual(ts_cg.get_node('X1 lag(n=1)'), node2)
+        self.assertNotEqual(node, node2)
+
+        cg = CausalGraph()
+        node = cg.add_node('X1 lag(n=1)')
+        self.assertNotEqual(node, node2)  # different types so should be unequal
 
     def test_add_edge(self):
         ts_cg = TimeSeriesCausalGraph()
@@ -237,6 +277,66 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         nodes = sorted(nodes, key=lambda x: list(x.values())[0])
         self.assertEqual(nodes, [{'X1': -1}, {'X2': -1}, {'X3': -1}, {'X1': 0}, {'X2': 0}, {'X3': 0}])
         self.assertEqual(maxlag, -1)
+
+    def test_serialization(self):
+        for tscg in [
+            self.tsdag,
+            self.tsdag_1,
+            self.tsdag_2,
+            self.tsdag_3,
+            self.ground_truth_minimal_graph_1,
+            self.ground_truth_minimal_graph_3,
+        ]:
+            graph_as_dict = tscg.to_dict()
+            graph_as_dict_2 = dict(tscg)
+            self.assertDictEqual(graph_as_dict, graph_as_dict_2)
+            self.assertIsInstance(json.dumps(graph_as_dict), str)
+
+            reconstruction = TimeSeriesCausalGraph.from_dict(tscg.to_dict())
+
+            # Check that their dict representations are the same.
+            self.assertDictEqual(tscg.to_dict(), reconstruction.to_dict())
+
+            # Also confirm that equality method works.
+            self.assertEqual(tscg, reconstruction)
+
+        # test with include_metadata=False
+        graph_as_dict_nometa = self.tsdag.to_dict(include_meta=False)
+        self.assertNotIn('meta', graph_as_dict_nometa['nodes']['X3 lag(n=1)'].keys())
+        # confirm node info is still correct on reconstruction
+        self.assertEqual(TimeSeriesCausalGraph.from_dict(graph_as_dict_nometa).get_node('X3 lag(n=1)').time_lag, -1)
+        self.assertEqual(
+            TimeSeriesCausalGraph.from_dict(graph_as_dict_nometa).get_node('X3 lag(n=1)').variable_name, 'X3'
+        )
+
+        graph_as_dict_withmeta = self.tsdag.to_dict(include_meta=True)
+        self.assertIn('meta', graph_as_dict_withmeta['nodes']['X3 lag(n=1)'].keys())
+        # confirm node info is still correct on reconstruction
+        self.assertEqual(TimeSeriesCausalGraph.from_dict(graph_as_dict_withmeta).get_node('X3 lag(n=1)').time_lag, -1)
+        self.assertEqual(
+            TimeSeriesCausalGraph.from_dict(graph_as_dict_withmeta).get_node('X3 lag(n=1)').variable_name, 'X3'
+        )
+
+        # test with a custom metadata
+        newg = self.tsdag.copy()
+        newg.add_node('xm future(n=2)', variable_type=NodeVariableType.CONTINUOUS, meta={'test': 'test'})
+        graph_as_dict_withmeta = newg.to_dict(include_meta=True)
+        # test that the metadata is in the dict
+        self.assertIn('test', graph_as_dict_withmeta['nodes']['xm future(n=2)']['meta'].keys())
+        # confirm node info is still correct on reconstruction
+        self.assertEqual(TimeSeriesCausalGraph.from_dict(graph_as_dict_withmeta).get_node('xm future(n=2)').time_lag, 2)
+        self.assertEqual(
+            TimeSeriesCausalGraph.from_dict(graph_as_dict_withmeta).get_node('xm future(n=2)').variable_name, 'xm'
+        )
+
+        graph_as_dict_nometa = newg.to_dict(include_meta=False)
+        # test that the metadata is not in the dict
+        self.assertNotIn('meta', graph_as_dict_nometa['nodes']['xm future(n=2)'].keys())
+        # confirm node info is still correct on reconstruction
+        self.assertEqual(TimeSeriesCausalGraph.from_dict(graph_as_dict_nometa).get_node('xm future(n=2)').time_lag, 2)
+        self.assertEqual(
+            TimeSeriesCausalGraph.from_dict(graph_as_dict_nometa).get_node('xm future(n=2)').variable_name, 'xm'
+        )
 
     def test_from_causal_graph(self):
         # dag
@@ -352,6 +452,19 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         ground_truth_mg = TimeSeriesCausalGraph()
         ground_truth_mg.add_edge('X1 lag(n=1)', 'X1')
         self.assertEqual(mg, ground_truth_mg)
+
+        # TODO: CAUSALAI-3397 - Need to test with CPGAG, MAG, and PAGs
+        # for edge_type in EdgeType.__members__:
+        #     tscg = TimeSeriesCausalGraph()
+        #     tscg.add_edge('x', 'x future(n=2)', edge_type=edge_type)
+        #     self.assertFalse(tscg.is_minimal_graph())
+        #
+        #     true_minimal = TimeSeriesCausalGraph()
+        #     true_minimal.add_edge('x lag(n=2)', 'x', edge_type=edge_type)
+        #     self.assertTrue(true_minimal.is_minimal_graph())
+        #
+        #     self.assertEqual(tscg.get_minimal_graph(), true_minimal)
+        #     self.assertTrue((tscg.get_minimal_graph().is_minimal_graph())
 
     def test_extend_backward(self):
         # with 1 steps
@@ -484,3 +597,202 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         extended_graph_3.add_edge('F future(n=1)', 'F future(n=2)', edge_type=EdgeType.DIRECTED_EDGE)
 
         self.assertEqual(extended_dag_3, extended_graph_3)
+
+
+class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
+    def test_default_nodes_and_edges(self):
+        cg = TimeSeriesCausalGraph()
+
+        n = cg.add_node('a')
+        e = cg.add_edge('a', 'b')
+
+        self.assertIsInstance(n.__hash__(), int)
+        self.assertIsInstance(e.__hash__(), int)
+        self.assertIsInstance(cg.__hash__(), int)
+
+        self.assertIsInstance(n.__repr__(), str)
+        self.assertIsInstance(e.__repr__(), str)
+        self.assertIsInstance(cg.__repr__(), str)
+        self.assertTrue(n.__repr__().startswith('TimeSeriesNode'))
+        self.assertTrue(e.__repr__().startswith('Edge'))
+        self.assertTrue(cg.__repr__().startswith('TimeSeriesCausalGraph'))
+
+        self.assertIsInstance(n.details(), str)
+        self.assertIsInstance(e.details(), str)
+        self.assertIsInstance(cg.details(), str)
+        self.assertTrue(n.details().startswith('TimeSeriesNode'))
+        self.assertTrue(e.details().startswith('Edge'))
+        self.assertTrue(cg.details().startswith('TimeSeriesCausalGraph'))
+
+    def test_complex_nodes_and_edges(self):
+        cg = TimeSeriesCausalGraph()
+
+        n = cg.add_node('a lag(n=1)')
+        e = cg.add_edge('a lag(n=1)', 'b', edge_type=EdgeType.BIDIRECTED_EDGE)
+
+        self.assertIsInstance(n.__hash__(), int)
+        self.assertIsInstance(e.__hash__(), int)
+        self.assertIsInstance(cg.__hash__(), int)
+
+        self.assertIsInstance(n.__repr__(), str)
+        self.assertIsInstance(e.__repr__(), str)
+        self.assertIsInstance(cg.__repr__(), str)
+        self.assertTrue(n.__repr__().startswith('TimeSeriesNode'))
+        self.assertTrue(e.__repr__().startswith('Edge'))
+        self.assertTrue(cg.__repr__().startswith('TimeSeriesCausalGraph'))
+
+        self.assertIsInstance(n.details(), str)
+        self.assertIsInstance(e.details(), str)
+        self.assertIsInstance(cg.details(), str)
+        self.assertTrue(n.details().startswith('TimeSeriesNode'))
+        self.assertTrue(e.details().startswith('Edge'))
+        self.assertTrue(cg.details().startswith('TimeSeriesCausalGraph'))
+
+    def test_add_node_from_node(self):
+        identifier = 'apple lag(n=1)'
+        cg = TimeSeriesCausalGraph()
+        cg.add_node(identifier=identifier, meta={'color': 'blue'}, variable_type=NodeVariableType.BINARY)
+
+        node = cg.get_node(identifier=identifier)
+        self.assertIsInstance(node, TimeSeriesNode)
+
+        cg2 = TimeSeriesCausalGraph()
+        cg2.add_node(node=node)
+
+        node2 = cg2.get_node(identifier=identifier)
+        self.assertIsInstance(node2, TimeSeriesNode)
+
+        self.assertEqual(node.variable_type, node2.variable_type)
+        self.assertEqual(-1, node.time_lag)
+        self.assertEqual(node.time_lag, node2.time_lag)
+        self.assertEqual('apple', node.variable_name)
+        self.assertEqual(node.variable_name, node2.variable_name)
+        self.assertDictEqual(node.metadata, node2.metadata)
+
+        node3 = cg.add_node(None, 'apple', 1)
+        self.assertIsInstance(node3, TimeSeriesNode)
+
+        cg2.add_node(node=node3)
+
+        node4 = cg2.get_node(identifier='apple future(n=1)')
+        self.assertIsInstance(node2, TimeSeriesNode)
+
+        self.assertEqual(node3.variable_type, node4.variable_type)
+        self.assertEqual(1, node3.time_lag)
+        self.assertEqual(node3.time_lag, node4.time_lag)
+        self.assertEqual('apple', node3.variable_name)
+        self.assertEqual(node3.variable_name, node4.variable_name)
+        self.assertDictEqual(node3.metadata, node4.metadata)
+
+    def test_add_node_from_node_deepcopies(self):
+        class DummyObj:
+            pass
+
+        identifier = 'apple lag(n=1)'
+        cg = TimeSeriesCausalGraph()
+        node = cg.add_node(identifier=identifier, meta={'dummy': DummyObj()})
+        self.assertIsInstance(node, TimeSeriesNode)
+
+        cg2 = TimeSeriesCausalGraph()
+        node2 = cg2.add_node(node=node)
+        self.assertIsInstance(node2, TimeSeriesNode)
+
+        self.assertIsInstance(node.metadata['dummy'], DummyObj)
+        self.assertIsInstance(node2.metadata['dummy'], DummyObj)
+        self.assertNotEqual(id(node.metadata['dummy']), id(node2.metadata['dummy']))
+
+    def test_add_node_from_node_raises(self):
+        identifier = 'apple lag(n=1)'
+        cg = TimeSeriesCausalGraph()
+        node = cg.add_node(identifier=identifier)
+
+        with self.assertRaises(AssertionError):
+            cg.add_node()
+
+        with self.assertRaises(AssertionError):
+            cg.add_node(None, None, None)
+
+        with self.assertRaises(AssertionError):
+            cg.add_node(None, 'apple', None)
+
+        with self.assertRaises(AssertionError):
+            cg.add_node(None, None, -2)
+
+        with self.assertRaises(AssertionError):
+            cg.add_node(identifier, 'apple', None)
+
+        with self.assertRaises(AssertionError):
+            cg.add_node('apple lag(n=2)', None, -2)
+
+        with self.assertRaises(AssertionError):
+            cg.add_node('apple lag(n=2)', 'apple', -2)
+
+        with self.assertRaises(CausalGraphErrors.NodeDuplicatedError):
+            cg.add_node(node=node)
+
+        with self.assertRaises(CausalGraphErrors.NodeDuplicatedError):
+            cg.add_node(identifier)
+
+        with self.assertRaises(CausalGraphErrors.NodeDuplicatedError):
+            cg.add_node(None, 'apple', -1)
+
+        with self.assertRaises(AssertionError):
+            cg.add_node(node=node, identifier='b')
+
+        with self.assertRaises(AssertionError):
+            cg.add_node(node=node, meta={'foo': 'bar'})
+
+        with self.assertRaises(AssertionError):
+            cg.add_node(node=node, variable_type=NodeVariableType.BINARY)
+
+        with self.assertRaises(AssertionError):
+            cg.add_node(node=node, my_kwargs='foo')
+
+    def test_node_variable_type(self):
+        cg = TimeSeriesCausalGraph()
+
+        cg.add_node('a', variable_type=NodeVariableType.CONTINUOUS)
+        self.assertEqual(cg.get_node('a').variable_type, NodeVariableType.CONTINUOUS)
+
+        cg.get_node('a').variable_type = NodeVariableType.MULTICLASS
+        self.assertEqual(cg.get_node('a').variable_type, NodeVariableType.MULTICLASS)
+
+        cg.get_node('a').variable_type = 'binary'
+        self.assertEqual(cg.get_node('a').variable_type, NodeVariableType.BINARY)
+
+        with self.assertRaises(ValueError):
+            cg.get_node('a').variable_type = 'not_a_variable_type'
+
+        # Test the above but directly through the constructor
+        identifier = 'b future(n=1)'
+        cg.add_node('b future(n=1)', variable_type='binary')
+        self.assertEqual(cg.get_node(identifier).variable_type, NodeVariableType.BINARY)
+        self.assertEqual(cg.get_node(identifier).variable_name, 'b')
+        self.assertEqual(cg.get_node(identifier).time_lag, 1)
+
+        with self.assertRaises(ValueError):
+            cg.add_node('c', variable_type='not_a_variable_type')
+
+    def test_node_repr(self):
+        cg = TimeSeriesCausalGraph()
+        cg.add_node('apple')
+        cg.add_node('banana', variable_type=NodeVariableType.CONTINUOUS)
+        cg.add_node('carrot lag(n=3)')
+        cg.add_node('donut future(n=2)')
+
+        self.assertEqual(cg['apple'], cg.get_node('apple'))
+        self.assertEqual(cg.get_node('apple').variable_name, 'apple')
+        self.assertEqual(cg.get_node('apple').time_lag, 0)
+        self.assertEqual(cg['banana'], cg.get_node('banana'))
+        self.assertEqual(cg.get_node('banana').variable_name, 'banana')
+        self.assertEqual(cg.get_node('banana').time_lag, 0)
+        self.assertEqual(cg['carrot lag(n=3)'], cg.get_node('carrot lag(n=3)'))
+        self.assertEqual(cg.get_node('carrot lag(n=3)').variable_name, 'carrot')
+        self.assertEqual(cg.get_node('carrot lag(n=3)').time_lag, -3)
+        self.assertEqual(cg['donut future(n=2)'], cg.get_node('donut future(n=2)'))
+        self.assertEqual(cg.get_node('donut future(n=2)').variable_name, 'donut')
+        self.assertEqual(cg.get_node('donut future(n=2)').time_lag, 2)
+        self.assertEqual(repr(cg['apple']), 'TimeSeriesNode("apple")')
+        self.assertEqual(repr(cg['banana']), 'TimeSeriesNode("banana", type="continuous")')
+        self.assertEqual(repr(cg['carrot lag(n=3)']), 'TimeSeriesNode("carrot lag(n=3)")')
+        self.assertEqual(repr(cg['donut future(n=2)']), 'TimeSeriesNode("donut future(n=2)")')
