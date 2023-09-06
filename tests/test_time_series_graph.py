@@ -18,8 +18,8 @@ import unittest
 
 import numpy
 
-from cai_causal_graph import EDGE_T, CausalGraph, TimeSeriesCausalGraph
-from cai_causal_graph.time_series_causal_graph import TimeSeriesNode
+from cai_causal_graph import CausalGraph, EdgeType, TimeSeriesCausalGraph
+from cai_causal_graph.graph_components import TimeSeriesNode
 from cai_causal_graph.utils import extract_names_and_lags, get_variable_name_and_lag
 
 
@@ -44,17 +44,17 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         self.dag = CausalGraph()
         self.dag.add_nodes_from(self.nodes)
         # auto-regressive edges
-        self.dag.add_edge('X1 lag(n=1)', 'X1', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.dag.add_edge('X2 lag(n=1)', 'X2', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.dag.add_edge('X3 lag(n=1)', 'X3', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.dag.add_edge('X1 lag(n=1)', 'X2', edge_type=EDGE_T.DIRECTED_EDGE)
+        self.dag.add_edge('X1 lag(n=1)', 'X1', edge_type=EdgeType.DIRECTED_EDGE)
+        self.dag.add_edge('X2 lag(n=1)', 'X2', edge_type=EdgeType.DIRECTED_EDGE)
+        self.dag.add_edge('X3 lag(n=1)', 'X3', edge_type=EdgeType.DIRECTED_EDGE)
+        self.dag.add_edge('X1 lag(n=1)', 'X2', edge_type=EdgeType.DIRECTED_EDGE)
         # instantaneous edges
-        self.dag.add_edge('X1', 'X3', edge_type=EDGE_T.DIRECTED_EDGE)
+        self.dag.add_edge('X1', 'X3', edge_type=EdgeType.DIRECTED_EDGE)
         self.tsdag = TimeSeriesCausalGraph.from_causal_graph(self.dag)
         self.ground_truth_summary_graph = CausalGraph()
         self.ground_truth_summary_graph.add_nodes_from(['X1', 'X2', 'X3'])
-        self.ground_truth_summary_graph.add_edge('X1', 'X2', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.ground_truth_summary_graph.add_edge('X1', 'X3', edge_type=EDGE_T.DIRECTED_EDGE)
+        self.ground_truth_summary_graph.add_edge('X1', 'X2', edge_type=EdgeType.DIRECTED_EDGE)
+        self.ground_truth_summary_graph.add_edge('X1', 'X3', edge_type=EdgeType.DIRECTED_EDGE)
         # dag is already minimal
         self.ground_truth_minimal_graph = self.tsdag.copy()
 
@@ -74,43 +74,43 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         self.dag_1.add_nodes_from(self.nodes_1)
         # auto-regressive edges
         # X1
-        self.dag_1.add_edge('X1 lag(n=1)', 'X1', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.dag_1.add_edge('X1 lag(n=2)', 'X1 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        self.dag_1.add_edge('X1 lag(n=1)', 'X1', edge_type=EdgeType.DIRECTED_EDGE)
+        self.dag_1.add_edge('X1 lag(n=2)', 'X1 lag(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
         # X2
-        self.dag_1.add_edge('X2 lag(n=1)', 'X2', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.dag_1.add_edge('X2 lag(n=2)', 'X2 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        self.dag_1.add_edge('X2 lag(n=1)', 'X2', edge_type=EdgeType.DIRECTED_EDGE)
+        self.dag_1.add_edge('X2 lag(n=2)', 'X2 lag(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
         # X3
-        self.dag_1.add_edge('X3 lag(n=1)', 'X3', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.dag_1.add_edge('X3 lag(n=2)', 'X3 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        self.dag_1.add_edge('X3 lag(n=1)', 'X3', edge_type=EdgeType.DIRECTED_EDGE)
+        self.dag_1.add_edge('X3 lag(n=2)', 'X3 lag(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
 
         # X3 (t-1) -> X1 (t)
-        self.dag_1.add_edge('X3 lag(n=1)', 'X1', edge_type=EDGE_T.DIRECTED_EDGE)
+        self.dag_1.add_edge('X3 lag(n=1)', 'X1', edge_type=EdgeType.DIRECTED_EDGE)
         # X3 (t-2) -> X2 (t)
-        self.dag_1.add_edge('X3 lag(n=2)', 'X2', edge_type=EDGE_T.DIRECTED_EDGE)
+        self.dag_1.add_edge('X3 lag(n=2)', 'X2', edge_type=EdgeType.DIRECTED_EDGE)
 
         # instantaneous edges (X3 -> X1)
-        self.dag_1.add_edge('X3', 'X1', edge_type=EDGE_T.DIRECTED_EDGE)
+        self.dag_1.add_edge('X3', 'X1', edge_type=EdgeType.DIRECTED_EDGE)
         self.tsdag_1 = TimeSeriesCausalGraph.from_causal_graph(self.dag_1)
 
         self.ground_truth_summary_graph_1 = CausalGraph()
         self.ground_truth_summary_graph_1.add_nodes_from(['X1', 'X2', 'X3'])
 
-        self.ground_truth_summary_graph_1.add_edge('X3', 'X1', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.ground_truth_summary_graph_1.add_edge('X3', 'X2', edge_type=EDGE_T.DIRECTED_EDGE)
+        self.ground_truth_summary_graph_1.add_edge('X3', 'X1', edge_type=EdgeType.DIRECTED_EDGE)
+        self.ground_truth_summary_graph_1.add_edge('X3', 'X2', edge_type=EdgeType.DIRECTED_EDGE)
 
         # create the minimal graph
         self.ground_truth_minimal_graph_1 = TimeSeriesCausalGraph()
         self.ground_truth_minimal_graph_1.add_nodes_from(['X1', 'X2', 'X3'])
-        self.ground_truth_minimal_graph_1.add_edge('X3', 'X1', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.ground_truth_minimal_graph_1.add_edge('X1 lag(n=1)', 'X1', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.ground_truth_minimal_graph_1.add_edge('X2 lag(n=1)', 'X2', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.ground_truth_minimal_graph_1.add_edge('X3 lag(n=1)', 'X3', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.ground_truth_minimal_graph_1.add_edge('X3 lag(n=1)', 'X1', edge_type=EDGE_T.DIRECTED_EDGE)
-        self.ground_truth_minimal_graph_1.add_edge('X3 lag(n=2)', 'X2', edge_type=EDGE_T.DIRECTED_EDGE)
+        self.ground_truth_minimal_graph_1.add_edge('X3', 'X1', edge_type=EdgeType.DIRECTED_EDGE)
+        self.ground_truth_minimal_graph_1.add_edge('X1 lag(n=1)', 'X1', edge_type=EdgeType.DIRECTED_EDGE)
+        self.ground_truth_minimal_graph_1.add_edge('X2 lag(n=1)', 'X2', edge_type=EdgeType.DIRECTED_EDGE)
+        self.ground_truth_minimal_graph_1.add_edge('X3 lag(n=1)', 'X3', edge_type=EdgeType.DIRECTED_EDGE)
+        self.ground_truth_minimal_graph_1.add_edge('X3 lag(n=1)', 'X1', edge_type=EdgeType.DIRECTED_EDGE)
+        self.ground_truth_minimal_graph_1.add_edge('X3 lag(n=2)', 'X2', edge_type=EdgeType.DIRECTED_EDGE)
 
         self.tsdag_2 = TimeSeriesCausalGraph()
         self.tsdag_2.add_nodes_from(['X1'])
-        self.tsdag_2.add_edge('X1 lag(n=2)', 'X1', edge_type=EDGE_T.DIRECTED_EDGE)
+        self.tsdag_2.add_edge('X1 lag(n=2)', 'X1', edge_type=EdgeType.DIRECTED_EDGE)
 
         # third graph
         causal_graph_3 = CausalGraph()
@@ -143,8 +143,8 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         causal_graph_3.add_node('D lag(n=1)')
         causal_graph_3.add_node('E lag(n=1)')
 
-        # we would not need to do this but we want to test that the underlying
-        # time series graph is being correctly constructed
+        # We would not need to do this, but we want to test that the underlying time series graph is being correctly
+        # constructed.
         for edge in causal_graph_3.edges:
             source_name = edge.source.identifier
             dest_name = edge.destination.identifier
@@ -152,6 +152,21 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
                 causal_graph_3.add_edge(f'{source_name} lag(n=1)', f'{dest_name} lag(n=1)')
 
         self.tsdag_3 = TimeSeriesCausalGraph.from_causal_graph(causal_graph_3)
+
+    def test_constructor(self):
+        input_nodes = ['A lag(n=2)', 'A lag(n=1)', 'B']
+        output_nodes = ['A', 'B future(n=1)']
+
+        # Just confirm this does not raise.
+        ts_graph = TimeSeriesCausalGraph(input_list=input_nodes, output_list=output_nodes, fully_connected=False)
+
+        # Again confirm this does not raise.
+        ts_graph = TimeSeriesCausalGraph(input_list=input_nodes, output_list=output_nodes, fully_connected=True)
+
+        # Now add a bad node and it should fail.
+        input_nodes.append('A future(n=1)')
+        with self.assertRaises(ValueError):
+            ts_graph = TimeSeriesCausalGraph(input_list=input_nodes, output_list=output_nodes, fully_connected=True)
 
     def test_time_series_nodes(self):
         tsnode = TimeSeriesNode(variable_name='X1', time_lag=-1)
@@ -176,18 +191,26 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
     def test_add_edge(self):
         ts_cg = TimeSeriesCausalGraph()
-        ts_cg.add_edge('X1 lag(n=1)', 'X2 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        ts_cg.add_edge('X1 lag(n=1)', 'X2 lag(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
 
         # test that nodes are added correctly
-        assert ts_cg.get_node('X1 lag(n=1)').time_lag == -1
-        assert ts_cg.get_node('X2 lag(n=1)').time_lag == -1
+        self.assertEqual(ts_cg.get_node('X1 lag(n=1)').time_lag, -1)
+        self.assertEqual(ts_cg.get_node('X2 lag(n=1)').time_lag, -1)
+
+        # confirm we cannot add an edge going into the past.
+        with self.assertRaises(ValueError):
+            ts_cg.add_edge('X1 lag(n=1)', 'X1 lag(n=2)')
+        with self.assertRaises(ValueError):
+            ts_cg.add_edge('X1 lag(n=1)', 'X2 lag(n=2)', edge_type=EdgeType.DIRECTED_EDGE)
+        with self.assertRaises(ValueError):
+            ts_cg.add_edge('X1 future(n=1)', 'X3')
 
     def test_replace_node(self):
         ts_cg = TimeSeriesCausalGraph()
-        ts_cg.add_edge('X1 lag(n=1)', 'X2 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        ts_cg.add_edge('X1 lag(n=1)', 'X2 lag(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
 
         ts_cg.replace_node('X1 lag(n=1)', 'X1 lag(n=2)')
-        assert ts_cg.get_node('X1 lag(n=2)').time_lag == -2
+        self.assertEqual(ts_cg.get_node('X1 lag(n=2)').time_lag, -2)
         # check 'X1 lag(n=1)' does not exist
         self.assertFalse(ts_cg.node_exists('X1 lag(n=1)'))
 
@@ -213,7 +236,7 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         # sort the nodes by value
         nodes = sorted(nodes, key=lambda x: list(x.values())[0])
         self.assertEqual(nodes, [{'X1': -1}, {'X2': -1}, {'X3': -1}, {'X1': 0}, {'X2': 0}, {'X3': 0}])
-        assert maxlag == -1
+        self.assertEqual(maxlag, -1)
 
     def test_from_causal_graph(self):
         # dag
@@ -230,6 +253,15 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         )
         self.assertNotEqual(self.tsdag_1, self.dag_1)
 
+        # Bad causal graph that has arrows going back in time. Confirm it raises when we try to build TS graph.
+        cg = CausalGraph()
+        nodes = ['A', 'B', 'A lag(n=1)', 'B future(n=1)']
+        cg.add_nodes_from(nodes)
+        cg.add_edge('A lag(n=1)', 'A')
+        cg.add_edge('B future(n=1)', 'B')
+        with self.assertRaises(ValueError):
+            TimeSeriesCausalGraph.from_causal_graph(cg)
+
     def test_from_adjacency_matrix(self):
         # test with the adjacency matrix corresponding to th minimal tsdag
         mg = self.tsdag.get_minimal_graph()
@@ -237,8 +269,7 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         self.assertEqual(tsdag, mg)
 
     def test_from_adjacency_matrices(self):
-        # the minimal tsdag has maxlag = 1 so we need two adjacency matrices
-        # one for lag 0 and one for lag 1
+        # The minimal tsdag has maxlag = 1, so we need two adjacency matrices one for lag 0 and one for lag 1.
         mg = self.tsdag.get_minimal_graph()
         # extract the adjacency matrices from the adjacency matrix of the minimal graph
         intra_indices = [0, 2, 4]  # 'X1', 'X2', 'X3'
@@ -265,6 +296,12 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         variables = ['X1', 'X2', 'X3']
         tsdag = TimeSeriesCausalGraph.from_adjacency_matrices(matrices, variables)
         self.assertEqual(len(tsdag.edges), adj_mat_lag_1.sum())
+
+        # test with mismatch sizes
+        matrices = {0: numpy.eye(3), -1: numpy.eye(4)}
+        variables = ['X1', 'X2', 'X3']
+        with self.assertRaises(AssertionError):
+            _ = TimeSeriesCausalGraph.from_adjacency_matrices(matrices, variables)
 
     def test_summary_graph(self):
         summary_graph = self.tsdag.get_summary_graph()
@@ -324,12 +361,12 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         # create the extended graph ground truth
         extended_graph = TimeSeriesCausalGraph()
         extended_graph.add_nodes_from(['X1', 'X2', 'X3'])
-        extended_graph.add_edge('X1', 'X3', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph.add_edge('X1 lag(n=1)', 'X1', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph.add_edge('X2 lag(n=1)', 'X2', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph.add_edge('X3 lag(n=1)', 'X3', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph.add_edge('X1 lag(n=1)', 'X2', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph.add_edge('X1 lag(n=1)', 'X3 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph.add_edge('X1', 'X3', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph.add_edge('X1 lag(n=1)', 'X1', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph.add_edge('X2 lag(n=1)', 'X2', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph.add_edge('X3 lag(n=1)', 'X3', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph.add_edge('X1 lag(n=1)', 'X2', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph.add_edge('X1 lag(n=1)', 'X3 lag(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
 
         self.assertEqual(extended_dag, extended_graph)
 
@@ -339,13 +376,13 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         # create the extended graph
         extended_graph_1 = TimeSeriesCausalGraph()
         extended_graph_1.add_nodes_from(['X1', 'X2', 'X3'])
-        extended_graph_1.add_edge('X3', 'X1', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_1.add_edge('X1 lag(n=1)', 'X1', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_1.add_edge('X2 lag(n=1)', 'X2', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_1.add_edge('X3 lag(n=1)', 'X3', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_1.add_edge('X3 lag(n=1)', 'X1', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_1.add_edge('X3 lag(n=2)', 'X2', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_1.add_edge('X3 lag(n=1)', 'X1 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X3', 'X1', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X1 lag(n=1)', 'X1', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X2 lag(n=1)', 'X2', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X3 lag(n=1)', 'X3', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X3 lag(n=1)', 'X1', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X3 lag(n=2)', 'X2', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X3 lag(n=1)', 'X1 lag(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
 
         self.assertEqual(extended_dag_1, extended_graph_1)
 
@@ -354,11 +391,11 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         extended_dag = self.tsdag.extend_graph(backward_steps=2)
 
         # create the extended graph from the previous extended graph
-        extended_graph.add_edge('X1 lag(n=2)', 'X1 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph.add_edge('X2 lag(n=2)', 'X2 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph.add_edge('X3 lag(n=2)', 'X3 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph.add_edge('X1 lag(n=2)', 'X2 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph.add_edge('X1 lag(n=2)', 'X3 lag(n=2)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph.add_edge('X1 lag(n=2)', 'X1 lag(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph.add_edge('X2 lag(n=2)', 'X2 lag(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph.add_edge('X3 lag(n=2)', 'X3 lag(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph.add_edge('X1 lag(n=2)', 'X2 lag(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph.add_edge('X1 lag(n=2)', 'X3 lag(n=2)', edge_type=EdgeType.DIRECTED_EDGE)
 
         self.assertEqual(extended_dag, extended_graph)
 
@@ -366,12 +403,11 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         extended_dag_1 = self.tsdag_1.extend_graph(backward_steps=2)
 
         # create the extended graph from the previous extended graph
-        # extended_graph_1.add_edge('X3 lag(n=4)', 'X2 lag(n=2)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_1.add_edge('X3 lag(n=2)', 'X1 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_1.add_edge('X3 lag(n=2)', 'X3 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_1.add_edge('X3 lag(n=2)', 'X1 lag(n=2)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_1.add_edge('X1 lag(n=2)', 'X1 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_1.add_edge('X2 lag(n=2)', 'X2 lag(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X3 lag(n=2)', 'X1 lag(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X3 lag(n=2)', 'X3 lag(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X3 lag(n=2)', 'X1 lag(n=2)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X1 lag(n=2)', 'X1 lag(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X2 lag(n=2)', 'X2 lag(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
 
         self.assertEqual(extended_dag_1, extended_graph_1)
 
@@ -392,11 +428,11 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         # create the extended graph by extending the minimal graph
         extended_graph = self.ground_truth_minimal_graph.copy()
 
-        extended_graph.add_edge('X1', 'X1 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph.add_edge('X2', 'X2 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph.add_edge('X3', 'X3 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph.add_edge('X1', 'X2 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph.add_edge('X1 future(n=1)', 'X3 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph.add_edge('X1', 'X1 future(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph.add_edge('X2', 'X2 future(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph.add_edge('X3', 'X3 future(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph.add_edge('X1', 'X2 future(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph.add_edge('X1 future(n=1)', 'X3 future(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
 
         self.assertEqual(extended_dag, extended_graph)
 
@@ -406,12 +442,12 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         # create the extended graph by extending the minimal graph
         extended_graph_1 = self.ground_truth_minimal_graph_1.copy()
 
-        extended_graph_1.add_edge('X3', 'X1 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_1.add_edge('X3', 'X3 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_1.add_edge('X1', 'X1 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_1.add_edge('X2', 'X2 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_1.add_edge('X3 future(n=1)', 'X1 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_1.add_edge('X3 lag(n=1)', 'X2 future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X3', 'X1 future(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X3', 'X3 future(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X1', 'X1 future(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X2', 'X2 future(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X3 future(n=1)', 'X1 future(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_1.add_edge('X3 lag(n=1)', 'X2 future(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
 
         self.assertEqual(extended_dag_1, extended_graph_1)
 
@@ -421,15 +457,15 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         # create the extended graph by extending the minimal graph
         extended_graph_3 = self.ground_truth_minimal_graph_3.copy()
 
-        extended_graph_3.add_edge('A', 'A future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_3.add_edge('B', 'B future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_3.add_edge('A future(n=1)', 'C future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_3.add_edge('B future(n=1)', 'C future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_3.add_edge('C future(n=1)', 'D future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_3.add_edge('C future(n=1)', 'E future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_3.add_edge('D future(n=1)', 'E future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_3.add_edge('E future(n=1)', 'F future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_3.add_edge('F', 'F future(n=1)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph_3.add_edge('A', 'A future(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_3.add_edge('B', 'B future(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_3.add_edge('A future(n=1)', 'C future(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_3.add_edge('B future(n=1)', 'C future(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_3.add_edge('C future(n=1)', 'D future(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_3.add_edge('C future(n=1)', 'E future(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_3.add_edge('D future(n=1)', 'E future(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_3.add_edge('E future(n=1)', 'F future(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_3.add_edge('F', 'F future(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
 
         self.assertEqual(extended_dag_3, extended_graph_3)
 
@@ -437,14 +473,14 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         extended_graph_3 = extended_graph_3.copy()
         extended_dag_3 = self.tsdag_3.extend_graph(forward_steps=2)
 
-        extended_graph_3.add_edge('A future(n=1)', 'A future(n=2)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_3.add_edge('B future(n=1)', 'B future(n=2)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_3.add_edge('A future(n=2)', 'C future(n=2)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_3.add_edge('B future(n=2)', 'C future(n=2)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_3.add_edge('C future(n=2)', 'D future(n=2)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_3.add_edge('C future(n=2)', 'E future(n=2)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_3.add_edge('D future(n=2)', 'E future(n=2)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_3.add_edge('E future(n=2)', 'F future(n=2)', edge_type=EDGE_T.DIRECTED_EDGE)
-        extended_graph_3.add_edge('F future(n=1)', 'F future(n=2)', edge_type=EDGE_T.DIRECTED_EDGE)
+        extended_graph_3.add_edge('A future(n=1)', 'A future(n=2)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_3.add_edge('B future(n=1)', 'B future(n=2)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_3.add_edge('A future(n=2)', 'C future(n=2)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_3.add_edge('B future(n=2)', 'C future(n=2)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_3.add_edge('C future(n=2)', 'D future(n=2)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_3.add_edge('C future(n=2)', 'E future(n=2)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_3.add_edge('D future(n=2)', 'E future(n=2)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_3.add_edge('E future(n=2)', 'F future(n=2)', edge_type=EdgeType.DIRECTED_EDGE)
+        extended_graph_3.add_edge('F future(n=1)', 'F future(n=2)', edge_type=EdgeType.DIRECTED_EDGE)
 
         self.assertEqual(extended_dag_3, extended_graph_3)

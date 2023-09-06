@@ -19,30 +19,29 @@ from __future__ import annotations
 import logging
 from copy import deepcopy
 from functools import wraps
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy
 
 from cai_causal_graph import CausalGraph
 from cai_causal_graph.exceptions import CausalGraphErrors
-from cai_causal_graph.graph_components import Edge, Node
+from cai_causal_graph.graph_components import Edge, Node, TimeSeriesNode
 from cai_causal_graph.interfaces import HasIdentifier, HasMetadata
-from cai_causal_graph.type_definitions import EDGE_T, TIME_LAG, VARIABLE_NAME, NodeLike, NodeVariableType
+from cai_causal_graph.type_definitions import TIME_LAG, VARIABLE_NAME, EdgeType, NodeLike, NodeVariableType
 from cai_causal_graph.utils import get_name_with_lag, get_variable_name_and_lag
 
 logger = logging.getLogger(__name__)
 
 
-# TODO: we can do one general for many other things as well
-def _reset_attributes(func):
+def _reset_ts_graph_attributes(func: Callable) -> Callable:
     """
-    Decorator to reset attributes such as summary graph, minimal graph, etc.
+    Decorator to reset attributes of TimeSeriesCausalGraph such as summary graph, minimal graph, etc.
 
-    Whenever a function is called that changes the graph, we need to reset the summary graph etc.
+    Whenever a function is called that changes the graph, we need to reset these attributes.
     """
-    # TODO: make this more clever as it is not said that we need to reset the summary graph etc
+    # TODO - CAUSALAI-3369: Improve this decorator to remove need to reset the summary graph and other attributes
     @wraps(func)
-    def wrapper(self: TimeSeriesCausalGraph, *args, **kwargs):
+    def wrapper(self: TimeSeriesCausalGraph, *args, **kwargs) -> Any:
         function = func(self, *args, **kwargs)
         self._minimal_graph = None
         self._summary_graph = None
@@ -53,83 +52,12 @@ def _reset_attributes(func):
     return wrapper
 
 
-class TimeSeriesNode(Node):
-    """
-    Time series node.
-
-    A node in a time series causal graph will have additional metadata and attributes that gives the time information
-    of the node together with the variable name.
-
-    The two additional metadata are:
-    - `cai_causal_graph.type_definitions.TIME_LAG`: the time difference with respect to the reference time 0
-    - `cai_causal_graph.type_definitions.VARIABLE_NAME`: the name of the variable (without the lag information)
-    """
-
-    def __init__(
-        self,
-        identifier: Optional[NodeLike] = None,
-        time_lag: Optional[int] = None,
-        variable_name: Optional[str] = None,
-        meta: Optional[Dict[str, Any]] = None,
-        variable_type: NodeVariableType = NodeVariableType.UNSPECIFIED,
-    ):
-        """
-        Initialize the time series node.
-
-        :param identifier: the identifier of the node. If the identifier is provided, the time_lag and
-            variable_name will be extracted from the identifier. Default is None.
-        :param time_lag: the time lag of the node. If `time_lag` is provided, then `variable_name` must be provided
-            to set the identifier. If both `time_lag` and `variable_name` are provided, the identifier must be None.
-            Default is None.
-        :param variable_name: the variable name of the node. If `variable_name` is provided, then `time_lag` must be
-            provided to set the identifier. If both `time_lag` and `variable_name` are provided, the identifier must
-            be None. Default is None.
-        :param meta: the metadata of the node. Default is None.
-        :param variable_type: the variable type of the node. Default is NodeVariableType.UNSPECIFIED.
-        """
-        if time_lag is not None and variable_name is not None:
-            assert identifier is None, 'If time_lag and variable_name are provided, identifier must be None.'
-            identifier = get_name_with_lag(variable_name, time_lag)
-        elif identifier is not None:
-            assert (
-                time_lag is None and variable_name is None
-            ), 'If identifier is provided, `time_lag` and `variable_name` must be None.'
-            identifier = Node.identifier_from(identifier)
-            variable_name, time_lag = get_variable_name_and_lag(identifier)
-        else:
-            raise ValueError(
-                'Either identifier or both time_lag and variable_name must be provided to initialize a node.'
-            )
-
-        # populate the metadata for each node
-        if meta is not None:
-            meta.update({TIME_LAG: time_lag, VARIABLE_NAME: variable_name})
-        else:
-            meta = {TIME_LAG: time_lag, VARIABLE_NAME: variable_name}
-
-        # populate the metadata for each node
-        super().__init__(identifier, meta, variable_type)
-
-    @property
-    def time_lag(self) -> int:
-        """Return the time lag of the node from the metadata."""
-        return self.meta.get(TIME_LAG, 0)
-
-    @property
-    def variable_name(self) -> Optional[str]:
-        """Return the variable name of the node from the metadata."""
-        return self.meta.get(VARIABLE_NAME, None)
-
-    def __repr__(self) -> str:
-        return super().__repr__().replace('Node', 'TimeSeriesNode')
-
-
 class TimeSeriesCausalGraph(CausalGraph):
     """
     A causal graph for time series data.
 
-    The node in a time series causal graph will have additional metadata that
-    gives the time information of the node together with the variable name.
+    The node in a time series causal graph will have additional metadata that provides the time information of the
+    node together with the variable name.
     The two additional metadata are:
     - `cai_causal_graph.type_definitions.TIME_LAG`: the time difference with respect to the reference time 0
     - `cai_causal_graph.type_definitions.VARIABLE_NAME`: the name of the variable (without the lag information)
@@ -144,32 +72,38 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         Initialize the time series causal graph.
 
-        :param input_list: list of input nodes. Default is None.
-        :param output_list: list of output nodes. Default is None.
-        :param fully_connected: if `True`, the graph will be fully connected from inputs to outputs.
-            Default is `False`.
-
         Example usage:
             >>> from cai_causal_graph import CausalGraph, TimeSeriesCausalGraph
             >>>
             >>>
             >>> # How to initialize a TimeSeriesCausalGraph directly
             >>> ts_cg = TimeSeriesCausalGraph()
-            >>> ts_cg.add_edge('X1 lag(n=1)', 'X1', edge_type=EDGE_T.DIRECTED_EDGE)
-            >>> ts_cg.add_edge('X2 lag(n=1)', 'X2', edge_type=EDGE_T.DIRECTED_EDGE)
-            >>> ts_cg.add_edge('X1', 'X3', edge_type=EDGE_T.DIRECTED_EDGE)
+            >>> ts_cg.add_edge('X1 lag(n=1)', 'X1', edge_type=EdgeType.DIRECTED_EDGE)
+            >>> ts_cg.add_edge('X2 lag(n=1)', 'X2', edge_type=EdgeType.DIRECTED_EDGE)
+            >>> ts_cg.add_edge('X1', 'X3', edge_type=EdgeType.DIRECTED_EDGE)
             >>>
             >>>
             >>> # How to initialize a TimeSeriesCausalGraph from a CausalGraph
             >>> cg = CausalGraph()
-            >>> cg.add_edge('X1 lag(n=1)', 'X1', edge_type=EDGE_T.DIRECTED_EDGE)
-            >>> cg.add_edge('X2 lag(n=1)', 'X2', edge_type=EDGE_T.DIRECTED_EDGE)
-            >>> cg.add_edge('X1', 'X3', edge_type=EDGE_T.DIRECTED_EDGE)
+            >>> cg.add_edge('X1 lag(n=1)', 'X1', edge_type=EdgeType.DIRECTED_EDGE)
+            >>> cg.add_edge('X2 lag(n=1)', 'X2', edge_type=EdgeType.DIRECTED_EDGE)
+            >>> cg.add_edge('X1', 'X3', edge_type=EdgeType.DIRECTED_EDGE)
             >>>
             >>> # The time series causal graph will have the same nodes and edges as the causal graph,
             >>> # but it is aware of the time information so 'X1 lag(n=1)' and 'X1' represent the same
             >>> # variable but at different times.
             >>> ts_cg = TimeSeriesCausalGraph.from_causal_graph(cg)
+
+        :param input_list: List of objects coercable to `cai_causal_graph.graph_components.TimeSeriesNode`. Each
+            element is treated as an input node, if `full_connected` parameter is `True`. Otherwise, the nodes will
+            simply be added to the graph with no edges.
+        :param output_list:  List of objects coercable to `cai_causal_graph.graph_components.TimeSeriesNode`. Each
+            element is treated as an output node, if `fully_connected` parameter is `True`. Otherwise, the nodes will
+            simply be added to the graph with no edges.
+        :param fully_connected: If set to `True`, create a fully-connected bipartite directed graph, with all
+            inputs connected to all outputs. If no `input_list` and no `output_list` is provided, an empty graph will
+            be created. If either or both are provided, but this is `False` (default), then the nodes will be added but
+            not connected by edges.
         """
         super().__init__(input_list, output_list, fully_connected)
 
@@ -199,7 +133,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         # now check the metadata timedelta in the nodes
         for node in self.get_nodes():
             other_node = other.get_node(node.identifier)
-            assert isinstance(other_node, TimeSeriesNode)
+            assert isinstance(other_node, TimeSeriesNode)  # for linting
 
             # check the variable name
             node_metadata_variable = node.variable_name
@@ -219,9 +153,10 @@ class TimeSeriesCausalGraph(CausalGraph):
 
     def copy(self, include_meta: bool = True) -> TimeSeriesCausalGraph:
         """
-        Return a copy of the graph.
+        Return a copy of the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` instance.
 
-        :param include_meta: if True, the metadata will be copied as well. Default is True.
+        :param include_meta: if `True` (default), the metadata will be copied as well.
+        :return: A copy of the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` instance.
         """
         graph = super().copy(include_meta=include_meta)
         # cast the graph to TimeSeriesCausalGraph to have the correct metadata
@@ -239,11 +174,13 @@ class TimeSeriesCausalGraph(CausalGraph):
             - X1(t-2)-> X1(t-1) -> X2(t-1) -> X2(t), X1(t) -> X2(t), X1(t-1) -> X2(t-1)
         Minimal graph:
             - X1(t-1) -> X1(t) -> X2(t)
+
+        :return: The minimal graph as a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` object.
         """
         minimal_cg = TimeSeriesCausalGraph()
 
         for edge in self.get_edges():
-            # get the relative time delta
+            # get the relative time delta; asserts are needed for linting
             assert isinstance(edge.source, TimeSeriesNode)
             assert isinstance(edge.destination, TimeSeriesNode)
             assert isinstance(edge.source.time_lag, int)
@@ -277,9 +214,9 @@ class TimeSeriesCausalGraph(CausalGraph):
 
     def is_minimal_graph(self) -> bool:
         """
-        Return True if the graph is minimal.
+        Return `True` if the graph is minimal.
 
-        See `get_minimal_graph` for more details.
+        See `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph` for more details.
         """
         return self == self.get_minimal_graph()
 
@@ -297,7 +234,7 @@ class TimeSeriesCausalGraph(CausalGraph):
             - if A and B have different directions, make it bi-directed
             - if one of the two is already bi-directed, keep it bi-directed
 
-        :return: The summary graph as a `CausalGraph` object.
+        :return: The summary graph as a `cai_causal_graph.causal_graph.CausalGraph` object.
         """
         if self._summary_graph is None:
             summary_graph = CausalGraph()
@@ -451,38 +388,42 @@ class TimeSeriesCausalGraph(CausalGraph):
         return extended_graph
 
     @staticmethod
-    def get_variable_names_from_node_names(node_names: List[str]):
+    def get_variable_names_from_node_names(node_names: List[str]) -> List[str]:
         """
         Return a list of variable names from a list of node names.
+
         This is useful for converting a list of node names into a list of variable names.
         Variables are the elementary (unique) units of a time series causal graph.
 
         Example:
             ['X', 'X lag(n=1)', 'Y', 'Z lag(n=2)'] -> ['X', 'Y', 'Z']
 
-        :param node_names: Can be a list of node names or a list of dictionaries with node names and lags.
-        :return: List of variable names.
+        :param node_names: A list of node names.
+        :return: A sorted list of variable names.
         """
         assert isinstance(node_names, list)
 
-        for node_name in node_names:
-            vname, _ = get_variable_name_and_lag(node_name)
-            if vname not in node_names:
-                node_names.append(vname)
+        var_names = []
 
-        return sorted(node_names)
+        for node_name in node_names:
+            var_name, _ = get_variable_name_and_lag(node_name)
+            if var_name not in var_names:
+                var_names.append(var_name)
+
+        return sorted(var_names)
 
     @staticmethod
     def _get_lagged_node(
         identifier: Optional[NodeLike] = None, node: Optional[TimeSeriesNode] = None, lag: Optional[int] = None
-    ):
+    ) -> TimeSeriesNode:
         """
         Return the lagged node of a node with a given lag. Lag is overwritten if the node is already lagged.
 
         For example, if the node is X and the lag is -1, the node will be X lag(n=1).
         If the node is X lag(n=1) and the lag is -2, the node will be X lag(n=2).
 
-        Moreover, if you want to make sure to copy all the metadata from the original node, you have to provide the node.
+        Moreover, if you want to make sure to copy all the metadata from the original node, you have to provide the
+        node instance and not the identifier.
 
         :param identifier: The identifier of the node. Default is None.
         :param node: The node. If provided, the identifier is ignored. Default is None.
@@ -519,7 +460,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         node = TimeSeriesNode(variable_name=node.variable_name, time_lag=lag, meta=meta)
         return node
 
-    @_reset_attributes
+    @_reset_ts_graph_attributes
     def add_node(
         self,
         /,
@@ -535,8 +476,8 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         Add a node to the time series graph. See `cai_causal_graph.causal_graph.CausalGraph.add_node` for more details.
 
-        In addition to the `CausalGraph.add_node` method, this method also populates the metadata of the node with
-        the variable name and the time lag.
+        In addition to the `cai_causal_graph.causal_graph.CausalGraph.add_node` method, this method also populates the
+        metadata of the node with the variable name and the time lag.
 
         :param identifier: The identifier of the time series node.
         :param variable_name: The variable name of the time series node.
@@ -580,7 +521,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         return node
 
-    @_reset_attributes
+    @_reset_ts_graph_attributes
     def replace_node(
         self,
         /,
@@ -617,7 +558,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         super().replace_node(node_id, new_node_id, variable_type=variable_type, meta=meta)
 
-    @_reset_attributes
+    @_reset_ts_graph_attributes
     def delete_node(self, identifier: NodeLike):
         """
         Delete a node from the graph.
@@ -626,7 +567,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         super().delete_node(identifier)
 
-    @_reset_attributes
+    @_reset_ts_graph_attributes
     def delete_edge(self, source: NodeLike, destination: NodeLike):
         """
         Delete an edge from the graph.
@@ -635,14 +576,14 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         super().delete_edge(source, destination)
 
-    @_reset_attributes
+    @_reset_ts_graph_attributes
     def add_edge(
         self,
         /,
         source: Optional[NodeLike] = None,
         destination: Optional[NodeLike] = None,
         *,
-        edge_type: EDGE_T = EDGE_T.DIRECTED_EDGE,
+        edge_type: EdgeType = EdgeType.DIRECTED_EDGE,
         meta: Optional[dict] = None,
         edge: Optional[Edge] = None,
         **kwargs,
@@ -650,21 +591,53 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         Add an edge to the graph. See `cai_causal_graph.causal_graph.CausalGraph.add_edge` for more details.
 
-        In addition to the `CausalGraph.add_edge` method, this method also populates the metadata of the nodes with
-        the variable name and the time lag.
+        In addition to the `cai_causal_graph.causal_graph.CausalGraph.add_edge` method, this method also populates the
+        metadata of the nodes with the variable name and the time lag.
         """
         # if the source and destination time series nodes do not exist, create them
         if source is not None and not self.node_exists(source):
             source_meta = None
             if isinstance(source, HasMetadata):
                 source_meta = source.get_metadata()
-                source = self.add_node(source, meta=source_meta)
+            source = self.add_node(source, meta=source_meta)
 
         if destination is not None and not self.node_exists(destination):
             destination_meta = None
             if isinstance(destination, HasMetadata):
                 destination_meta = destination.get_metadata()
-                destination = self.add_node(destination, meta=destination_meta)
+            destination = self.add_node(destination, meta=destination_meta)
+
+        # For directed edge, confirm time of destination is greater than or equal to time of source.
+        if edge is not None and edge.get_edge_type() == EdgeType.DIRECTED_EDGE:
+            source_node = edge.source
+            destination_node = edge.destination
+            assert isinstance(source_node, TimeSeriesNode)  # for linting
+            assert isinstance(destination_node, TimeSeriesNode)  # for linting
+            time_source = source_node.time_lag
+            time_destination = destination_node.time_lag
+            if time_destination < time_source:
+                raise ValueError(
+                    f'For a directed edge, the time at the destination must be greater than or equal to the time at '
+                    f'the source. The time lag for the source and destination are {time_source} and '
+                    f'{time_destination}, respectively.'
+                )
+        elif edge_type == EdgeType.DIRECTED_EDGE:
+            # Check these are not None before trying to get node.
+            assert source is not None
+            assert destination is not None
+            source_node = self.get_node(source)
+            destination_node = self.get_node(destination)
+            assert isinstance(source_node, TimeSeriesNode)  # for linting
+            assert isinstance(destination_node, TimeSeriesNode)  # for linting
+            time_source = source_node.time_lag
+            time_destination = destination_node.time_lag
+            if time_destination < time_source:
+                raise ValueError(
+                    f'For a directed edge, the time at the destination must be greater than or equal to the time at '
+                    f'the source. The time lag for the source and destination are {time_source} and '
+                    f'{time_destination}, respectively.'
+                )
+        # No else needed as we don't need to check time direction for other edge types.
 
         edge = super().add_edge(source, destination, edge_type=edge_type, meta=meta, edge=edge, **kwargs)
 
@@ -712,7 +685,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         :param adjacency: A square binary numpy adjacency array.
         :param node_names: A list of strings, `cai_causal_graph.interfaces.HasIdentifier`, and/or integers which can be
-            coerced to `cai_causal_graph.graph_components.Node`.
+            coerced to `cai_causal_graph.graph_components.TimeSeriesNode`.
         :return: A `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` object.
         """
         graph = CausalGraph.from_adjacency_matrix(adjacency, node_names=node_names)
@@ -724,11 +697,11 @@ class TimeSeriesCausalGraph(CausalGraph):
         variable_names: Optional[List[Union[NodeLike, int]]] = None,
     ) -> TimeSeriesCausalGraph:
         """
-        Return a time series causal graph from a dictionary of adjacency matrices. Keys are the time delta.
+        Return a time series causal graph from a dictionary of adjacency matrices. Keys are the time deltas.
         This is useful for converting a list of adjacency matrices into a time series causal graph.
 
-        For example, the adjacency matrix with time delta -1 is stored in adjacency_matrices[-1] as would correspond to X-1 -> X,
-        where X is the set of nodes.
+        For example, the adjacency matrix with time delta -1 is stored in adjacency_matrices[-1] and would correspond
+        to X-1 -> X, where X is the set of nodes.
 
         Example:
         >>> adjacency_matrices = {
@@ -755,11 +728,16 @@ class TimeSeriesCausalGraph(CausalGraph):
         :return: A time series causal graph.
         """
         assert isinstance(adjacency_matrices, dict)
-        # keys must be integers or str that can be converted to integers
+        # Keys must be integers or str that can be converted to integers as they represent the time deltas.
         assert all(isinstance(key, (int, str)) and int(key) == key for key in adjacency_matrices)
+        assert all(isinstance(adj, numpy.ndarray) for adj in adjacency_matrices.values())
 
-        # get the shape of the adjacency matrices (get the first key as 0 may not be present)
-        shape = adjacency_matrices[next(iter(adjacency_matrices))].shape
+        # Confirm shape of all adjacency matrices are the same.
+        shapes = [adj.shape for adj in adjacency_matrices.values()]
+        assert (
+            len(set(shapes)) == 1
+        ), f'The shape of all the adjacency matrices must be the same. Got the following shapes: {list(set(shapes))}.'
+        shape = shapes[0]
 
         if variable_names is not None:
             variable_names_str: List[Union[str, int]] = []
@@ -829,11 +807,11 @@ class TimeSeriesCausalGraph(CausalGraph):
                 edge.destination.meta[TIME_LAG],
             )
 
-            if edge.get_edge_type() == EDGE_T.DIRECTED_EDGE:
+            if edge.get_edge_type() == EdgeType.DIRECTED_EDGE:
                 adjacency_matrices[source_lag][
                     self.variables.index(source_variable_name), self.variables.index(destination_variable_name)
                 ] = 1
-            elif edge.get_edge_type() == EDGE_T.UNDIRECTED_EDGE:
+            elif edge.get_edge_type() == EdgeType.UNDIRECTED_EDGE:
                 adjacency_matrices[source_lag][
                     self.variables.index(source_variable_name), self.variables.index(destination_variable_name)
                 ] = 1
@@ -864,8 +842,8 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         Return the variables in the graph.
 
-        Variables differ from nodes in that they do not contain the lag.
-        For example, if the graph contains the node "X1 lag(n=2)", the variable is "X1".
+        Variables differ from nodes in that they do not contain the lag. For example, if the graph contains the node
+        'X1 lag(n=2)', the variable is 'X1'.
         """
         if self._variables is None:
             variables = []
@@ -885,4 +863,4 @@ class TimeSeriesCausalGraph(CausalGraph):
         nodes = super().get_nodes(identifier)
         # check all nodes are TimeSeriesNode
         assert all(isinstance(node, TimeSeriesNode) for node in nodes)
-        return cast(List[TimeSeriesNode], nodes)
+        return nodes  # type: ignore

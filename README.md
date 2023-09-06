@@ -19,7 +19,7 @@ Documentation, including a quickstart and code reference docs, can be found [her
 ![INTERROGATE](https://github.com/causalens/cai-causal-graph/blob/main/interrogate_badge.svg?raw=true)
 
 > **Note**  
-> The current development cycle of this branch is `v0.2.x` (development).
+> The current development cycle of this branch is `v0.2.x` (stable).
  
 ## License
 

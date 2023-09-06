@@ -15,12 +15,16 @@ limitations under the License.
 """
 from __future__ import annotations
 
+import logging
 from copy import deepcopy
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from cai_causal_graph.exceptions import CausalGraphErrors
 from cai_causal_graph.interfaces import CanDictSerialize, HasIdentifier, HasMetadata
-from cai_causal_graph.type_definitions import EDGE_T, NodeLike, NodeVariableType
+from cai_causal_graph.type_definitions import TIME_LAG, VARIABLE_NAME, EdgeType, NodeLike, NodeVariableType
+from cai_causal_graph.utils import get_name_with_lag, get_variable_name_and_lag
+
+logger = logging.getLogger(__name__)
 
 
 class Node(HasIdentifier, HasMetadata, CanDictSerialize):
@@ -34,9 +38,9 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
     ):
         """
         :param identifier: String that uniquely identifies the node within the causal graph.
-        :param meta: The meta values for the node.
+        :param meta: The metadata of the node. Default is None.
         :param variable_type: The variable type that the node represents. The choices are available through the
-            `cai_causal_graph.type_definitions.NodeVariableType` enum.
+            `cai_causal_graph.type_definitions.NodeVariableType` enum. Default is `NodeVariableType.UNSPECIFIED`.
         """
         assert isinstance(
             identifier, str
@@ -107,7 +111,7 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         if isinstance(new_type, str):
             new_type = NodeVariableType(new_type)
         if not isinstance(new_type, NodeVariableType):
-            raise TypeError(f'Expected NodeVariableType or string, got object of type {type(new_type)}.')
+            raise TypeError(f'Expected NodeVariableType or string type, got object of type {type(new_type)}.')
         self._variable_type = new_type
 
     @property
@@ -173,14 +177,19 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         """Return a string description of the object."""
         type_string = f', type="{self.variable_type}"' if self.variable_type != NodeVariableType.UNSPECIFIED else ''
 
-        return f'Node("{self.identifier}"{type_string})'
+        return f'{self.__class__.__name__}("{self.identifier}"{type_string})'
 
     def details(self) -> str:
         """Return a detailed string description of the object."""
         return self.__repr__()
 
     def to_dict(self, include_meta: bool = True) -> dict:
-        """Serialize the Node instance to a dictionary."""
+        """
+        Serialize a `cai_causal_graph.graph_components.Node` instance to a dictionary.
+
+        :param include_meta: Whether to include meta information about the node in the dictionary. Default is `True`.
+        :return: The dictionary representation of the `cai_causal_graph.graph_components.Node` instance.
+        """
         node_dict = {
             'identifier': self.identifier,
             'variable_type': self.variable_type,
@@ -191,6 +200,99 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         return node_dict
 
 
+class TimeSeriesNode(Node):
+    """
+    Time series node.
+
+    A node in a time series causal graph will have additional metadata and attributes that provides the time
+    information of the node together with the variable name.
+
+    The two additional metadata are:
+    - `cai_causal_graph.type_definitions.TIME_LAG`: the time difference with respect to the reference time 0
+    - `cai_causal_graph.type_definitions.VARIABLE_NAME`: the name of the variable (without the lag information)
+    """
+
+    def __init__(
+        self,
+        identifier: Optional[NodeLike] = None,
+        time_lag: Optional[int] = None,
+        variable_name: Optional[str] = None,
+        meta: Optional[Dict[str, Any]] = None,
+        variable_type: NodeVariableType = NodeVariableType.UNSPECIFIED,
+    ):
+        """
+        Initialize the time series node.
+
+        :param identifier: String that uniquely identifies the node within the causal graph. If the `identifier` is
+            provided, the `time_lag` and `variable_name` will be extracted from the `identifier`. Default is `None`.
+        :param time_lag: The time lag of the node. If `time_lag` is provided, then `variable_name` must be provided
+            to set the identifier. If both `time_lag` and `variable_name` are provided, the `identifier` must be `None`.
+            Default is `None`.
+        :param variable_name: The variable name of the node. If `variable_name` is provided, then `time_lag` must be
+            provided to set the identifier. If both `time_lag` and `variable_name` are provided, the `identifier` must
+            be `None`. Default is `None`.
+        :param meta: The metadata of the node. Default is `None`.
+        :param variable_type: The variable type that the node represents. The choices are available through the
+            `cai_causal_graph.type_definitions.NodeVariableType` enum. Default is `NodeVariableType.UNSPECIFIED`.
+        """
+        if time_lag is not None and variable_name is not None:
+            assert identifier is None, 'If `time_lag` and `variable_name` are provided, `identifier` must be `None`.'
+            identifier = get_name_with_lag(variable_name, time_lag)
+        elif identifier is not None:
+            assert (
+                time_lag is None and variable_name is None
+            ), 'If `identifier` is provided, `time_lag` and `variable_name` must be `None`.'
+            identifier = Node.identifier_from(identifier)
+            variable_name, time_lag = get_variable_name_and_lag(identifier)
+        else:
+            raise ValueError(
+                'Either `identifier` or both `time_lag` and `variable_name` must be provided to initialize a time '
+                'series node.'
+            )
+
+        # populate the metadata for each node
+        if meta is not None:
+            meta = meta.copy()
+            meta_time_lag = meta.get(TIME_LAG)
+            meta_variable_name = meta.get(VARIABLE_NAME)
+            if meta_time_lag is not None and meta_time_lag != time_lag:
+                logger.warning(
+                    'The current time lag in the meta (%d) for node %s will be overwritten to the newly provided value (%d).',
+                    meta_time_lag,
+                    identifier,
+                    time_lag,
+                )
+            if meta_variable_name is not None and meta_variable_name != variable_name:
+                logger.warning(
+                    'The current variable name in the meta (%s) for node %s will be overwritten to the newly provided value (%s).',
+                    meta_variable_name,
+                    identifier,
+                    variable_name,
+                )
+            meta.update({TIME_LAG: time_lag, VARIABLE_NAME: variable_name})
+        else:
+            meta = {TIME_LAG: time_lag, VARIABLE_NAME: variable_name}
+
+        # populate the metadata for the node
+        super().__init__(identifier, meta, variable_type)
+
+    @property
+    def time_lag(self) -> int:
+        """Return the time lag of the node from the metadata."""
+        lag = self.meta.get(TIME_LAG)
+        if lag is None:
+            raise ValueError(f'The time lag for node {self.identifier} is not set.')
+        return lag
+
+    @property
+    def variable_name(self) -> str:
+        """Return the variable name of the node from the metadata."""
+        name = self.meta.get(VARIABLE_NAME)
+        if name is None:
+            raise ValueError(f'The variable name for node {self.identifier} is not set.')
+        return name
+
+
 class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
     """A utility class that manages the state of an edge."""
 
@@ -198,15 +300,15 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         self,
         source: Node,
         destination: Node,
-        edge_type: EDGE_T = EDGE_T.DIRECTED_EDGE,
+        edge_type: EdgeType = EdgeType.DIRECTED_EDGE,
         meta: Optional[Dict[str, Any]] = None,
     ):
         """
         :param source: The `cai_causal_graph.graph_components.Node` from which the edge will originate.
         :param destination: The `cai_causal_graph.graph_components.Node` at which the edge will terminate.
         :param edge_type: The type of the edge to be added. Default is
-            `cai_causal_graph.type_definitions.EDGE_T.DIRECTED_EDGE`. See `cai_causal_graph.type_definitions.EDGE_T` for
-            the list of possible edge types.
+            `cai_causal_graph.type_definitions.EdgeType.DIRECTED_EDGE`. See `cai_causal_graph.type_definitions.EdgeType`
+            for the list of possible edge types.
         :param meta: The meta values for the node.
         """
         self._source = source
@@ -227,8 +329,6 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         Check if the edge is equal to another edge.
 
         This method checks for the edge source, destination, and type but ignores any metadata.
-
-        :param other: The other edge to compare to.
         """
         if not isinstance(other, Edge):
             return False
@@ -239,7 +339,7 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         elif self.get_edge_pair() == other.get_edge_pair()[::-1]:
             # Some edges inherently have no direction. So allow them to be defined with opposite source/destination
             return (
-                self.get_edge_type() in [EDGE_T.UNDIRECTED_EDGE, EDGE_T.BIDIRECTED_EDGE, EDGE_T.UNKNOWN_EDGE]
+                self.get_edge_type() in [EdgeType.UNDIRECTED_EDGE, EdgeType.BIDIRECTED_EDGE, EdgeType.UNKNOWN_EDGE]
                 and self.get_edge_type() == other.get_edge_type()
             )
 
@@ -298,18 +398,22 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         """Return a tuple of the source node and destination node identifiers."""
         return self._source.identifier, self._destination.identifier
 
-    def get_edge_type(self) -> EDGE_T:
+    def get_edge_type(self) -> EdgeType:
         """
         Return the edge type.
 
-        Please note that to change the edge type, you must use the `CausalGraph.change_edge_type` method defined
-        on the causal graph.
+        Please note that to change the edge type, you must use the
+        `cai_causal_graph.causal_graph.CausalGraph.change_edge_type` method defined on the causal
+        graph.
         """
         return self._edge_type
 
     def __repr__(self) -> str:
         """Return a string description of the object."""
-        return f'Edge("{self.source.identifier}", "{self.destination.identifier}", type={self._edge_type})'
+        return (
+            f'{self.__class__.__name__}("{self.source.identifier}", "{self.destination.identifier}", '
+            f'type={self._edge_type})'
+        )
 
     def details(self) -> str:
         """Return a detailed string description of the object."""
@@ -317,9 +421,10 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
 
     def to_dict(self, include_meta: bool = True) -> dict:
         """
-        Serialize the Edge instance to a dictionary.
+        Serialize a `cai_causal_graph.graph_components.Edge` instance to a dictionary.
 
-        :param include_meta: Whether to include the edge metadata in the dictionary. Default is True.
+        :param include_meta: Whether to include meta information about the edge in the dictionary. Default is `True`.
+        :return: The dictionary representation of the `cai_causal_graph.graph_components.Edge` instance.
         """
         edge_dict = {
             'source': self._source.to_dict(),

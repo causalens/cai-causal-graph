@@ -27,7 +27,7 @@ from cai_causal_graph import __version__ as CAUSAL_GRAPH_VERSION
 from cai_causal_graph.exceptions import CausalGraphErrors
 from cai_causal_graph.graph_components import Edge, Node
 from cai_causal_graph.interfaces import CanDictDeserialize, CanDictSerialize, HasIdentifier, HasMetadata
-from cai_causal_graph.type_definitions import EDGE_T, PAIR_T, NodeLike, NodeVariableType, validate_pair_type
+from cai_causal_graph.type_definitions import PAIR_T, EdgeType, NodeLike, NodeVariableType, validate_pair_type
 
 
 def to_list(var: Any) -> List[Any]:
@@ -106,11 +106,13 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
     def edges(self) -> List[Edge]:
         """
         Return a list of all edges. All edges will be of the type
-        `cai_causal_graph.type_definitions.EDGE_T.UNDIRECTED_EDGE` because this class represents a skeleton, which only
+        `cai_causal_graph.type_definitions.EdgeType.UNDIRECTED_EDGE` because this class represents a skeleton, which only
         has undirected edges and no directed edges.
         """
         # instantiate new edges to enforce undirected edge types
-        return [Edge(e.source, e.destination, edge_type=EDGE_T.UNDIRECTED_EDGE, meta=e.meta) for e in self._graph.edges]
+        return [
+            Edge(e.source, e.destination, edge_type=EdgeType.UNDIRECTED_EDGE, meta=e.meta) for e in self._graph.edges
+        ]
 
     def get_edge(
         self,
@@ -174,23 +176,28 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
 
     @staticmethod
     def from_adjacency_matrix(
-        adjacency: numpy.ndarray,
-        node_names: Optional[List[Union[NodeLike, int]]] = None,
+        adjacency: numpy.ndarray, node_names: Optional[List[Union[NodeLike, int]]] = None
     ) -> Skeleton:
         """Instantiate a `cai_causal_graph.causal_graph.Skeleton` object from an adjacency matrix."""
         graph: CausalGraph = CausalGraph.from_adjacency_matrix(adjacency=adjacency, node_names=node_names)
         return Skeleton(graph=graph)
 
-    def to_dict(self) -> dict:
-        """Serialize the `cai_causal_graph.causal_graph.Skeleton` instance to a dictionary."""
-        nodes = {node.identifier: node.to_dict() for node in self.nodes}
+    def to_dict(self, include_meta: bool = True) -> dict:
+        """
+        Serialize the `cai_causal_graph.causal_graph.Skeleton` instance to a dictionary.
 
-        edges: Dict[str, Dict[str, dict]] = {}
+        :param include_meta: Whether to include meta information about the skeleton in the dictionary. Default is
+            `True`.
+        :return: The dictionary representation of the `cai_causal_graph.causal_graph.Skeleton` instance.
+        """
+        nodes = {node.identifier: node.to_dict(include_meta=include_meta) for node in self.nodes}
+
+        edges: Dict[str, Dict[str, dict]] = dict()
         for edge in self.edges:
             source, destination = edge.get_edge_pair()
             if source not in edges:
                 edges[source] = dict()
-            edges[source][destination] = edge.to_dict()
+            edges[source][destination] = edge.to_dict(include_meta=include_meta)
 
         return {
             'nodes': nodes,
@@ -312,10 +319,10 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
             By default, any edges added will be directed edges, e.g. 'input1' -> 'target1' for the edge added above. It
             is possible to specify different edge types via the `edge_type` argument. For the full list of edge types,
-            see `cai_causal_graph.type_definitions.EDGE_T`. For instance, an undirected edge can be added:
+            see `cai_causal_graph.type_definitions.EdgeType`. For instance, an undirected edge can be added:
 
             >>> # add an undirected edge between 'input1' and 'input2'
-            >>> causal_graph.add_edge('input1', 'input2', edge_type=EDGE_T.UNDIRECTED_EDGE)
+            >>> causal_graph.add_edge('input1', 'input2', edge_type=EdgeType.UNDIRECTED_EDGE)
 
             Setting `fully_connected=True` (default) and providing an `input_list` and `n `output_list` during
             construction, automatically creates a fully-connected bipartite directed causal graph. This means that all
@@ -339,14 +346,14 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             >>> causal_graph_dict = causal_graph.to_dict()
 
         :param input_list: List of objects coercable to `cai_causal_graph.graph_components.Node`. Each element is
-            treated as an input node, if `full_connected` parameter is True. Otherwise, the nodes will simply be
+            treated as an input node, if `full_connected` parameter is `True`. Otherwise, the nodes will simply be
             added to the graph with no edges.
         :param output_list:  List of objects coercable to `cai_causal_graph.graph_components.Node`. Each element is
-            treated as an output node, if `fully_connected` parameter is True. Otherwise, the nodes will simply be
+            treated as an output node, if `fully_connected` parameter is `True`. Otherwise, the nodes will simply be
             added to the graph with no edges.
-        :param fully_connected: If set to True (default), create a fully-connected bipartite directed graph, with all
+        :param fully_connected: If set to `True` (default), create a fully-connected bipartite directed graph, with all
             inputs connected to all outputs. If no `input_list` and no `output_list` is provided, an empty graph will
-            be created. If either are both are provided, but this is False, then the nodes will be added but not
+            be created. If either or both are provided, but this is `False`, then the nodes will be added but not
             connected by edges.
         """
         self._nodes_by_identifier: Dict[str, Node] = dict()
@@ -452,9 +459,9 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         adj = numpy.zeros((len(self.nodes), len(self.nodes)), dtype=int)
         for edge in self.edges:
             source, destination = edge.get_edge_pair()
-            if edge.get_edge_type() == EDGE_T.DIRECTED_EDGE:
+            if edge.get_edge_type() == EdgeType.DIRECTED_EDGE:
                 adj[nodes_indices_map[source], nodes_indices_map[destination]] = 1
-            elif edge.get_edge_type() == EDGE_T.UNDIRECTED_EDGE:
+            elif edge.get_edge_type() == EdgeType.UNDIRECTED_EDGE:
                 adj[nodes_indices_map[source], nodes_indices_map[destination]] = 1
                 adj[nodes_indices_map[destination], nodes_indices_map[source]] = 1
             else:
@@ -514,14 +521,14 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         Check whether the `cai_causal_graph.causal_graph.CausalGraph` instance only contains directed edges, i.e.,
         all edges are directed.
         """
-        return all(edge.get_edge_type() == EDGE_T.DIRECTED_EDGE for edge in self.edges)
+        return all(edge.get_edge_type() == EdgeType.DIRECTED_EDGE for edge in self.edges)
 
     def _is_fully_undirected(self) -> bool:
         """
         Check whether the `cai_causal_graph.causal_graph.CausalGraph` instance only contains undirected edges, i.e.,
         all edges are undirected.
         """
-        return all(edge.get_edge_type() == EDGE_T.UNDIRECTED_EDGE for edge in self.edges)
+        return all(edge.get_edge_type() == EdgeType.UNDIRECTED_EDGE for edge in self.edges)
 
     def _is_directed_and_or_undirected_error_message(self, is_one_kind_only: bool = True) -> str:
         """
@@ -697,7 +704,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """Create directed edges between all inputs and all outputs."""
         for input_node in inputs:
             for output_node in outputs:
-                self.add_edge(input_node, output_node, edge_type=EDGE_T.DIRECTED_EDGE)
+                self.add_edge(input_node, output_node, edge_type=EdgeType.DIRECTED_EDGE)
 
     def delete_node(self, identifier: NodeLike):
         """
@@ -790,7 +797,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         # remove the original edge
         self.delete_node(original_node.identifier)
 
-    def get_edge(self, /, source: NodeLike, destination: NodeLike, *, edge_type: Optional[EDGE_T] = None) -> Edge:
+    def get_edge(self, /, source: NodeLike, destination: NodeLike, *, edge_type: Optional[EdgeType] = None) -> Edge:
         """Return an edge based on its source, destination and (optional) edge_type."""
         # get edge with the specified source and destination
         try:
@@ -822,7 +829,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         source: Optional[NodeLike] = None,
         destination: Optional[NodeLike] = None,
         *,
-        edge_type: Optional[EDGE_T] = None,
+        edge_type: Optional[EdgeType] = None,
     ) -> List[Edge]:
         """
         Return edges matching the given identifiers.
@@ -869,41 +876,41 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         else:
             return edges
 
-    def get_edge_by_pair(self, pair: Tuple[NodeLike, NodeLike], edge_type: Optional[EDGE_T] = None) -> Edge:
+    def get_edge_by_pair(self, pair: Tuple[NodeLike, NodeLike], edge_type: Optional[EdgeType] = None) -> Edge:
         """Return an edge based on a tuple of (source, destination) and an edge_type."""
         validate_pair_type(pair)
         return self.get_edge(pair[0], pair[1], edge_type=edge_type)
 
-    def is_edge_by_pair(self, pair: Tuple[NodeLike, NodeLike], edge_type: Optional[EDGE_T] = None) -> bool:
+    def is_edge_by_pair(self, pair: Tuple[NodeLike, NodeLike], edge_type: Optional[EdgeType] = None) -> bool:
         """Check if a given edge exists by pair identifier."""
         validate_pair_type(pair)
         return self.edge_exists(pair[0], pair[1], edge_type=edge_type)
 
     def get_directed_edges(self) -> List[Edge]:
         """Returns a list of directed edges, e.g. ('X' -> 'Y'), in the causal graph."""
-        return self._get_edges_by_type(EDGE_T.DIRECTED_EDGE)
+        return self._get_edges_by_type(EdgeType.DIRECTED_EDGE)
 
     def get_undirected_edges(self) -> List[Edge]:
         """Returns a list of undirected edges, e.g. ('X' -- 'Y'), in the causal graph."""
-        return self._get_edges_by_type(EDGE_T.UNDIRECTED_EDGE)
+        return self._get_edges_by_type(EdgeType.UNDIRECTED_EDGE)
 
     def get_bidirected_edges(self) -> List[Edge]:
-        """Returns a list of bidirectional edges, e.g. ('X' <> 'Y'),  in the causal graph."""
-        return self._get_edges_by_type(EDGE_T.BIDIRECTED_EDGE)
+        """Returns a list of bidirectional edges, e.g. ('X' <-> 'Y'),  in the causal graph."""
+        return self._get_edges_by_type(EdgeType.BIDIRECTED_EDGE)
 
     def get_unknown_edges(self) -> List[Edge]:
         """Returns a list of edges that are unknown, e.g. ('X' oo 'Y'), in the causal graph."""
-        return self._get_edges_by_type(EDGE_T.UNKNOWN_EDGE)
+        return self._get_edges_by_type(EdgeType.UNKNOWN_EDGE)
 
     def get_unknown_directed_edges(self) -> List[Edge]:
         """Returns a list of edges that are unknown-directed, e.g. ('X' o> 'Y'), in the causal graph."""
-        return self._get_edges_by_type(EDGE_T.UNKNOWN_DIRECTED_EDGE)
+        return self._get_edges_by_type(EdgeType.UNKNOWN_DIRECTED_EDGE)
 
     def get_unknown_undirected_edges(self) -> List[Edge]:
         """Returns a list of edges that are unknown-undirected, e.g. ('X' o- 'Y'), in the causal graph."""
-        return self._get_edges_by_type(EDGE_T.UNKNOWN_UNDIRECTED_EDGE)
+        return self._get_edges_by_type(EdgeType.UNKNOWN_UNDIRECTED_EDGE)
 
-    def _get_edges_by_type(self, edge_type: EDGE_T) -> List[Edge]:
+    def _get_edges_by_type(self, edge_type: EdgeType) -> List[Edge]:
         """
         Get a list of edges that have the provided type, e.g. ->.
 
@@ -911,7 +918,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """
         return [edge for edge in self.edges if edge.get_edge_type() == edge_type]
 
-    def edge_exists(self, /, source: NodeLike, destination: NodeLike, *, edge_type: Optional[EDGE_T] = None) -> bool:
+    def edge_exists(self, /, source: NodeLike, destination: NodeLike, *, edge_type: Optional[EdgeType] = None) -> bool:
         """Returns True if the edge exists. If edge_type is None (default), this ignores edge types."""
         try:
             edge = self.get_edge(source, destination)
@@ -926,7 +933,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """Return all edge pairs in the current graph."""
         return [edge.get_edge_pair() for edge in self.edges]
 
-    def change_edge_type(self, source: NodeLike, destination: NodeLike, new_edge_type: EDGE_T):
+    def change_edge_type(self, source: NodeLike, destination: NodeLike, new_edge_type: EdgeType):
         """
         Change an edge type for a specific edge.
 
@@ -954,7 +961,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         source: Optional[NodeLike] = None,
         destination: Optional[NodeLike] = None,
         *,
-        edge_type: EDGE_T = EDGE_T.DIRECTED_EDGE,
+        edge_type: EdgeType = EdgeType.DIRECTED_EDGE,
         meta: Optional[dict] = None,
         edge: Optional[Edge] = None,
         **kwargs,
@@ -973,8 +980,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         :param destination: String identifying the node at which the edge will terminate. Can be `None`, if an `edge`
             parameter is specified.
         :param edge_type: The type of the edge to be added. Default is
-            `cai_causal_graph.type_definitions.EDGE_T.DIRECTED_EDGE`. See `cai_causal_graph.type_definitions.EDGE_T` for
-            the list of possible edge types.
+            `cai_causal_graph.type_definitions.EdgeType.DIRECTED_EDGE`. See `cai_causal_graph.type_definitions.EdgeType`
+            for the list of possible edge types.
         :param meta: The meta values for the edge.
         :param edge: A `cai_causal_graph.graph_components.Edge` edge to be used to construct a new edge. All the
             properties of the provided edge will be deep copied to the constructed edge, including metadata. If
@@ -985,7 +992,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             assert (
                 source is None
                 and destination is None
-                and edge_type == EDGE_T.DIRECTED_EDGE
+                and edge_type == EdgeType.DIRECTED_EDGE
                 and meta is None
                 and len(kwargs) == 0
             ), 'If specifying `edge` argument, all other arguments should not be specified.'
@@ -1045,7 +1052,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         self._edges_by_destination[destination][source] = edge
 
         # only add edges to inbound / outbound edges of a node if the specified edge type is directed
-        if edge_type == EDGE_T.DIRECTED_EDGE:
+        if edge_type == EdgeType.DIRECTED_EDGE:
             self._nodes_by_identifier[destination]._add_inbound_edge(edge)
             self._nodes_by_identifier[source]._add_outbound_edge(edge)
 
@@ -1073,17 +1080,17 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             validate_pair_type(pair)
             self.add_edge(source=pair[0], destination=pair[1])
 
-    def add_edge_by_pair(self, pair: Tuple[NodeLike, NodeLike], edge_type: EDGE_T = EDGE_T.DIRECTED_EDGE, **kwargs):
+    def add_edge_by_pair(self, pair: Tuple[NodeLike, NodeLike], edge_type: EdgeType = EdgeType.DIRECTED_EDGE, **kwargs):
         """Add edge by pair identifier (source, destination)."""
         validate_pair_type(pair)
         self.add_edge(pair[0], pair[1], edge_type=edge_type, **kwargs)
 
-    def remove_edge_by_pair(self, pair: Tuple[NodeLike, NodeLike], edge_type: Optional[EDGE_T] = None):
+    def remove_edge_by_pair(self, pair: Tuple[NodeLike, NodeLike], edge_type: Optional[EdgeType] = None):
         """Remove edge by pair identifier (source, destination)."""
         validate_pair_type(pair)
         self.delete_edge(pair[0], pair[1], edge_type=edge_type)
 
-    def delete_edge(self, /, source: NodeLike, destination: NodeLike, *, edge_type: Optional[EDGE_T] = None):
+    def delete_edge(self, /, source: NodeLike, destination: NodeLike, *, edge_type: Optional[EdgeType] = None):
         """
         Delete an edge from the causal graph.
 
@@ -1114,7 +1121,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         edge = matching_edges[0]
 
         # need to delete inbound / outbound edges if the edge type is ->
-        if edge.get_edge_type() == EDGE_T.DIRECTED_EDGE:
+        if edge.get_edge_type() == EdgeType.DIRECTED_EDGE:
             edge.destination._delete_inbound_edge(edge)
             edge.source._delete_outbound_edge(edge)
 
@@ -1124,7 +1131,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         self._clean_empty_edge_dictionaries()
         edge.invalidate()
 
-    def remove_edge(self, /, source: str, destination: str, *, edge_type: Optional[EDGE_T] = None):
+    def remove_edge(self, /, source: str, destination: str, *, edge_type: Optional[EdgeType] = None):
         """Remove a specific edge by source and destination node identifiers, as well as edge type."""
         self.delete_edge(source=source, destination=destination, edge_type=edge_type)
 
@@ -1290,7 +1297,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             Hence, if some nodes are descendants and some are not, `False` is returned.
         """
         descendant_node_set = (
-            set([descendant_node])
+            {descendant_node}
             if not isinstance(descendant_node, (set, list))
             else set(descendant_node)
             if isinstance(descendant_node, list)
@@ -1314,7 +1321,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """
 
         ancestor_node_set = (
-            set([ancestor_node])
+            {ancestor_node}
             if not isinstance(ancestor_node, (set, list))
             else set(ancestor_node)
             if isinstance(ancestor_node, list)
@@ -1405,14 +1412,14 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             separation_set = set()
 
         nodes_1 = (
-            set([nodes_1])
+            {nodes_1}
             if not isinstance(nodes_1, (set, list))
             else set(nodes_1)
             if isinstance(nodes_1, list)
             else nodes_1
         )
         nodes_2 = (
-            set([nodes_2])
+            {nodes_2}
             if not isinstance(nodes_2, (set, list))
             else set(nodes_2)
             if isinstance(nodes_2, list)
@@ -1586,17 +1593,18 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
     def to_dict(self, include_meta: bool = True) -> dict:
         """
-        Serialize a `cai_causal_graph.causal_graph.CausalGraph` instance by converting it to a dictionary.
+        Serialize a `cai_causal_graph.causal_graph.CausalGraph` instance to a dictionary.
 
-        :param include_meta: whether to include meta information about the graph in the dictionary.
+        :param include_meta: Whether to include meta information about the graph in the dictionary. Default is `True`.
+        :return: The dictionary representation of the `cai_causal_graph.causal_graph.CausalGraph` instance.
         """
-        nodes = {node.identifier: node.to_dict(include_meta=include_meta) for node in self.get_nodes(None)}
+        nodes = {node.identifier: node.to_dict(include_meta=include_meta) for node in self.nodes}
 
-        edges: Dict[str, Dict[str, dict]] = {}
+        edges: Dict[str, Dict[str, dict]] = dict()
         for edge in self.edges:
             source, destination = edge.get_edge_pair()
             if source not in edges:
-                edges[source] = {}
+                edges[source] = dict()
             edges[source][destination] = edge.to_dict(include_meta=include_meta)
 
         return {
@@ -1659,10 +1667,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         the numpy array.
         """
         for edge in self.edges:
-            if edge.get_edge_type() not in [
-                EDGE_T.DIRECTED_EDGE,
-                EDGE_T.UNDIRECTED_EDGE,
-            ]:
+            if edge.get_edge_type() not in [EdgeType.DIRECTED_EDGE, EdgeType.UNDIRECTED_EDGE]:
                 raise TypeError(
                     'Cannot convert a CausalGraph instance to a numpy array if it contains edges other than directed '
                     f'and undirected edges. Got {edge.get_edge_type()} for the edge {edge.descriptor}.'
@@ -1700,7 +1705,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
                 graph.add_edge(
                     source,
                     destination,
-                    edge_type=EDGE_T.DIRECTED_EDGE if d['version'] == 2 else edge_dictionary['edge_type'],
+                    edge_type=EdgeType.DIRECTED_EDGE if d['version'] == 2 else edge_dictionary['edge_type'],
                     meta=edge_dictionary.get('meta', {}),
                 )
 
@@ -1738,8 +1743,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
     @staticmethod
     def from_adjacency_matrix(
-        adjacency: numpy.ndarray,
-        node_names: Optional[List[Union[NodeLike, int]]] = None,
+        adjacency: numpy.ndarray, node_names: Optional[List[Union[NodeLike, int]]] = None
     ) -> CausalGraph:
         """
         Construct a `cai_causal_graph.causal_graph.CausalGraph` instance from an adjacency matrix and optionally a list
@@ -1784,23 +1788,29 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         graph.add_nodes_from(nodes)
         for i, j in itertools.combinations(range(len(nodes)), 2):
             if adjacency[i, j] != 0 and adjacency[j, i] == 0:
-                graph.add_edge(nodes[i], nodes[j], edge_type=EDGE_T.DIRECTED_EDGE)
+                graph.add_edge(nodes[i], nodes[j], edge_type=EdgeType.DIRECTED_EDGE)
             elif adjacency[i, j] == 0 and adjacency[j, i] != 0:
-                graph.add_edge(nodes[j], nodes[i], edge_type=EDGE_T.DIRECTED_EDGE)
+                graph.add_edge(nodes[j], nodes[i], edge_type=EdgeType.DIRECTED_EDGE)
             elif adjacency[i, j] != 0 and adjacency[j, i] != 0:
-                graph.add_edge(nodes[i], nodes[j], edge_type=EDGE_T.UNDIRECTED_EDGE)
+                graph.add_edge(nodes[i], nodes[j], edge_type=EdgeType.UNDIRECTED_EDGE)
 
         return graph
 
     def copy(self, include_meta: bool = True) -> CausalGraph:
-        """Copy a `cai_causal_graph.causal_graph.CausalGraph` instance."""
+        """
+        Return a copy of the `cai_causal_graph.causal_graph.CausalGraph` instance.
+
+        :param include_meta: if `True` (default), the metadata will be copied as well.
+        :return: A copy of the `cai_causal_graph.causal_graph.CausalGraph` instance.
+        """
         graph_dict = self.to_dict(include_meta=include_meta)
         return CausalGraph.from_dict(graph_dict)
 
     def __repr__(self) -> str:
         """Return a string description of the `cai_causal_graph.causal_graph.CausalGraph` instance."""
         return (
-            f'CausalGraph(num_nodes={len(self.nodes)}, num_edges={len(self.edges)}, id={self.__hash__()})\n'
+            f'{self.__class__.__name__}(num_nodes={len(self.nodes)}, num_edges={len(self.edges)}, id={self.__hash__()})'
+            f'\n'
             f'Nodes: {self.nodes}\nEdges: {self.edges}'
         )
 
