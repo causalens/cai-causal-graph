@@ -125,9 +125,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         # now check if the graphs are equal. Since TimeSeriesCausalGraph is a subclass of CausalGraph,
         # we can use the CausalGraph.__eq__ method and then check for the metadata
-        are_equal = super().__eq__(other)
-        # no need to check the metadata if the graphs are not equal
-        if not are_equal:
+        if not super().__eq__(other):
             return False
 
         # now check the metadata timedelta in the nodes
@@ -136,20 +134,18 @@ class TimeSeriesCausalGraph(CausalGraph):
             assert isinstance(other_node, TimeSeriesNode)  # for linting
 
             # check the variable name
-            node_metadata_variable = node.variable_name
-            other_node_metadata_variable = other_node.variable_name
-
-            if node_metadata_variable != other_node_metadata_variable:
+            if node.variable_name != other_node.variable_name:
                 return False
 
             # check the time delta
-            node_metadata_td = node.time_lag
-            other_node_metadata_td = other_node.time_lag
-
-            if node_metadata_td != other_node_metadata_td:
+            if node.time_lag != other_node.time_lag:
                 return False
 
         return True
+
+    def __ne__(self, other: object) -> bool:
+        """Check if the graph is not equal to another graph."""
+        return not (self == other)
 
     def copy(self, include_meta: bool = True) -> TimeSeriesCausalGraph:
         """
@@ -924,5 +920,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         return nodes  # type: ignore
 
     def __hash__(self) -> int:
-        """Return a hash representation of the graph."""
-        return hash(repr(self.to_dict()))
+        """
+        Return a hash representation of the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` instance.
+        """
+        return super().__hash__()
