@@ -49,8 +49,7 @@ Summary graph of the full time graphs above.
 ### Direct initialization
 You can initialize the time series causal graph directly.
 ```python
-from cai_causal_graph import TimeSeriesCausalGraph
-from cai_causal_graph.type_definitions import EdgeType
+from cai_causal_graph import EdgeType, TimeSeriesCausalGraph
 
 ts_cg = TimeSeriesCausalGraph()
 ts_cg.add_edge('X1 lag(n=1)', 'X1', edge_type=EdgeType.DIRECTED_EDGE)
@@ -64,7 +63,7 @@ from a `cai_causal_graph.causal_graph.CausalGraph`,
 converting a causal graph from a single time step into a time series causal graph.
 
 ```python
-from cai_causal_graph import CausalGraph, TimeSeriesCausalGraph
+from cai_causal_graph import CausalGraph, EdgeType, TimeSeriesCausalGraph
 
 cg = CausalGraph()
 cg.add_edge('X1 lag(n=1)', 'X1', edge_type=EdgeType.DIRECTED_EDGE)
@@ -170,16 +169,35 @@ summary_graph = ts_cg.get_summary_graph()
 
 ## Example
 Time series causal graph.
-X1(t-2)-> X1(t-1) -> X2(t-1) -> X2(t), X1(t) -> X2(t), X2(t-2) -> X2(t-1)
+X1(t-1) -> X1(t)
+X2(t-1) -> X2(t)
+X1(t-1) -> X2(t-1)
+X1(t) -> X2(t)
+X1(t) -> X1(t+1)
+X2(t) -> X2(t+1)
+X1(t+1) -> X2(t+1)
 ![ts_cg](images/ts_cg.png)
 
 Minimal graph.
-X1(t-1) -> X1(t) -> X2(t), X2(t-1) -> X2
+X1(t-1) -> X1(t)
+X2(t-1) -> X2(t)
+X1(t-1) -> X2(t-1)
+X1(t) -> X2(t)
 ![ts_minimal_graph](images/ts_minimal_graph.png)
 
 Summary graph.
 X1 -> X2
 ![ts_summary_graph](images/ts_summary_graph.png)
+
+Extended graph with `backward_steps` = 2 and `forward_steps` = 0.
+X1(t-2) -> X1(t-1)
+X2(t-2) -> X2(t-1)
+X1(t-2) -> X2(t-2)
+X1(t-1) -> X1(t)
+X2(t-1) -> X2(t)
+X1(t-1) -> X2(t-1)
+X1(t) -> X2(t)
+![ts_cg](images/ts_extended_graph.png)
 
 
 ## Extended graph
@@ -250,9 +268,8 @@ ts_cg.add_node(identifier='X lag(n=3)', variable_type=NodeVariableType.UNSPECIFI
 You can add time series edges and the corresponding meta data will be automatically populated.
 
 ```python
-from cai_causal_graph import TimeSeriesCausalGraph
+from cai_causal_graph import EdgeType, TimeSeriesCausalGraph
 from cai_causal_graph.graph_components import Edge
-from cai_causal_graph.type_definitions import EdgeType
 
 ts_cg: TimeSeriesCausalGraph
 
@@ -292,7 +309,7 @@ ts_cg.replace_node(node_id='X lag(n=3)', new_node_id='Y lag(n=3)', variable_type
 You can delete nodes and edges from the time series graph.
 
 ```python
-from cai_causal_graph import TimeSeriesCausalGraph
+from cai_causal_graph import EdgeType, TimeSeriesCausalGraph
 
 ts_cg: TimeSeriesCausalGraph
 
