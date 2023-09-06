@@ -151,13 +151,14 @@ ts_cg: TimeSeriesCausalGraph
 minimal_graph = ts_cg.get_minimal_graph()
 
 # Check whether a graph is in its minimal form
+# Returns True if the graph is a minimal graph, False otherwise
 is_minimal = ts_cg.is_minimal_graph()
 ```
 
 ## Summary graph
 You can collapse the graph in time into a single node per variable (column name).
 This can become cyclic and bi-directed as X(t-1) -> Y and Y(t-1) -> X would become X <-> Y.
-Note that the summary graph is a `CausalGraph` object.
+Note that the summary graph is a `cai_causal_graph.causal_graph.CausalGraph` object.
 
 ```python
 from cai_causal_graph import TimeSeriesCausalGraph
@@ -219,10 +220,10 @@ from cai_causal_graph import TimeSeriesCausalGraph
 ts_cg: TimeSeriesCausalGraph
 
 # A single node
-variable = ts_cg.get_nodes(identifier='X lag(n=1)')
+variable: TimeSeriesNode = ts_cg.get_nodes(identifier='X lag(n=1)')
 
 # Multiple nodes
-variable = ts_cg.get_nodes(identifier=['X', 'X lag(n=1)'])
+variables = ts_cg.get_nodes(identifier=['X', 'X lag(n=1)'])
 ```
 
 ## Add nodes
@@ -243,9 +244,6 @@ ts_cg.add_node(variable_name='X', time_lag=3)
 
 # Variable type can also be specified
 ts_cg.add_node(identifier='X lag(n=3)', variable_type=NodeVariableType.UNSPECIFIED)
-
-# You can also provide the additional meta information
-ts_cg.add_node(identifier='X lag(n=3)', meta={TIME_LAG: 3, VARIABLE_NAME: 'X'})
 ```
 
 ## Add edges
