@@ -190,12 +190,14 @@ class TimeSeriesCausalGraph(CausalGraph):
 
             time_delta = edge.destination.time_lag - edge.source.time_lag
             # add the edge if the time delta is 0 (no need to extract the new names)
+            # copy the edge type to the minimal graph
             if time_delta == 0 and not minimal_cg.edge_exists(
                 edge.source.variable_name, edge.destination.variable_name
             ):
                 minimal_cg.add_edge(
                     edge.source.variable_name,
                     edge.destination.variable_name,
+                    edge_type=edge.get_edge_type(),
                 )
             # otherwise if the time delta is not 0, we may have X[t-2]->X[t-1] and
             # we must add X[t-1]->X[t]
@@ -208,6 +210,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                     minimal_cg.add_edge(
                         source_name,
                         destination_name,
+                        edge_type=edge.get_edge_type(),
                     )
 
         return minimal_cg
@@ -240,6 +243,13 @@ class TimeSeriesCausalGraph(CausalGraph):
             summary_graph = CausalGraph()
             # now check as described above (assume edges are already directed)
             edges = self.get_edges()
+
+            # check if the graph is a DAG
+            if not self.is_dag():
+                raise ValueError(
+                    'Cannot create a summary graph for a non-DAG graph.'
+                )
+
             for edge in edges:
                 # first we need to extract the variable names from the nodes as the summary graph
                 # will have the variable names as nodes

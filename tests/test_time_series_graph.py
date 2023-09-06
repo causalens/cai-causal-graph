@@ -353,6 +353,14 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         ground_truth_mg.add_edge('X1 lag(n=1)', 'X1')
         self.assertEqual(mg, ground_truth_mg)
 
+        # test edge types are preserved
+        tsdag_4 = TimeSeriesCausalGraph()
+        tsdag_4.add_edge('X1 lag(n=2)', 'X1 lag(n=1)', edge_type='<>')
+
+        mg = tsdag_4.get_minimal_graph()
+
+        self.assertEqual(mg.get_edge_by_pair(('X1 lag(n=1)', 'X1')).get_edge_type(), '<>')
+
     def test_extend_backward(self):
         # with 1 steps
         # dag
@@ -498,5 +506,10 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         # create the ground truth graph
         ground_truth_graph = TimeSeriesCausalGraph()
         ground_truth_graph.add_edge('A lag(n=1)', 'B future(n=2)', edge_type=EdgeType.DIRECTED_EDGE)
+        self.assertEqual(tsgraph, ground_truth_graph)
 
+        tsgraph = TimeSeriesCausalGraph()
+        tsgraph.add_time_edge('A', 0, 'B', 0)
+        ground_truth_graph = TimeSeriesCausalGraph()
+        ground_truth_graph.add_edge('A', 'B', edge_type=EdgeType.DIRECTED_EDGE)
         self.assertEqual(tsgraph, ground_truth_graph)
