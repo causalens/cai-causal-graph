@@ -50,12 +50,12 @@ Summary graph of the full time graphs above.
 You can initialize the time series causal graph directly.
 ```python
 from cai_causal_graph import TimeSeriesCausalGraph
-from cai_causal_graph.type_definitions import EDGE_T
+from cai_causal_graph.type_definitions import EdgeType
 
 ts_cg = TimeSeriesCausalGraph()
-ts_cg.add_edge('X1 lag(n=1)', 'X1', edge_type=EDGE_T.DIRECTED_EDGE)
-ts_cg.add_edge('X2 lag(n=1)', 'X2', edge_type=EDGE_T.DIRECTED_EDGE)
-ts_cg.add_edge('X1', 'X3', edge_type=EDGE_T.DIRECTED_EDGE)
+ts_cg.add_edge('X1 lag(n=1)', 'X1', edge_type=EdgeType.DIRECTED_EDGE)
+ts_cg.add_edge('X2 lag(n=1)', 'X2', edge_type=EdgeType.DIRECTED_EDGE)
+ts_cg.add_edge('X1', 'X3', edge_type=EdgeType.DIRECTED_EDGE)
 ```
 
 ### From `cai_causal_graph.causal_graph.CausalGraph``
@@ -67,9 +67,9 @@ converting a causal graph from a single time step into a time series causal grap
 from cai_causal_graph import CausalGraph, TimeSeriesCausalGraph
 
 cg = CausalGraph()
-cg.add_edge('X1 lag(n=1)', 'X1', edge_type=EDGE_T.DIRECTED_EDGE)
-cg.add_edge('X2 lag(n=1)', 'X2', edge_type=EDGE_T.DIRECTED_EDGE)
-cg.add_edge('X1', 'X3', edge_type=EDGE_T.DIRECTED_EDGE)
+cg.add_edge('X1 lag(n=1)', 'X1', edge_type=EdgeType.DIRECTED_EDGE)
+cg.add_edge('X2 lag(n=1)', 'X2', edge_type=EdgeType.DIRECTED_EDGE)
+cg.add_edge('X1', 'X3', edge_type=EdgeType.DIRECTED_EDGE)
 
 ts_cg = TimeSeriesCausalGraph.from_causal_graph(cg)
 ```
@@ -254,7 +254,7 @@ You can add time series edges and the corresponding meta data will be automatica
 ```python
 from cai_causal_graph import TimeSeriesCausalGraph
 from cai_causal_graph.graph_components import Edge
-from cai_causal_graph.type_definitions import EDGE_T
+from cai_causal_graph.type_definitions import EdgeType
 
 ts_cg: TimeSeriesCausalGraph
 
@@ -262,10 +262,10 @@ ts_cg: TimeSeriesCausalGraph
 new_edge: Edge
 ts_cg.add_edge(new_edge)
 # Via identifier (the edge type can be specified if desired)
-ts_cg.add_edge(source='X lag(n=3)', destination='Y lag(n=3)', edge_type=EDGE_T.DIRECTED_EDGE)
+ts_cg.add_edge(source='X lag(n=3)', destination='Y lag(n=3)', edge_type=EdgeType.DIRECTED_EDGE)
 
 # Add edge by pair (the edge type can be specified if desired)
-ts_cg.add_edge_by_pair(pair=('X lag(n=2)', 'Y lag(n=2)'), edge_type=EDGE_T.DIRECTED_EDGE)
+ts_cg.add_edge_by_pair(pair=('X lag(n=2)', 'Y lag(n=2)'), edge_type=EdgeType.DIRECTED_EDGE)
 
 # Add multiple edges by specifying tuples of source and destination node identifiers and with default setup
 ts_cg.add_edges_from(pairs=[('X lag(n=2)', 'Y lag(n=2)'), ('X lag(n=3)', 'Y lag(n=3)')])
@@ -302,10 +302,10 @@ ts_cg: TimeSeriesCausalGraph
 ts_cg.delete_node(identifier='X lag(n=3)')
 
 # Delete edge (the edge type can be specified if desired)
-ts_cg.delete_edge(source='X lag(n=3)', destination='Z lag(n=3)', edge_type=EDGE_T.DIRECTED_EDGE)
+ts_cg.delete_edge(source='X lag(n=3)', destination='Z lag(n=3)', edge_type=EdgeType.DIRECTED_EDGE)
 
 # Delete edge from pair (the edge type can be specified if desired)
-ts_cg.remove_edge_by_pair(pair=('X lag(n=3)', 'Z lag(n=3)'), edge_type=EDGE_T.DIRECTED_EDGE)
+ts_cg.remove_edge_by_pair(pair=('X lag(n=3)', 'Z lag(n=3)'), edge_type=EdgeType.DIRECTED_EDGE)
 ```
 
 ## Main properties
