@@ -27,9 +27,6 @@ ts_node = TimeSeriesNode(identifier='X lag(n=1)')
 
 # Via time lag and variable name
 ts_node = TimeSeriesNode(time_lag=1, variable_name='X')
-
-# You can also provide the additional meta information
-ts_node = TimeSeriesNode(time_lag=1, variable_name='X', meta={TIME_LAG: 1, VARIABLE_NAME: 'X'})
 ```
 
 ## Examples of time series causal graphs
@@ -298,8 +295,6 @@ ts_cg: TimeSeriesCausalGraph
 ts_cg.replace_node(node_id='X lag(n=3)', new_node_id='Y lag(n=3)')
 # Via variable name and time lag
 ts_cg.replace_node(node_id='X lag(n=3)', time_lag=3, variable_name='Y')
-# Via metadata
-ts_cg.replace_node(node_id='X lag(n=3)', meta={TIME_LAG: 3, VARIABLE_NAME: 'X'})
 
 # Variable type can also be specified
 ts_cg.replace_node(node_id='X lag(n=3)', new_node_id='Y lag(n=3)', variable_type=NodeVariableType.UNSPECIFIED)
