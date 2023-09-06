@@ -290,10 +290,10 @@ class TimeSeriesCausalGraph(CausalGraph):
         # check steps are valid (positive integers) if not None
         if backward_steps is not None:
             assert backward_steps == int(backward_steps), f'backward_steps must be an integer. Got {backward_steps}.'
-            assert backward_steps > 0, f'backward_steps must be a positive integer. Got {backward_steps}.'
+            assert backward_steps >= 0, f'backward_steps must be greater than zero. Got {backward_steps}.'
         if forward_steps is not None:
             assert forward_steps == int(forward_steps), f'backward_steps must be an integer. Got {forward_steps}.'
-            assert forward_steps > 0, f'forward_steps must be a positive integer. Got {forward_steps}.'
+            assert forward_steps >= 0, f'forward_steps must be greater than zero. Got {forward_steps}.'
 
         # first get the minimal graph
         minimal_graph = self.get_minimal_graph()
