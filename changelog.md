@@ -1,5 +1,12 @@
 # Changelog
 
+## NEXT
+
+- Fixed `repr` bug in the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class.
+- Added equality method for the `cai_causal_graph.graph_components.TimeSeriesNode` class.
+- Extended unit tests for `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` and
+  `cai_causal_graph.graph_components.TimeSeriesNode` classes.
+
 ## 0.2.0
 
 - Added the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class to represent a time series causal
