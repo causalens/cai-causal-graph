@@ -852,10 +852,16 @@ class TestCausalGraphPrinting(unittest.TestCase):
         self.assertIsInstance(n.__repr__(), str)
         self.assertIsInstance(e.__repr__(), str)
         self.assertIsInstance(cg.__repr__(), str)
+        self.assertTrue(n.__repr__().startswith('Node'))
+        self.assertTrue(e.__repr__().startswith('Edge'))
+        self.assertTrue(cg.__repr__().startswith('CausalGraph'))
 
         self.assertIsInstance(n.details(), str)
         self.assertIsInstance(e.details(), str)
         self.assertIsInstance(cg.details(), str)
+        self.assertTrue(n.details().startswith('Node'))
+        self.assertTrue(e.details().startswith('Edge'))
+        self.assertTrue(cg.details().startswith('CausalGraph'))
 
     def test_complex_nodes_and_edges(self):
         cg = CausalGraph()
@@ -870,10 +876,16 @@ class TestCausalGraphPrinting(unittest.TestCase):
         self.assertIsInstance(n.__repr__(), str)
         self.assertIsInstance(e.__repr__(), str)
         self.assertIsInstance(cg.__repr__(), str)
+        self.assertTrue(n.__repr__().startswith('Node'))
+        self.assertTrue(e.__repr__().startswith('Edge'))
+        self.assertTrue(cg.__repr__().startswith('CausalGraph'))
 
         self.assertIsInstance(n.details(), str)
         self.assertIsInstance(e.details(), str)
         self.assertIsInstance(cg.details(), str)
+        self.assertTrue(n.details().startswith('Node'))
+        self.assertTrue(e.details().startswith('Edge'))
+        self.assertTrue(cg.details().startswith('CausalGraph'))
 
     def test_add_node_from_node(self):
         causal_graph = CausalGraph()

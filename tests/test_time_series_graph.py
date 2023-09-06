@@ -453,6 +453,19 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         ground_truth_mg.add_edge('X1 lag(n=1)', 'X1')
         self.assertEqual(mg, ground_truth_mg)
 
+        # TODO: CAUSALAI-3397 - Need to test with CPGAG, MAG, and PAGs
+        # for edge_type in EdgeType.__members__:
+        #     tscg = TimeSeriesCausalGraph()
+        #     tscg.add_edge('x', 'x future(n=2)', edge_type=edge_type)
+        #     self.assertFalse(tscg.is_minimal_graph())
+        #
+        #     true_minimal = TimeSeriesCausalGraph()
+        #     true_minimal.add_edge('x lag(n=2)', 'x', edge_type=edge_type)
+        #     self.assertTrue(true_minimal.is_minimal_graph())
+        #
+        #     self.assertEqual(tscg.get_minimal_graph(), true_minimal)
+        #     self.assertTrue((tscg.get_minimal_graph().is_minimal_graph())
+
     def test_extend_backward(self):
         # with 1 steps
         # dag
@@ -600,10 +613,16 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
         self.assertIsInstance(n.__repr__(), str)
         self.assertIsInstance(e.__repr__(), str)
         self.assertIsInstance(cg.__repr__(), str)
+        self.assertTrue(n.__repr__().startswith('TimeSeriesNode'))
+        self.assertTrue(e.__repr__().startswith('Edge'))
+        self.assertTrue(cg.__repr__().startswith('TimeSeriesCausalGraph'))
 
         self.assertIsInstance(n.details(), str)
         self.assertIsInstance(e.details(), str)
         self.assertIsInstance(cg.details(), str)
+        self.assertTrue(n.details().startswith('TimeSeriesNode'))
+        self.assertTrue(e.details().startswith('Edge'))
+        self.assertTrue(cg.details().startswith('TimeSeriesCausalGraph'))
 
     def test_complex_nodes_and_edges(self):
         cg = TimeSeriesCausalGraph()
@@ -618,10 +637,16 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
         self.assertIsInstance(n.__repr__(), str)
         self.assertIsInstance(e.__repr__(), str)
         self.assertIsInstance(cg.__repr__(), str)
+        self.assertTrue(n.__repr__().startswith('TimeSeriesNode'))
+        self.assertTrue(e.__repr__().startswith('Edge'))
+        self.assertTrue(cg.__repr__().startswith('TimeSeriesCausalGraph'))
 
         self.assertIsInstance(n.details(), str)
         self.assertIsInstance(e.details(), str)
         self.assertIsInstance(cg.details(), str)
+        self.assertTrue(n.details().startswith('TimeSeriesNode'))
+        self.assertTrue(e.details().startswith('Edge'))
+        self.assertTrue(cg.details().startswith('TimeSeriesCausalGraph'))
 
     def test_add_node_from_node(self):
         identifier = 'apple lag(n=1)'
