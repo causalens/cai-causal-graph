@@ -2,7 +2,7 @@
 The class `cai_causal_graph.causal_graph.TimeSeriesCausalGraph`, inheriting directly from `cai_causal_graph.causal_graph.CausalGraph`,
 extends causal graphs to time series data.
 
-For the theotetical background of causality for time series, please refer to Chapter 10 of _Peters, J., Janzing, D. and Schölkopf, B., 2017. Elements of causal inference: foundations and learning algorithms (p. 288). The MIT Press_. 
+For the theoretical background of causality for time series, please refer to Chapter 10 of _Peters, J., Janzing, D. and Schölkopf, B., 2017. Elements of causal inference: foundations and learning algorithms (p. 288). The MIT Press_. 
 
 The main addition of `cai_causal_graph.causal_graph.TimeSeriesCausalGraph`
 lies in the type of nodes it supports.
@@ -50,6 +50,7 @@ Summary graph of the full time graphs above.
 You can initialize the time series causal graph directly.
 ```python
 from cai_causal_graph import TimeSeriesCausalGraph
+from cai_causal_graph.type_definitions import EDGE_T
 
 ts_cg = TimeSeriesCausalGraph()
 ts_cg.add_edge('X1 lag(n=1)', 'X1', edge_type=EDGE_T.DIRECTED_EDGE)
@@ -193,7 +194,7 @@ ts_cg: TimeSeriesCausalGraph
 backward_steps = 2
 forward_steps = 3
 
-extended_graph = ts_cg.extend_graph()
+extended_graph = ts_cg.extend_graph(backward_steps=backward_steps, forward_steps=forward_steps)
 ```
 
 ## Query the nodes and the variables
@@ -341,9 +342,9 @@ from cai_causal_graph import TimeSeriesCausalGraph
 
 ts_cg: TimeSeriesCausalGraph
 
-maxlag = ts_cg.variables
+variables = ts_cg.variables
 ```
 
 ## Other methods
 For all the other base properties and methods (e.g. how to query nodes and edges), please refer to the documentation of `cai_causal_graph.causal_graph.CausalGraph`,
-from which `cai_causal_graph.causal_graph.TimeSeriesCausalGraph` inherits all the fonctionalities.
+from which `cai_causal_graph.causal_graph.TimeSeriesCausalGraph` inherits all the functionalities.
