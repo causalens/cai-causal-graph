@@ -213,6 +213,19 @@ forward_steps = 3
 extended_graph = ts_cg.extend_graph(backward_steps=backward_steps, forward_steps=forward_steps)
 ```
 
+## CPDAGS
+`cai_causal_graph.causal_graph.TimeSeriesCausalGraph` also supports CPDAGs, as in the following example.
+
+```python
+from cai_causal_graph import EdgeType, TimeSeriesCausalGraph
+
+ts_cg = TimeSeriesCausalGraph()
+
+ts_cg.add_edge('X1 lag(n=1)', 'X1', edge_type=EdgeType.BIDIRECTED_EDGE)
+ts_cg.add_edge('X1 lag(n=1)', 'X2')
+ts_cg.add_edge('X1', 'X2')
+```
+
 ## Query the nodes and the variables
 You can extract all the variable names from the variable nodes of the time series graph.
 
