@@ -906,3 +906,18 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
         tscg.add_edge('X1 lag(n=1)', 'X1')
 
         self.assertTrue(tscg.is_stationary())
+
+    def test_make_stationary(self):
+            
+            tscg = TimeSeriesCausalGraph()
+            tscg.add_edge('X1 lag(n=2)', 'X1 lag(n=1)')
+            tscg.add_edge('X2 lag(n=2)', 'X2 lag(n=1)')
+            tscg.add_edge('X1 lag(n=1)', 'X2 lag(n=1)')
+            tscg.add_edge('X1', 'X2')
+            tscg.add_edge('X2 lag(n=1)', 'X2')
+
+            self.assertFalse(tscg.is_stationary())
+
+            stat_tscg = tscg.make_stationary()
+
+            self.assertTrue(stat_tscg.is_stationary())
