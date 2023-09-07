@@ -45,6 +45,7 @@ def _reset_ts_graph_attributes(func: Callable) -> Callable:
         function = func(self, *args, **kwargs)
         self._minimal_graph = None
         self._summary_graph = None
+        self._stationary_graph = None
         self._maxlag = None
         self._variables = None
         return function
@@ -112,6 +113,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         # list of variables in the graph, i.e. discarding the lags (X1(t-1) and X1 are the same variable)
         self._variables: Optional[List[str]] = None
         self._summary_graph: Optional[CausalGraph] = None
+        self._stationary_graph: Optional[CausalGraph] = None
         self._minimal_graph: Optional[TimeSeriesCausalGraph] = None
 
     def __eq__(self, other: object) -> bool:
@@ -158,29 +160,31 @@ class TimeSeriesCausalGraph(CausalGraph):
         # cast the graph to TimeSeriesCausalGraph to have the correct metadata
         return TimeSeriesCausalGraph.from_causal_graph(graph)
 
-    def is_stationary(self) -> bool:
+    def is_stationary_graph(self) -> bool:
         """
         Check if the graph is stationary. That is, if the graph is time invariant.
 
         If there exists the edge X(t-1) -> X(t), then there must be the same edge X(t-2) -> X(t-1), etc.
 
-        :param return_stationarized_graph: If True, return the stationarized graph.
         :return: True if the graph is stationary, False otherwise.
         """
         if not self.is_dag():
             logger.warning('The graph is not a DAG. The stationarity check is not valid.')
             return False
 
-        stationary_graph = self.make_stationary()
+        stationary_graph = self.get_stationary_graph()
 
         # now check if the extended minimal graph is equal to the current graph
         return stationary_graph == self
 
-    def make_stationary(self) -> TimeSeriesCausalGraph:
+    def get_stationary_graph(self) -> TimeSeriesCausalGraph:
         """
         Make the graph stationary by adding the missing edges if needed.
         If there exists the edge X(t-1) -> X(t), then there must be the edge X(t-2) -> X(t-1), etc.
         """
+        if self._stationary_graph is not None:
+            return self._stationary_graph
+
         # extract the minimal graph
         minimal_graph = self.get_minimal_graph()
 
@@ -189,7 +193,8 @@ class TimeSeriesCausalGraph(CausalGraph):
         neg_lag, pos_lag = lags[0], lags[-1]
 
         # now extend the minimal graph to the current max and min lag to match the current graph
-        return minimal_graph.extend_graph(-neg_lag, pos_lag)
+        self._stationary_graph = minimal_graph.extend_graph(-neg_lag, pos_lag)
+        return self._stationary_graph
 
     def get_minimal_graph(self) -> TimeSeriesCausalGraph:
         """
