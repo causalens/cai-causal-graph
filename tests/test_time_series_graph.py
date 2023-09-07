@@ -22,7 +22,7 @@ import numpy
 from cai_causal_graph import CausalGraph, EdgeType, NodeVariableType, TimeSeriesCausalGraph
 from cai_causal_graph.exceptions import CausalGraphErrors
 from cai_causal_graph.graph_components import TimeSeriesNode
-from cai_causal_graph.utils import extract_names_and_lags, get_variable_name_and_lag
+from cai_causal_graph.utils import extract_names_and_lags, get_name_with_lag, get_variable_name_and_lag
 
 
 class TestTimeSeriesCausalGraph(unittest.TestCase):
@@ -568,6 +568,27 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
         self.assertEqual(extended_dag_2, gr_ext_dag_2)
 
+        # test with other types of edges
+        tscg1 = self.ground_truth_minimal_graph_1.copy()
+
+        # change randomly the edge types of the graph
+        for edge in tscg1.get_edges():
+            edge._edge_type = self.rng.choice(list(EdgeType.__members__.values()))
+
+        extended_tscg1 = tscg1.extend_graph(backward_steps=2)
+
+        # create the extended graph from the previous extended graph
+        for edge in extended_tscg1.edges:
+            vars = edge.source.variable_name
+            vard = edge.destination.variable_name
+            time_delta = edge.source.time_lag - edge.destination.time_lag
+
+            # check if the corresponding edge in the minimal graph has same edge type
+            new_source = get_name_with_lag(vars, time_delta)
+            new_destination = get_name_with_lag(vard, 0)
+
+            self.assertEqual(tscg1.get_edge(new_source, new_destination).get_edge_type(), edge.get_edge_type())
+
     def test_extend_graph_forward(self):
         # with 1 steps
         # dag
@@ -633,12 +654,28 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
         self.assertEqual(extended_dag_3, extended_graph_3)
 
-        # TODO: test with other types of edges
-        # # test with other types of edges
-        # extended_dag_3 = self.tsdag_3.extend_graph(forward_steps=1, edge_types=[EdgeType.UNKNOWN_DIRECTED_EDGE])
+        # test with other types of edges
+        tscg3 = self.ground_truth_minimal_graph_3.copy()
+
+        # change randomly the edge types of the graph
+        for edge in tscg3.get_edges():
+            edge._edge_type = self.rng.choice(list(EdgeType.__members__.values()))
+
+        extended_tsdag_3 = tscg3.extend_graph(forward_steps=1)
+
+        tscg3.add_edge('A', 'A future(n=1)', edge_type=tscg3.get_edge('A lag(n=1)', 'A').get_edge_type())
+        tscg3.add_edge('B', 'B future(n=1)', edge_type=tscg3.get_edge('B lag(n=1)', 'B').get_edge_type())
+        tscg3.add_edge('A future(n=1)', 'C future(n=1)', edge_type=tscg3.get_edge('A', 'C').get_edge_type())
+        tscg3.add_edge('B future(n=1)', 'C future(n=1)', edge_type=tscg3.get_edge('B', 'C').get_edge_type())
+        tscg3.add_edge('C future(n=1)', 'D future(n=1)', edge_type=tscg3.get_edge('C', 'D').get_edge_type())
+        tscg3.add_edge('C future(n=1)', 'E future(n=1)', edge_type=tscg3.get_edge('C', 'E').get_edge_type())
+        tscg3.add_edge('D future(n=1)', 'E future(n=1)', edge_type=tscg3.get_edge('D', 'E').get_edge_type())
+        tscg3.add_edge('E future(n=1)', 'F future(n=1)', edge_type=tscg3.get_edge('E', 'F').get_edge_type())
+        tscg3.add_edge('F', 'F future(n=1)', edge_type=tscg3.get_edge('F lag(n=1)', 'F').get_edge_type())
+
+        self.assertEqual(extended_tsdag_3, tscg3)
 
     def test_add_time_edge(self):
-
         # test adding a time edge to a graph
         tsgraph = TimeSeriesCausalGraph()
         tsgraph.add_time_edge('A', -1, 'B', 2)

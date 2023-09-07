@@ -386,6 +386,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                         extended_graph.add_edge(
                             source=lagged_source_node,
                             destination=lagged_destination_node,
+                            edge_type=edge.get_edge_type(),
                             meta=edge.meta,
                         )
 
@@ -425,13 +426,12 @@ class TimeSeriesCausalGraph(CausalGraph):
                     lagged_source = self._get_lagged_node(node=source, lag=source.time_lag + lag)
                     lagged_dest = self._get_lagged_node(node=destination, lag=destination.time_lag + lag)
 
-                    lagged_edge = Edge(
-                        source=extended_graph.get_node(lagged_source.identifier),  # make sure the node exists
+                    extended_graph.add_edge(
+                        source=extended_graph.get_node(lagged_source.identifier),
                         destination=extended_graph.get_node(lagged_dest.identifier),
                         edge_type=edge.get_edge_type(),
-                        meta=edge.meta,  # copy the meta from the original edge
+                        meta=edge.meta,
                     )
-                    extended_graph.add_edge(edge=lagged_edge)
 
         return extended_graph
 
