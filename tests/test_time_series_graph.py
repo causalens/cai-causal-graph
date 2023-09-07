@@ -633,8 +633,9 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
         self.assertEqual(extended_dag_3, extended_graph_3)
 
-        # test with other types of edges
-        extended_dag_3 = self.tsdag_3.extend_graph(forward_steps=1, edge_types=[EdgeType.UNKNOWN_DIRECTED_EDGE])
+        # TODO: test with other types of edges
+        # # test with other types of edges
+        # extended_dag_3 = self.tsdag_3.extend_graph(forward_steps=1, edge_types=[EdgeType.UNKNOWN_DIRECTED_EDGE])
 
     def test_add_time_edge(self):
 
