@@ -113,7 +113,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         # list of variables in the graph, i.e. discarding the lags (X1(t-1) and X1 are the same variable)
         self._variables: Optional[List[str]] = None
         self._summary_graph: Optional[CausalGraph] = None
-        self._stationary_graph: Optional[CausalGraph] = None
+        self._stationary_graph: Optional[TimeSeriesCausalGraph] = None
         self._minimal_graph: Optional[TimeSeriesCausalGraph] = None
 
     def __eq__(self, other: object) -> bool:
