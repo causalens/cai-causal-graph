@@ -158,6 +158,45 @@ class TimeSeriesCausalGraph(CausalGraph):
         # cast the graph to TimeSeriesCausalGraph to have the correct metadata
         return TimeSeriesCausalGraph.from_causal_graph(graph)
 
+    def is_stationary(self, return_stationarized_graph: bool = False) -> bool:
+        """
+        Check if the graph is stationary. That is, if the graph is time invariant.
+        If stationary, hf there exists the edge X(t-1) -> X(t), then there must be
+        the edge X(t-2) -> X(t-1), etc.
+
+        :param return_stationarized_graph: If True, return the stationarized graph.
+        :return: True if the graph is stationary, False otherwise.
+        """
+        if not self.is_dag():
+            logger.warning('The graph is not a DAG. The stationarity check is not valid.')
+            return False
+
+        # extract the minimal graph
+        minimal_graph = self.get_minimal_graph()
+
+        # extract the negative and positive lag of the original graph
+        lags = sorted([node.time_lag for node in self.get_nodes()])
+        neg_lag, pos_lag = lags[0], lags[-1]
+
+        # now extend the minimal graph to the current max and min lag to match the current graph
+        extended_minimal_graph = minimal_graph.extend_graph(-neg_lag, pos_lag)
+
+        # now check if the extended minimal graph is equal to the current graph
+        if return_stationarized_graph:
+            return extended_minimal_graph == self, extended_minimal_graph
+
+        return extended_minimal_graph == self
+
+    def make_stationary(self) -> TimeSeriesCausalGraph:
+        """
+        Make the graph stationary by adding the missing edges if needed.
+        If there exists the edge X(t-1) -> X(t), then there must be the edge X(t-2) -> X(t-1), etc.
+        """
+        # check if the graph is stationary
+        is_stat, stat_tscf = self.is_stationary(return_stationarized_graph=True)
+
+        return stat_tscf
+
     def get_minimal_graph(self) -> TimeSeriesCausalGraph:
         """
         Return a minimal graph.
@@ -241,10 +280,7 @@ class TimeSeriesCausalGraph(CausalGraph):
             edges = self.get_edges()
 
             # check if the graph is a DAG
-            if not self.is_dag():
-                raise ValueError(
-                    'Cannot create a summary graph for a non-DAG graph.'
-                )
+            assert self.is_dag(), 'This method only works for DAGs but the current graph is not a DAG.'
 
             for edge in edges:
                 # first we need to extract the variable names from the nodes as the summary graph
@@ -574,13 +610,13 @@ class TimeSeriesCausalGraph(CausalGraph):
         super().delete_node(identifier)
 
     @_reset_ts_graph_attributes
-    def delete_edge(self, source: NodeLike, destination: NodeLike):
+    def delete_edge(self, /, source: NodeLike, destination: NodeLike, *, edge_type: Optional[EdgeType] = None):
         """
         Delete an edge from the graph.
 
         See `cai_causal_graph.causal_graph.CausalGraph.delete_edge` for more details.
         """
-        super().delete_edge(source, destination)
+        super().delete_edge(source, destination, edge_type=edge_type)
 
     @_reset_ts_graph_attributes
     def add_edge(
@@ -688,7 +724,6 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         return self.add_edge(source, destination, meta=meta, **kwargs)
 
-
     @classmethod
     def from_causal_graph(cls, causal_graph: CausalGraph) -> TimeSeriesCausalGraph:
         """
@@ -700,14 +735,6 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
 
         sepsets = deepcopy(causal_graph._sepsets)
-
-        # raise if the causal graph has any edges that are not directed edges
-        for edge in causal_graph.get_edges():
-            if edge.get_edge_type() != EdgeType.DIRECTED_EDGE:
-                raise ValueError(
-                    f'The causal graph must only have directed edges. The edge from {edge.source} to '
-                    f'{edge.destination} is not a directed edge.'
-                )
 
         # copy nodes and make them TimeSeriesNodes
         ts_cg = cls()
@@ -722,7 +749,10 @@ class TimeSeriesCausalGraph(CausalGraph):
         for edge in causal_graph.get_edges():
             source = ts_cg.get_node(edge.source)
             destination = ts_cg.get_node(edge.destination)
-            ts_cg.add_edge(source, destination, meta=edge.meta)
+            assert isinstance(source, TimeSeriesNode)  # for linting
+            assert isinstance(destination, TimeSeriesNode)  # for linting
+
+            ts_cg.add_edge(source, destination, meta=edge.meta, edge_type=edge.get_edge_type())
 
         ts_cg._sepsets = sepsets
 
