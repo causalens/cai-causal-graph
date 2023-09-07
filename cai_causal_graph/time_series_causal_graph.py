@@ -158,23 +158,17 @@ class TimeSeriesCausalGraph(CausalGraph):
         # cast the graph to TimeSeriesCausalGraph to have the correct metadata
         return TimeSeriesCausalGraph.from_causal_graph(graph)
 
-    def is_stationary(
-        self, return_stationarized_graph: bool = False
-    ) -> Union[bool, Tuple[bool, Optional[TimeSeriesCausalGraph]]]:
+    def is_stationary(self) -> bool:
         """
         Check if the graph is stationary. That is, if the graph is time invariant.
-        If stationary, hf there exists the edge X(t-1) -> X(t), then there must be
-        the edge X(t-2) -> X(t-1), etc.
+
+        If there exists the edge X(t-1) -> X(t), then there must be the same edge X(t-2) -> X(t-1), etc.
 
         :param return_stationarized_graph: If True, return the stationarized graph.
-        :return: True if the graph is stationary, False otherwise. If `return_stationarized_graph` is True, return
-            a tuple with the first element being the boolean and the second element being the stationarized graph.
-            If the graph is not a DAG, return False. If `return_stationarized_graph` is True, return False, None.
+        :return: True if the graph is stationary, False otherwise.
         """
         if not self.is_dag():
             logger.warning('The graph is not a DAG. The stationarity check is not valid.')
-            if return_stationarized_graph:
-                return False, None
             return False
 
         # extract the minimal graph
@@ -188,9 +182,6 @@ class TimeSeriesCausalGraph(CausalGraph):
         extended_minimal_graph = minimal_graph.extend_graph(-neg_lag, pos_lag)
 
         # now check if the extended minimal graph is equal to the current graph
-        if return_stationarized_graph:
-            return extended_minimal_graph == self, extended_minimal_graph
-
         return extended_minimal_graph == self
 
     def make_stationary(self) -> TimeSeriesCausalGraph:
@@ -198,10 +189,15 @@ class TimeSeriesCausalGraph(CausalGraph):
         Make the graph stationary by adding the missing edges if needed.
         If there exists the edge X(t-1) -> X(t), then there must be the edge X(t-2) -> X(t-1), etc.
         """
-        # check if the graph is stationary
-        is_stat, stat_tscf = self.is_stationary(return_stationarized_graph=True)   # type: ignore
-        assert isinstance(stat_tscf, TimeSeriesCausalGraph)  # for linting
-        return stat_tscf
+        # extract the minimal graph
+        minimal_graph = self.get_minimal_graph()
+
+        # extract the negative and positive lag of the original graph
+        lags = sorted([node.time_lag for node in self.get_nodes()])
+        neg_lag, pos_lag = lags[0], lags[-1]
+
+        # now extend the minimal graph to the current max and min lag to match the current graph
+        return minimal_graph.extend_graph(-neg_lag, pos_lag)
 
     def get_minimal_graph(self) -> TimeSeriesCausalGraph:
         """
@@ -338,10 +334,10 @@ class TimeSeriesCausalGraph(CausalGraph):
         # check steps are valid (positive integers) if not None
         if backward_steps is not None:
             assert backward_steps == int(backward_steps), f'backward_steps must be an integer. Got {backward_steps}.'
-            assert backward_steps >= 0, f'backward_steps must be greater than zero. Got {backward_steps}.'
+            assert backward_steps >= 0, f'backward_steps must be a non-negative integer. Got {backward_steps}.'
         if forward_steps is not None:
             assert forward_steps == int(forward_steps), f'backward_steps must be an integer. Got {forward_steps}.'
-            assert forward_steps >= 0, f'forward_steps must be greater than zero. Got {forward_steps}.'
+            assert forward_steps >= 0, f'forward_steps must be a non-negative integer. Got {forward_steps}.'
 
         # first get the minimal graph
         minimal_graph = self.get_minimal_graph()
