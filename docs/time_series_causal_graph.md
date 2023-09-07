@@ -213,8 +213,22 @@ forward_steps = 3
 extended_graph = ts_cg.extend_graph(backward_steps=backward_steps, forward_steps=forward_steps)
 ```
 
-## CPDAGS
-`cai_causal_graph.causal_graph.TimeSeriesCausalGraph` also supports CPDAGs, as in the following example.
+## Markov Equivalence Classes
+Certain causal relationships yield the same conditional independencies and are therefore indistinguishable from each other with only observational data. The set of such causal relationships is called the Markov Equivalence Class (MEC) for a particular set of nodes. Most causal discovery methods that use observational data are only able to return the MEC of a set of nodes and not the full directed acyclic graph (DAG).
+
+One prominent representation of MECs is a Completed Partially Directed Acyclic Graph (CPDAG), which only contains directed (->) and undirected (--) edges. In this case, an undirected edge simply implies that a causal relationship can point either way, i.e. A -- B can be resolved to either A -> B or A <- B
+
+DAGs are directed and contain only directed edges. 
+
+Finally, a Partial Ancestral Graph (PAG) can encode all the information that CPDAGs can, but also provides more detailed information about the relationships between variables, such as including whether a latent confounder is likely to exist or selection bias is likely to be present. 
+
+Specifically, in addition to directed edges (A -> B or A <- B) and undirected edges (A -- B), PAGs represent an equivalence class of MAGs (Maximal Ancestor Graphs) that may also contain bi-directed edges A <-> B, which implies that there is a latent confounder between the respective variables. They introduce the additional "wild-card" or "circle" edges A -o B, which can either be a directed or undirected arrow head, i.e. A -o B can be resolved to A -- B or A -> B.
+
+Similar to a CPDAG, a PAG can represent a number of DAGs. Therefore, PAGs, CPDAGs and DAGs can be thought of in a hierarchical way.
+
+MAGs and PAGs retain the pairwise Markov property of DAGs - every missing edges corresponds to a statement of conditional independence amongst the observed variables. Contrary to DAGs, however, the presence of an edge does not mean necessarily that two nodes are adjacent in the (presumed) true DAG - which may include unobserved variables. Rather, it simply means that a conditional set that separates the two nodes could not be found amongst the observed variables.
+
+`cai_causal_graph.causal_graph.TimeSeriesCausalGraph` also supports Markov equivalence classes, as in the following example with a CPDAG.
 
 ```python
 from cai_causal_graph import EdgeType, TimeSeriesCausalGraph
@@ -222,8 +236,8 @@ from cai_causal_graph import EdgeType, TimeSeriesCausalGraph
 ts_cg = TimeSeriesCausalGraph()
 
 ts_cg.add_edge('X1 lag(n=1)', 'X1', edge_type=EdgeType.BIDIRECTED_EDGE)
-ts_cg.add_edge('X1 lag(n=1)', 'X2')
-ts_cg.add_edge('X1', 'X2')
+ts_cg.add_edge('X1 lag(n=1)', 'X2', edge_type=EdgeType.UNKNOWN_UNDIRECTED_EDGE)
+ts_cg.add_edge('X1', 'X2', edge_type=EdgeType.DIRECTED_EDGE)
 ```
 
 ## Query the nodes and the variables
