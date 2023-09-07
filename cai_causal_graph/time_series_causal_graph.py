@@ -171,18 +171,10 @@ class TimeSeriesCausalGraph(CausalGraph):
             logger.warning('The graph is not a DAG. The stationarity check is not valid.')
             return False
 
-        # extract the minimal graph
-        minimal_graph = self.get_minimal_graph()
-
-        # extract the negative and positive lag of the original graph
-        lags = sorted([node.time_lag for node in self.get_nodes()])
-        neg_lag, pos_lag = lags[0], lags[-1]
-
-        # now extend the minimal graph to the current max and min lag to match the current graph
-        extended_minimal_graph = minimal_graph.extend_graph(-neg_lag, pos_lag)
+        stationary_graph = self.make_stationary()
 
         # now check if the extended minimal graph is equal to the current graph
-        return extended_minimal_graph == self
+        return stationary_graph == self
 
     def make_stationary(self) -> TimeSeriesCausalGraph:
         """
