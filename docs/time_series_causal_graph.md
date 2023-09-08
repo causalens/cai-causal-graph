@@ -128,6 +128,115 @@ ts_cg = TimeSeriesCausalGraph.from_adjacency_matrices(adjacency_matrices=adjacen
 ts_cg = TimeSeriesCausalGraph.from_adjacency_matrices(adjacency_matrices=adjacency_matrices, variable_names=['X', 'Y', 'Z'])
 ```
 
+## Query the nodes and the variables
+You can extract all the variable names from the nodes of the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`.
+
+```python
+from cai_causal_graph import TimeSeriesCausalGraph
+
+ts_cg: TimeSeriesCausalGraph
+
+# Return a list of variable names from a list of node names
+node_names = ['X', 'X lag(n=1)', 'Y', 'Z lag(n=2)']
+ts_cg.get_variable_names_from_node_names(node_names)
+# This will return ['X', 'Y', 'Z']
+```
+
+Conversely, you can extract a list of `cai_causal_graph.graph_components.TimeSeriesNode`s in the graph from a given list of identifiers.
+
+```python
+from typing import List
+from cai_causal_graph import TimeSeriesCausalGraph
+from cai_causal_graph.graph_components import TimeSeriesNode
+
+ts_cg: TimeSeriesCausalGraph
+
+# A single node (it will be a list with one element)
+variable: List[TimeSeriesNode] = ts_cg.get_nodes(identifier='X lag(n=1)')
+
+# Multiple nodes
+variables: List[TimeSeriesNode] = ts_cg.get_nodes(identifier=['X', 'X lag(n=1)'])
+```
+
+## Add nodes
+You can add a `cai_causal_graph.graph_components.TimeSeriesNode` to the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`.
+
+```python
+from cai_causal_graph import NodeVariableType, TimeSeriesCausalGraph
+from cai_causal_graph.graph_components import TimeSeriesNode
+
+ts_cg: TimeSeriesCausalGraph
+
+# Via a node object
+new_node = TimeSeriesNode(time_lag=-3, variable_name='X')
+ts_cg.add_node(node=new_node)
+
+# Via identifier
+ts_cg.add_node(identifier='X lag(n=3)')
+
+# Via variable name and time lag
+ts_cg.add_node(variable_name='X', time_lag=-33)
+
+# Variable type can also be specified
+ts_cg.add_node(identifier='X lag(n=3)', variable_type=NodeVariableType.CONTINUOUS)
+```
+
+## Add edges
+You can add time series edges to the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`.
+
+```python
+from cai_causal_graph import EdgeType, TimeSeriesCausalGraph
+
+ts_cg: TimeSeriesCausalGraph
+
+# Via identifier (the edge type can be specified if desired)
+ts_cg.add_edge(source='X lag(n=3)', destination='Y lag(n=3)', edge_type=EdgeType.DIRECTED_EDGE)
+
+# Add edge by pair (the edge type can be specified if desired)
+ts_cg.add_edge_by_pair(pair=('X lag(n=2)', 'Y lag(n=2)'), edge_type=EdgeType.DIRECTED_EDGE)
+
+# Add multiple edges by specifying tuples of source and destination node identifiers and with default setup
+ts_cg.add_edges_from(pairs=[('X lag(n=2)', 'Y lag(n=2)'), ('X lag(n=3)', 'Y lag(n=3)')])
+
+# Via time edge
+ts_cg.add_time_edge(source_variable='X', source_time=-2, destination_variable='Y', destination_time=-2, edge_type=EdgeType.DIRECTED_EDGE)
+```
+
+## Replace nodes
+Replace a node in the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`.
+
+```python
+from cai_causal_graph import NodeVariableType, TimeSeriesCausalGraph
+
+ts_cg: TimeSeriesCausalGraph
+
+# Via identifier
+ts_cg.replace_node(node_id='X lag(n=3)', new_node_id='Y lag(n=3)')
+# Via variable name and time lag
+ts_cg.replace_node(node_id='X lag(n=3)', time_lag=3, variable_name='Y')
+
+# Variable type can also be specified
+ts_cg.replace_node(node_id='X lag(n=3)', new_node_id='Y lag(n=3)', variable_type=NodeVariableType.CONTINUOUS)
+```
+
+## Delete nodes and edges
+You can delete nodes and edges from the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`.
+
+```python
+from cai_causal_graph import EdgeType, TimeSeriesCausalGraph
+
+ts_cg: TimeSeriesCausalGraph
+
+# Delete node
+ts_cg.delete_node(identifier='X lag(n=3)')
+
+# Delete edge (the edge type can be specified if desired)
+ts_cg.delete_edge(source='X lag(n=3)', destination='Z lag(n=3)', edge_type=EdgeType.DIRECTED_EDGE)
+
+# Delete edge from pair (the edge type can be specified if desired)
+ts_cg.remove_edge_by_pair(pair=('X lag(n=3)', 'Z lag(n=3)'), edge_type=EdgeType.DIRECTED_EDGE)
+```
+
 ## Minimal graph
 The minimal graph is the graph with the minimal number of edges that is equivalent to the original graph.
 In other words, it is a graph that has no edges whose destination is not time delta 0.
@@ -210,6 +319,10 @@ forward_steps = 3
 extended_graph = ts_cg.extend_graph(backward_steps=backward_steps, forward_steps=forward_steps)
 ```
 
+## Other methods
+For all the other base properties and methods, please refer to the documentation of `cai_causal_graph.causal_graph.CausalGraph`,
+from which `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` inherits.
+
 ## Example
 You define the following as the initial `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` instance.
 Please note that this graph is stationary.
@@ -224,182 +337,51 @@ If you query for the summary graph, you will get the following:
 
 ![ts_summary_graph](images/ts_summary_graph.png)
 
-Finally, if you extend the minimal graph with `backward_steps=2` = 2 and `forward_steps=0` = 0.
+Finally, if you extend the minimal graph with `backward_steps=2` and `forward_steps=0`.
 
 ![ts_cg](images/ts_extended_graph.png)
 
 ## Markov Equivalence Classes
-Certain causal relationships yield the same conditional independencies and are therefore indistinguishable from each other with only observational data. The set of such causal relationships is called the Markov Equivalence Class (MEC) for a particular set of nodes. Most causal discovery methods that use observational data are only able to return the MEC of a set of nodes and not the full directed acyclic graph (DAG).
+Certain causal relationships yield the same conditional independencies and are therefore indistinguishable from each 
+other with only observational data. The set of such causal relationships is called the Markov Equivalence Class (MEC) 
+for a particular set of nodes. Most causal discovery methods that use observational data are only able to return the 
+MEC of a set of nodes and not the full directed acyclic graph (DAG).
 
-One prominent representation of MECs is a Completed Partially Directed Acyclic Graph (CPDAG), which only contains directed (->) and undirected (--) edges. In this case, an undirected edge simply implies that a causal relationship can point either way, i.e. A -- B can be resolved to either A -> B or A <- B
+One prominent representation of MECs is a Completed Partially Directed Acyclic Graph (CPDAG), which only contains 
+directed (`->`) and undirected (`--`) edges. In this case, an undirected edge simply implies that a causal 
+relationship can point either way, i.e. `A -- B` can be resolved to either `A -> B` or `A <- B`.
 
-DAGs are directed and contain only directed edges. 
+A Partial Ancestral Graph (PAG) can encode all the information that CPDAGs can, but also provides more detailed 
+information about the relationships between variables, such as including whether a latent confounder is likely to exist 
+or selection bias is likely to be present. 
 
-Finally, a Partial Ancestral Graph (PAG) can encode all the information that CPDAGs can, but also provides more detailed information about the relationships between variables, such as including whether a latent confounder is likely to exist or selection bias is likely to be present. 
+Specifically, in addition to directed edges (`A -> B` or `A <- B`) and undirected edges (`A -- B`), PAGs represent an 
+equivalence class of MAGs (Maximal Ancestral Graphs) that may also contain bi-directed edges `A <-> B`, which implies 
+that there is a latent confounder between the respective variables. They also introduce the additional "wild-card" or 
+"circle" edges `A -o B`, which can either be a directed or undirected arrow head, i.e. `A -o B` can be resolved to 
+`A -- B` or `A -> B`.
 
-Specifically, in addition to directed edges (A -> B or A <- B) and undirected edges (A -- B), PAGs represent an equivalence class of MAGs (Maximal Ancestor Graphs) that may also contain bi-directed edges A <-> B, which implies that there is a latent confounder between the respective variables. They introduce the additional "wild-card" or "circle" edges A -o B, which can either be a directed or undirected arrow head, i.e. A -o B can be resolved to A -- B or A -> B.
+MAGs and PAGs retain the pairwise Markov property of DAGs - every missing edges corresponds to a statement of 
+conditional independence amongst the observed variables. Contrary to DAGs, however, the presence of an edge does not 
+mean necessarily that two nodes are adjacent in the (presumed) true DAG - which may include unobserved variables. 
+Rather, it simply means that a conditional set that separates the two nodes could not be found amongst the observed 
+variables.
 
-Similar to a CPDAG, a PAG can represent a number of DAGs. Therefore, PAGs, CPDAGs and DAGs can be thought of in a hierarchical way.
+Similar to a CPDAG, a PAG can represent a number of DAGs. Therefore, PAGs, MAGs, CPDAGs and DAGs can be thought of in 
+a hierarchical way.
 
-MAGs and PAGs retain the pairwise Markov property of DAGs - every missing edges corresponds to a statement of conditional independence amongst the observed variables. Contrary to DAGs, however, the presence of an edge does not mean necessarily that two nodes are adjacent in the (presumed) true DAG - which may include unobserved variables. Rather, it simply means that a conditional set that separates the two nodes could not be found amongst the observed variables.
+All these edge types can be represented by `cai_causal_graph.type_definitions.EdgeType` and edges of these types can be 
+added to the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` (as shown above) as long as the ordering 
+of time is respected.
 
-`cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` also supports Markov equivalence classes, as in the following example with a CPDAG.
+In addition to DAGs (as shown above), the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` also 
+supports Markov equivalence classes, as in the following example with a PAG.
 
 ```python
 from cai_causal_graph import EdgeType, TimeSeriesCausalGraph
 
 ts_cg = TimeSeriesCausalGraph()
 
-ts_cg.add_edge('X1 lag(n=1)', 'X1', edge_type=EdgeType.BIDIRECTED_EDGE)
-ts_cg.add_edge('X1 lag(n=1)', 'X2', edge_type=EdgeType.UNKNOWN_UNDIRECTED_EDGE)
-ts_cg.add_edge('X1', 'X2', edge_type=EdgeType.DIRECTED_EDGE)
+ts_cg.add_edge('X1 lag(n=1)', 'X1', edge_type=EdgeType.DIRECTED_EDGE)
+ts_cg.add_edge('X1 lag(n=1)', 'X2', edge_type=EdgeType.UNKNOWN_DIRECTED_EDGE)
 ```
-
-## Query the nodes and the variables
-You can extract all the variable names from the variable nodes of the time series graph.
-
-```python
-from cai_causal_graph import TimeSeriesCausalGraph
-
-ts_cg: TimeSeriesCausalGraph
-
-# Return a list of variable names from a list of node names
-node_names = ['X', 'X lag(n=1)', 'Y', 'Z lag(n=2)']
-ts_cg.get_variable_names_from_node_names(node_names)
-# This will return ['X', 'Y', 'Z']
-```
-
-Conversely, you can extract the time series nodes in the graph from a given list of identifiers.
-
-```python
-from typing import List
-from cai_causal_graph import TimeSeriesCausalGraph
-from cai_causal_graph.graph_components import TimeSeriesNode
-
-ts_cg: TimeSeriesCausalGraph
-
-# A single node (it will be a list with one element)
-variable: List[TimeSeriesNode] = ts_cg.get_nodes(identifier='X lag(n=1)')
-
-# Multiple nodes
-variables: List[TimeSeriesNode] = ts_cg.get_nodes(identifier=['X', 'X lag(n=1)'])
-```
-
-## Add nodes
-You can add time series nodes and the corresponding meta data will be automatically populated.
-
-```python
-from cai_causal_graph import NodeVariableType, TimeSeriesCausalGraph
-from cai_causal_graph.graph_components import TimeSeriesNode
-
-ts_cg: TimeSeriesCausalGraph
-
-# Via a node object
-new_node: TimeSeriesNode
-ts_cg.add_node(new_node)
-# Via identifier
-ts_cg.add_node(identifier='X lag(n=3)')
-# Via variable name and time lag
-ts_cg.add_node(variable_name='X', time_lag=3)
-
-# Variable type can also be specified
-ts_cg.add_node(identifier='X lag(n=3)', variable_type=NodeVariableType.UNSPECIFIED)
-```
-
-## Add edges
-You can add time series edges and the corresponding metadata will be automatically populated.
-
-```python
-from cai_causal_graph import EdgeType, TimeSeriesCausalGraph
-from cai_causal_graph.graph_components import Edge
-
-ts_cg: TimeSeriesCausalGraph
-
-# Via a new edge object
-new_edge: Edge
-ts_cg.add_edge(new_edge)
-# Via identifier (the edge type can be specified if desired)
-ts_cg.add_edge(source='X lag(n=3)', destination='Y lag(n=3)', edge_type=EdgeType.DIRECTED_EDGE)
-
-# Add edge by pair (the edge type can be specified if desired)
-ts_cg.add_edge_by_pair(pair=('X lag(n=2)', 'Y lag(n=2)'), edge_type=EdgeType.DIRECTED_EDGE)
-
-# Add multiple edges by specifying tuples of source and destination node identifiers and with default setup
-ts_cg.add_edges_from(pairs=[('X lag(n=2)', 'Y lag(n=2)'), ('X lag(n=3)', 'Y lag(n=3)')])
-```
-
-## Replace nodes
-Replace a node in the time series graph.
-
-```python
-from cai_causal_graph import NodeVariableType, TimeSeriesCausalGraph
-
-ts_cg: TimeSeriesCausalGraph
-
-# Via identifier
-ts_cg.replace_node(node_id='X lag(n=3)', new_node_id='Y lag(n=3)')
-# Via variable name and time lag
-ts_cg.replace_node(node_id='X lag(n=3)', time_lag=3, variable_name='Y')
-
-# Variable type can also be specified
-ts_cg.replace_node(node_id='X lag(n=3)', new_node_id='Y lag(n=3)', variable_type=NodeVariableType.UNSPECIFIED)
-```
-
-## Delete nodes and edges
-You can delete nodes and edges from the time series graph.
-
-```python
-from cai_causal_graph import EdgeType, TimeSeriesCausalGraph
-
-ts_cg: TimeSeriesCausalGraph
-
-# Delete node
-ts_cg.delete_node(identifier='X lag(n=3)')
-
-# Delete edge (the edge type can be specified if desired)
-ts_cg.delete_edge(source='X lag(n=3)', destination='Z lag(n=3)', edge_type=EdgeType.DIRECTED_EDGE)
-
-# Delete edge from pair (the edge type can be specified if desired)
-ts_cg.remove_edge_by_pair(pair=('X lag(n=3)', 'Z lag(n=3)'), edge_type=EdgeType.DIRECTED_EDGE)
-```
-
-## Main properties
-### Adjacency_matrices
-Return the adjacency matrix dictionary of the minimal causal graph.
-The keys are the time deltas and the values are the adjacency matrices.
-
-```python
-from cai_causal_graph import TimeSeriesCausalGraph
-
-ts_cg: TimeSeriesCausalGraph
-
-adjacency_matrices = ts_cg.adjacency_matrices
-```
-
-### maxlag
-Return the autoregressive order of the time series graph, i.e. the maximum lag of the nodes in the minimal graph.
-
-```python
-from cai_causal_graph import TimeSeriesCausalGraph
-
-ts_cg: TimeSeriesCausalGraph
-
-maxlag = ts_cg.maxlag
-```
-
-### Variables
-Return the list of variable identifiers in the time series graph.
-Variables differ from nodes in that they do not contain the lag.
-For example, if the graph contains the node "X1 lag(n=2)", the variable is "X1".
-
-```python
-from cai_causal_graph import TimeSeriesCausalGraph
-
-ts_cg: TimeSeriesCausalGraph
-
-variables = ts_cg.variables
-```
-
-## Other methods
-For all the other base properties and methods (e.g. how to query nodes and edges), please refer to the documentation of `cai_causal_graph.causal_graph.CausalGraph`,
-from which `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` inherits all the functionalities.
