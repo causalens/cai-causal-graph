@@ -380,6 +380,39 @@ ts_cg: TimeSeriesCausalGraph
 
 variables = ts_cg.variables
 ```
+### Stationarity
+
+It may be useful to check whether the time series graph is stationary. By stationary, we mean that the graph is not
+dependent on the time lag. In other words, the graph is the same for all time lags. This is useful for example when
+we want to use the graph to predict the future. If the graph is stationary, we can use the graph to predict the future
+for any time lag. If the graph is not stationary, we can only use the graph to predict the future for the time lag
+that the graph was built for. Thus, if the edge `X lag(n=1) -> Y lag(n=1)` exists, also the edge `X lag(n=2) -> Y lag(n=2)` 
+must be present if the nodes `X lag(n=2)` and `Y lag(n=2)` are presented.
+
+You can check if the graph is stationary by calling the `is_stationary_gragh` method.
+
+```python
+
+from cai_causal_graph import TimeSeriesCausalGraph
+
+ts_cg: TimeSeriesCausalGraph
+
+is_stationary = ts_cg.is_stationary_graph()
+```
+
+Moreover, you can make it stationary by calling the `get_stationary_graph` method as follows:
+
+```python
+
+from cai_causal_graph import TimeSeriesCausalGraph
+
+ts_cg: TimeSeriesCausalGraph
+
+stationary_graph = ts_cg.get_stationary_graph()
+```
+
+It is important to note that the minimal graph is not necessarily stationary. This does not mean that the underlying process is not stationary. 
+It only means that the graph is missing at least one of the corresponding edges. Please refer to the image example for a visualization of a minimal graph that is not stationary.
 
 ## Other methods
 For all the other base properties and methods (e.g. how to query nodes and edges), please refer to the documentation of `cai_causal_graph.causal_graph.CausalGraph`,
