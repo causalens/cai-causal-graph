@@ -21,6 +21,11 @@
             "type": "doc",
             "id": "docs/causal_graph",
             "label": "Causal Graph"
+        },
+        {
+            "type": "doc",
+            "id": "docs/time_series_causal_graph",
+            "label": "Time Series Causal Graph"
         }
     ]
 }

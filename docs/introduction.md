@@ -61,7 +61,7 @@ eferenced to as "unknown" in this package. See `cai_causal_graph.type_definition
 types. Similar to a _CPDAG_, a _PAG_ can represent  a number of _DAGs_. Therefore, _PAGs_, _CPDAGs_ and _DAGs_ can be 
 thought of in a hierarchical way.
 
-![DAG CPDAG PAG](assets/DAG_CPDAG_PAG.png)
+![DAG CPDAG PAG](images/DAG_CPDAG_PAG.png)
 
 Note that the `cai_causal_graph.causal_graph.CausalGraph` class can contain all the aforementioned edge types, and 
 can therefore represent _DAGs_, _CPDAGs_, _MAGs_, and _PAGs_.
