@@ -47,8 +47,38 @@ differences with respect to the `cai_causal_graph.causal_graph.CausalGraph` clas
   to create a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` from a dictionary of adjacency 
   matrices where the keys are the time lags.
 
+You can define a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` as shown below.
+
+```python
+from cai_causal_graph import TimeSeriesCausalGraph
+
+ts_causal_graph = TimeSeriesCausalGraph()
+
+# add edges to the causal graph
+ts_causal_graph.add_edge('X1 lag(n=1)', 'X2')
+ts_causal_graph.add_edge('X2 lag(n=1)', 'X2')
+```
+
+This is equivalent to the following:
+
+```python
+from cai_causal_graph import TimeSeriesCausalGraph
+
+ts_causal_graph = TimeSeriesCausalGraph()
+
+# add edges to the causal graph
+ts_causal_graph.add_time_edge('X1', -1, 'X2', 0)
+ts_causal_graph.add_time_edge('X2,' -1, 'X2', 0)
+```
+
 `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` is aware of the time lags of the variables and can 
 be extended backwards and forward in time.
+
+When you define the node `X1 lag(n=1)` you are actually defining a node with `variable_name='X1'` and `time_lag=-1`. Thus,
+the edge `X1 lag(n=1) -> X2` means that `X1` at time `t-1` is a causal driver of `X2` at time `t`.
+
+The method `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.add_time_edge` is a convenience method to
+add edges between nodes with different time lags without having to specify them in the node names.
 
 If you want to convert a `cai_causal_graph.causal_graph.CausalGraph` to a 
 `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`, you can use the 

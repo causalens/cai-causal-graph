@@ -10,6 +10,12 @@
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` to a dictionary of adjacency matrices where the
   keys are the time lags with the values being the adjacency matrices with respect to the variables.
 - Fixed edge type in the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_gragh` method.
+- Changed the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_gragh` method to work with
+  a non-negative `backward_steps` and `forward_steps` instead of strictly positive.
+- Added `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.add_time_edge` method to add a time edge
+  between two nodes. This method allows to specify the time lag for source and destination variables. This avoids
+  having to create the corresponding node name manually or using the utility function `cai_causal_graph.utils.get_name_with_lag`.
+- Changed quickstart to start from a `TimeSeriesCausalGraph` instead of a `CausalGraph`.
 
 ## 0.2.0
 
