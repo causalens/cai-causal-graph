@@ -1,63 +1,74 @@
 # Time Series Causal Graph
-The class `cai_causal_graph.causal_graph.TimeSeriesCausalGraph`, inheriting directly from `cai_causal_graph.causal_graph.CausalGraph`,
-extends causal graphs to time series data.
+The class `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`, inheriting directly from 
+`cai_causal_graph.causal_graph.CausalGraph`, extends causal graphs to time series data.
 
-For the theoretical background of causality for time series, please refer to Chapter 10 of _Peters, J., Janzing, D. and Schölkopf, B., 2017. Elements of causal inference: foundations and learning algorithms (p. 288). The MIT Press_. 
+For the theoretical background of causality for time series, please refer to Chapter 10 of _Peters, J., Janzing, D. and 
+Schölkopf, B., 2017. Elements of causal inference: foundations and learning algorithms (p. 288). The MIT Press_. 
 
-The main addition of `cai_causal_graph.causal_graph.TimeSeriesCausalGraph`
-lies in the type of nodes it supports.
-The new time series node is a new class `cai_causal_graph.causal_graph.TimeSeriesNode`
-inheriting from the corresponding `cai_causal_graph.causal_graph.Node` all the original attributes:
-- identifier
-- variable_type
+The main addition of `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` lies in representing the time 
+information in each node. The new `cai_causal_graph.graph_components.TimeSeriesNode` class inherits from the 
+corresponding `cai_causal_graph.graph_components.Node` and keeps all original properties:
+- `cai_causal_graph.graph_components.Node.identifier`
+- `cai_causal_graph.graph_components.Node.variable_type`
 
-The node in a time series causal graph, `cai_causal_graph.causal_graph.TimeSeriesCausalGraph`,
-will have additional metadata that gives the time information of the node together with the variable name.
-The two additional metadata are:
-- `cai_causal_graph.type_definitions.TIME_LAG`: the time difference with respect to the reference time 0.
-- `cai_causal_graph.type_definitions.VARIABLE_NAME`: the name of the variable (without the lag information).
+The `cai_causal_graph.graph_components.TimeSeriesNode` class has two additional properties:
+- `cai_causal_graph.graph_components.TimeSeriesNode.time_lag`: the time difference with respect to the reference time 0.
+- `cai_causal_graph.graph_components.TimeSeriesNode.variable_name`: the name of the variable (without the lag information).
 
-Therefore, the time series node `cai_causal_graph.causal_graph.TimeSeriesCausalGraph` can be initialized as follows.
+The `cai_causal_graph.graph_components.TimeSeriesNode` can be instantiated as follows:
 
 ```python
-from cai_causal_graph import TimeSeriesNode
+from cai_causal_graph.graph_components import TimeSeriesNode
 
 # Via identifier
 ts_node = TimeSeriesNode(identifier='X lag(n=1)')
 
 # Via time lag and variable name
-ts_node = TimeSeriesNode(time_lag=1, variable_name='X')
+ts_node = TimeSeriesNode(time_lag=-1, variable_name='X')
 ```
 
-## Examples of time series causal graphs
-The following examples have been drawn from _Peters, J., Janzing, D. and Schölkopf, B., 2017. Elements of causal inference: foundations and learning algorithms (p. 288). The MIT Press_.
+However, it is easier to just add nodes directly to the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`.
 
-Example of a time series with no instantaneous effects.
+The format of the identifier is the following: 
+- `f'{variable_name}'` if `time_lag == 0`
+- `f'{variable_name} lag(n={time_lag}'` if `time_lag < 0`
+- `f'{variable_name} future(n={time_lag}'` if `time_lag < 1`
+
+## Examples of time series causal graphs
+The following examples have been drawn from _Peters, J., Janzing, D. and Schölkopf, B., 2017. Elements of causal 
+inference: foundations and learning algorithms (p. 288). The MIT Press_.
+
+Example of a time series causal graph with no instantaneous effects, i.e., no edges between nodes at the same time stamp.
+
 ![ts_no_instantaneous_effects](images/ts_no_instantaneous_effects.png)
 
-Example of a time series with instantaneous effects.
+Example of a time series causal graph with instantaneous effects, i.e., there are edges between nodes at the same time stamp.
+
 ![ts_instantaneous_effects](images/ts_instantaneous_effects.png)
 
-Summary graph of the full time graphs above.
+Summary graph of the full time series causal graphs above.
+
 ![summary_graph](images/summary_graph.png)
 
-## Initialization
+## Construction
 
 ### Direct initialization
-You can initialize the time series causal graph directly.
+You can instantiate a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` directly using its constructor.
+
 ```python
 from cai_causal_graph import EdgeType, TimeSeriesCausalGraph
 
 ts_cg = TimeSeriesCausalGraph()
+# Nodes are added automatically if they are not in the graph when an edge is added.
 ts_cg.add_edge('X1 lag(n=1)', 'X1', edge_type=EdgeType.DIRECTED_EDGE)
 ts_cg.add_edge('X2 lag(n=1)', 'X2', edge_type=EdgeType.DIRECTED_EDGE)
 ts_cg.add_edge('X1', 'X3', edge_type=EdgeType.DIRECTED_EDGE)
 ```
 
-### From `cai_causal_graph.causal_graph.CausalGraph``
-Alternatively, you can initialize a `cai_causal_graph.causal_graph.TimeSeriesCausalGraph` instance
-from a `cai_causal_graph.causal_graph.CausalGraph`,
-converting a causal graph from a single time step into a time series causal graph.
+### From a `CausalGraph`
+Alternatively, you can instantiate a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` from a 
+`cai_causal_graph.causal_graph.CausalGraph` instance. If the nodes are named correctly, the time information will be
+extracted accordingly.
 
 ```python
 from cai_causal_graph import CausalGraph, EdgeType, TimeSeriesCausalGraph
@@ -70,12 +81,12 @@ cg.add_edge('X1', 'X3', edge_type=EdgeType.DIRECTED_EDGE)
 ts_cg = TimeSeriesCausalGraph.from_causal_graph(cg)
 ```
 
-The time series causal graph will have the same nodes and edges as the causal graph,
-but will be aware of the time information so 'X1 lag(n=1)' and 'X1' represent the same
-variable but at different times.
+The `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` will have the same nodes and edges as the 
+`cai_causal_graph.causal_graph.CausalGraph`, but will be aware of the time information so `'X1 lag(n=1)'` and `'X1'` 
+represent the same variable but at different times.
 
 ### From an adjacency matrix
-You can initialize a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` instance from an adjacency matrix
+You can instantiate a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` from an adjacency matrix
 and optionally a list of node names.
 
 ```python
@@ -89,25 +100,21 @@ adjacency_matrix: numpy.ndarray
 ts_cg = TimeSeriesCausalGraph.from_adjacency_matrix(adjacency=adjacency_matrix)
 
 # Also specifying the node names
-ts_cg = TimeSeriesCausalGraph.from_adjacency_matrix(adjacency=adjacency_matrix, node_names=['X1 lag(n=1)', 'X1', 'X2 lag(n=1)', 'X2', 'X3'])
+ts_cg = TimeSeriesCausalGraph.from_adjacency_matrix(
+    adjacency=adjacency_matrix, node_names=['X1 lag(n=1)', 'X1', 'X2 lag(n=1)', 'X2', 'X3']
+)
 ```
 
 ### From multiple adjacency matrices
-You can initialize a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` instance
-from a dictionary of adjacency matrices. Keys are the time deltas.
+You can instantiate a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` from a dictionary of adjacency 
+matrices, where the keys are the time deltas.
 For example, the adjacency matrix with time delta -1 is stored in adjacency_matrices[-1] as would correspond to X-1 -> X,
 where X is the set of nodes.
 
-Example:
-adjacency_matrices = {
-...     -2: numpy.array([[0, 0, 0], [1, 0, 0], [0, 0, 1]]),
-...     -1: numpy.array([[0, 1, 0], [1, 0, 0], [0, 0, 0]]),
-...     0: numpy.array([[0, 1, 1], [0, 0, 1], [0, 0, 0]]),
-... }
-
-
 ```python
+import numpy
 from cai_causal_graph import TimeSeriesCausalGraph
+
 adjacency_matrices = {
     -2: numpy.array([[0, 0, 0], [1, 0, 0], [0, 0, 1]]),
     -1: numpy.array([[0, 1, 0], [1, 0, 0], [0, 0, 0]]),
@@ -121,34 +128,21 @@ ts_cg = TimeSeriesCausalGraph.from_adjacency_matrices(adjacency_matrices=adjacen
 ts_cg = TimeSeriesCausalGraph.from_adjacency_matrices(adjacency_matrices=adjacency_matrices, variable_names=['X', 'Y', 'Z'])
 ```
 
-Let the nodes of this example be X,Y,Z. The corresponding edges are the following:
-edges = [
-...     (Z-2, Y),
-...     (X-1, X),
-...     (Y-1, X),
-...     (Y-1, Y),
-...     (Z-1, Z),
-...     (X, Y),
-...     (X, Z),
-...     (Y, Z),
-... ]
-
 ## Minimal graph
 The minimal graph is the graph with the minimal number of edges that is equivalent to the original graph.
 In other words, it is a graph that has no edges whose destination is not time delta 0.
-
 
 ```python
 from cai_causal_graph import TimeSeriesCausalGraph
 
 ts_cg: TimeSeriesCausalGraph
 
-# Get the minimal graph
-minimal_graph = ts_cg.get_minimal_graph()
-
 # Check whether a graph is in its minimal form
 # Returns True if the graph is a minimal graph, False otherwise
 is_minimal = ts_cg.is_minimal_graph()
+
+# Get the minimal graph
+minimal_graph: TimeSeriesCausalGraph = ts_cg.get_minimal_graph()
 ```
 
 ## Summary graph
@@ -157,50 +151,54 @@ This can become cyclic and bi-directed as X(t-1) -> Y and Y(t-1) -> X would beco
 Note that the summary graph is a `cai_causal_graph.causal_graph.CausalGraph` object.
 
 ```python
+from cai_causal_graph import CausalGraph, TimeSeriesCausalGraph
+
+ts_cg: TimeSeriesCausalGraph
+
+summary_graph: CausalGraph = ts_cg.get_summary_graph()
+```
+## Stationary graph
+
+It may be useful to check whether the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` is stationary, 
+i.e., its edges are not dependent on the corresponding time lags. In other words, the graph is the same for all time lags.
+
+Stationarity is a useful concept for future prediction: if the graph is stationary, it can be used to predict the future
+for any time lag. Conversely, if the graph is not stationary, it can only be used to predict the future for the specified 
+time lags. Thus, in a stationary graph, if the edge `X lag(n=1) -> Y lag(n=1)` exists, also the edge `X lag(n=2) -> Y lag(n=2)` 
+must be present if the nodes `X lag(n=2)` and `Y lag(n=2)` are in the graph.
+
+```python
 from cai_causal_graph import TimeSeriesCausalGraph
 
 ts_cg: TimeSeriesCausalGraph
 
-summary_graph = ts_cg.get_summary_graph()
+# Check whether a graph is stationary
+# Returns True if the graph is a stationary, False otherwise
+is_stationary = ts_cg.is_stationary_graph()
+
+# Get the stationary graph
+stationary_graph: TimeSeriesCausalGraph = ts_cg.get_stationary_graph()
 ```
 
-## Example
-Time series causal graph.
-X1(t-1) -> X1(t)
-X2(t-1) -> X2(t)
-X1(t-1) -> X2(t-1)
-X1(t) -> X2(t)
-X1(t) -> X1(t+1)
-X2(t) -> X2(t+1)
-X1(t+1) -> X2(t+1)
-![ts_cg](images/ts_cg.png)
+:::note
 
-Minimal graph.
-X1(t-1) -> X1(t)
-X2(t-1) -> X2(t)
-X1(t) -> X2(t)
-![ts_minimal_graph](images/ts_minimal_graph.png)
+It is important to note that the minimal graph is not necessarily stationary. Therefore, the underlying process 
+defined in the minimal graph does not need to be stationary, but if the minimal graph is non-stationary it does 
+not always mean that the process is not stationary. It may only mean that the graph is missing at least one of the 
+corresponding edges in time. This is the more likely scenario. Please see the example below of a minimal graph that is 
+not stationary as it is missing the edge `X1 lag(n=1) -> X2 lag(n=1)`. Adding that edge would make the graph no longer
+minimal so the process may be stationary, but obviously the minimal graph will be non-stationary. The stationary graph 
+is obtained by extending (in time) the minimal graph with all the edges to the correct backward and forward time lags.
 
-Summary graph.
-X1 -> X2
-![ts_summary_graph](images/ts_summary_graph.png)
-
-Extended graph with `backward_steps` = 2 and `forward_steps` = 0.
-X1(t-2) -> X1(t-1)
-X2(t-2) -> X2(t-1)
-X1(t-2) -> X2(t-2)
-X1(t-1) -> X1(t)
-X2(t-1) -> X2(t)
-X1(t-1) -> X2(t-1)
-X1(t) -> X2(t)
-![ts_cg](images/ts_extended_graph.png)
-
+:::
 
 ## Extended graph
 You can extend the graph in time by adding nodes for each variable at each time step from `backward_steps` to
-`forward_steps`. If a backward step of n is specified, it means that the graph will be extended in order to
-include nodes back to time -n and all the nodes connected to them as specified by the minimal graph.
-If both `backward_steps` and `forward_steps` are None, the original graph is returned.
+`forward_steps`. If a backward step of `n` is specified, it means that the graph will be extended in order to
+include nodes back to time `-n` and all the nodes connected to them as specified by the minimal graph. If a forward step
+of `n` is specified, it means the graph will be extended in order to include nodes forward to time `n` and all the nodes
+connected to them as specified by the minimal graph. If both `backward_steps` and `forward_steps` are `None`, the 
+original graph is returned.
 
 ```python
 from cai_causal_graph import TimeSeriesCausalGraph
@@ -211,6 +209,24 @@ forward_steps = 3
 
 extended_graph = ts_cg.extend_graph(backward_steps=backward_steps, forward_steps=forward_steps)
 ```
+
+## Example
+You define the following as the initial `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` instance.
+Please note that this graph is stationary.
+
+![ts_cg](images/ts_cg.png)
+
+If you query for the minimal graph, you will get the following:
+
+![ts_minimal_graph](images/ts_minimal_graph.png)
+
+If you query for the summary graph, you will get the following:
+
+![ts_summary_graph](images/ts_summary_graph.png)
+
+Finally, if you extend the minimal graph with `backward_steps=2` = 2 and `forward_steps=0` = 0.
+
+![ts_cg](images/ts_extended_graph.png)
 
 ## Markov Equivalence Classes
 Certain causal relationships yield the same conditional independencies and are therefore indistinguishable from each other with only observational data. The set of such causal relationships is called the Markov Equivalence Class (MEC) for a particular set of nodes. Most causal discovery methods that use observational data are only able to return the MEC of a set of nodes and not the full directed acyclic graph (DAG).
@@ -227,7 +243,7 @@ Similar to a CPDAG, a PAG can represent a number of DAGs. Therefore, PAGs, CPDAG
 
 MAGs and PAGs retain the pairwise Markov property of DAGs - every missing edges corresponds to a statement of conditional independence amongst the observed variables. Contrary to DAGs, however, the presence of an edge does not mean necessarily that two nodes are adjacent in the (presumed) true DAG - which may include unobserved variables. Rather, it simply means that a conditional set that separates the two nodes could not be found amongst the observed variables.
 
-`cai_causal_graph.causal_graph.TimeSeriesCausalGraph` also supports Markov equivalence classes, as in the following example with a CPDAG.
+`cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` also supports Markov equivalence classes, as in the following example with a CPDAG.
 
 ```python
 from cai_causal_graph import EdgeType, TimeSeriesCausalGraph
@@ -249,29 +265,32 @@ ts_cg: TimeSeriesCausalGraph
 
 # Return a list of variable names from a list of node names
 node_names = ['X', 'X lag(n=1)', 'Y', 'Z lag(n=2)']
-ts_cg.get_variable_names_from_node_names()
->>> ['X', 'Y', 'Z']
+ts_cg.get_variable_names_from_node_names(node_names)
+# This will return ['X', 'Y', 'Z']
 ```
 
 Conversely, you can extract the time series nodes in the graph from a given list of identifiers.
 
 ```python
+from typing import List
 from cai_causal_graph import TimeSeriesCausalGraph
+from cai_causal_graph.graph_components import TimeSeriesNode
 
 ts_cg: TimeSeriesCausalGraph
 
-# A single node
-variable: TimeSeriesNode = ts_cg.get_nodes(identifier='X lag(n=1)')
+# A single node (it will be a list with one element)
+variable: List[TimeSeriesNode] = ts_cg.get_nodes(identifier='X lag(n=1)')
 
 # Multiple nodes
-variables = ts_cg.get_nodes(identifier=['X', 'X lag(n=1)'])
+variables: List[TimeSeriesNode] = ts_cg.get_nodes(identifier=['X', 'X lag(n=1)'])
 ```
 
 ## Add nodes
 You can add time series nodes and the corresponding meta data will be automatically populated.
 
 ```python
-from cai_causal_graph import TimeSeriesCausalGraph, TimeSeriesNode
+from cai_causal_graph import NodeVariableType, TimeSeriesCausalGraph
+from cai_causal_graph.graph_components import TimeSeriesNode
 
 ts_cg: TimeSeriesCausalGraph
 
@@ -288,7 +307,7 @@ ts_cg.add_node(identifier='X lag(n=3)', variable_type=NodeVariableType.UNSPECIFI
 ```
 
 ## Add edges
-You can add time series edges and the corresponding meta data will be automatically populated.
+You can add time series edges and the corresponding metadata will be automatically populated.
 
 ```python
 from cai_causal_graph import EdgeType, TimeSeriesCausalGraph
@@ -313,7 +332,7 @@ ts_cg.add_edges_from(pairs=[('X lag(n=2)', 'Y lag(n=2)'), ('X lag(n=3)', 'Y lag(
 Replace a node in the time series graph.
 
 ```python
-from cai_causal_graph import TimeSeriesCausalGraph
+from cai_causal_graph import NodeVariableType, TimeSeriesCausalGraph
 
 ts_cg: TimeSeriesCausalGraph
 
@@ -380,41 +399,7 @@ ts_cg: TimeSeriesCausalGraph
 
 variables = ts_cg.variables
 ```
-### Stationarity
-
-It may be useful to check whether the time series graph is stationary, i.e. its edges are not
-dependent on the corresponding time lags. In other words, the graph is the same for all time lags.
-Stationarity is a useful concept for future prediction: if the graph is stationary, it can be used to predict the future
-for any time lag.
-Conversely, if the graph is not stationary, it can only be used to predict the future for the specified time lags.
-Thus, in a stationary graph, if the edge `X lag(n=1) -> Y lag(n=1)` exists, also the edge `X lag(n=2) -> Y lag(n=2)` 
-must be present if the nodes `X lag(n=2)` and `Y lag(n=2)` are also present.
-
-You can check whether the graph is stationary by calling the `is_stationary_gragh` method. The stationary graph is obtained by extending (in time) the minimal graph with all the edges to the correct backward and forward time lags.
-
-```python
-
-from cai_causal_graph import TimeSeriesCausalGraph
-
-ts_cg: TimeSeriesCausalGraph
-
-is_stationary = ts_cg.is_stationary_graph()
-```
-
-Moreover, you can make it stationary by calling the `get_stationary_graph` method as follows:
-
-```python
-
-from cai_causal_graph import TimeSeriesCausalGraph
-
-ts_cg: TimeSeriesCausalGraph
-
-stationary_graph = ts_cg.get_stationary_graph()
-```
-
-It is important to note that the minimal graph is not necessarily stationary. This does not mean that the underlying process is not stationary. 
-It only means that the graph is missing at least one of the corresponding edges in time. Please refer to the image example for a visualization of a minimal graph that is not stationary.
 
 ## Other methods
 For all the other base properties and methods (e.g. how to query nodes and edges), please refer to the documentation of `cai_causal_graph.causal_graph.CausalGraph`,
-from which `cai_causal_graph.causal_graph.TimeSeriesCausalGraph` inherits all the functionalities.
+from which `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` inherits all the functionalities.
