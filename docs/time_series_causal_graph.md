@@ -411,6 +411,8 @@ ts_cg: TimeSeriesCausalGraph
 stationary_graph = ts_cg.get_stationary_graph()
 ```
 
+The stationary graph is obtained by extending (in time) the minimal graph with all the edges to the correct backward and forward time lags.
+
 It is important to note that the minimal graph is not necessarily stationary. This does not mean that the underlying process is not stationary. 
 It only means that the graph is missing at least one of the corresponding edges in time. Please refer to the image example for a visualization of a minimal graph that is not stationary.
 
