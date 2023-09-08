@@ -45,6 +45,7 @@ def _reset_ts_graph_attributes(func: Callable) -> Callable:
         function = func(self, *args, **kwargs)
         self._minimal_graph = None
         self._summary_graph = None
+        self._stationary_graph = None
         self._maxlag = None
         self._variables = None
         return function
@@ -112,6 +113,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         # list of variables in the graph, i.e. discarding the lags (X1(t-1) and X1 are the same variable)
         self._variables: Optional[List[str]] = None
         self._summary_graph: Optional[CausalGraph] = None
+        self._stationary_graph: Optional[TimeSeriesCausalGraph] = None
         self._minimal_graph: Optional[TimeSeriesCausalGraph] = None
 
     def __eq__(self, other: object) -> bool:
@@ -158,6 +160,43 @@ class TimeSeriesCausalGraph(CausalGraph):
         # cast the graph to TimeSeriesCausalGraph to have the correct metadata
         return TimeSeriesCausalGraph.from_causal_graph(graph)
 
+    def is_stationary_graph(self) -> bool:
+        """
+        Check if the graph is stationary. That is, if the graph is time invariant.
+
+        If there exists the edge X(t-1) -> X(t), then there must be the same edge X(t-2) -> X(t-1), etc.
+
+        :return: True if the graph is stationary, False otherwise.
+        """
+        if not self.is_dag():
+            logger.warning('The graph is not a DAG. The stationarity check is not valid.')
+            return False
+
+        stationary_graph = self.get_stationary_graph()
+
+        # now check if the stationary graph is equal to the current graph
+        return stationary_graph == self
+
+    def get_stationary_graph(self) -> TimeSeriesCausalGraph:
+        """
+        Make the graph stationary by adding the missing edges if needed.
+
+        If there exists the edge X(t-1) -> X(t), then there must be the edge X(t-2) -> X(t-1), etc.
+        """
+        if self._stationary_graph is not None:
+            return self._stationary_graph
+
+        # extract the minimal graph
+        minimal_graph = self.get_minimal_graph()
+
+        # extract the negative and positive lag of the original graph
+        lags = sorted([node.time_lag for node in self.get_nodes()])
+        neg_lag, pos_lag = lags[0], lags[-1]
+
+        # now extend the minimal graph to the current max and min lag to match the current graph
+        self._stationary_graph = minimal_graph.extend_graph(-neg_lag, pos_lag)
+        return self._stationary_graph
+
     def get_minimal_graph(self) -> TimeSeriesCausalGraph:
         """
         Return a minimal graph.
@@ -186,12 +225,14 @@ class TimeSeriesCausalGraph(CausalGraph):
 
             time_delta = edge.destination.time_lag - edge.source.time_lag
             # add the edge if the time delta is 0 (no need to extract the new names)
+            # copy the edge type to the minimal graph
             if time_delta == 0 and not minimal_cg.edge_exists(
                 edge.source.variable_name, edge.destination.variable_name
             ):
                 minimal_cg.add_edge(
                     edge.source.variable_name,
                     edge.destination.variable_name,
+                    edge_type=edge.get_edge_type(),
                 )
             # otherwise if the time delta is not 0, we may have X[t-2]->X[t-1] and
             # we must add X[t-1]->X[t]
@@ -204,6 +245,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                     minimal_cg.add_edge(
                         source_name,
                         destination_name,
+                        edge_type=edge.get_edge_type(),
                     )
 
         return minimal_cg
@@ -236,6 +278,10 @@ class TimeSeriesCausalGraph(CausalGraph):
             summary_graph = CausalGraph()
             # now check as described above (assume edges are already directed)
             edges = self.get_edges()
+
+            # check if the graph is a DAG
+            assert self.is_dag(), 'This method only works for DAGs but the current graph is not a DAG.'
+
             for edge in edges:
                 # first we need to extract the variable names from the nodes as the summary graph
                 # will have the variable names as nodes
@@ -286,10 +332,10 @@ class TimeSeriesCausalGraph(CausalGraph):
         # check steps are valid (positive integers) if not None
         if backward_steps is not None:
             assert backward_steps == int(backward_steps), f'backward_steps must be an integer. Got {backward_steps}.'
-            assert backward_steps > 0, f'backward_steps must be a positive integer. Got {backward_steps}.'
+            assert backward_steps >= 0, f'backward_steps must be a non-negative integer. Got {backward_steps}.'
         if forward_steps is not None:
             assert forward_steps == int(forward_steps), f'backward_steps must be an integer. Got {forward_steps}.'
-            assert forward_steps > 0, f'forward_steps must be a positive integer. Got {forward_steps}.'
+            assert forward_steps >= 0, f'forward_steps must be a non-negative integer. Got {forward_steps}.'
 
         # first get the minimal graph
         minimal_graph = self.get_minimal_graph()
@@ -334,6 +380,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                         extended_graph.add_edge(
                             source=lagged_source_node,
                             destination=lagged_destination_node,
+                            edge_type=edge.get_edge_type(),
                             meta=edge.meta,
                         )
 
@@ -373,13 +420,12 @@ class TimeSeriesCausalGraph(CausalGraph):
                     lagged_source = self._get_lagged_node(node=source, lag=source.time_lag + lag)
                     lagged_dest = self._get_lagged_node(node=destination, lag=destination.time_lag + lag)
 
-                    lagged_edge = Edge(
-                        source=extended_graph.get_node(lagged_source.identifier),  # make sure the node exists
+                    extended_graph.add_edge(
+                        source=extended_graph.get_node(lagged_source.identifier),
                         destination=extended_graph.get_node(lagged_dest.identifier),
                         edge_type=edge.get_edge_type(),
-                        meta=edge.meta,  # copy the meta from the original edge
+                        meta=edge.meta,
                     )
-                    extended_graph.add_edge(edge=lagged_edge)
 
         return extended_graph
 
@@ -564,13 +610,13 @@ class TimeSeriesCausalGraph(CausalGraph):
         super().delete_node(identifier)
 
     @_reset_ts_graph_attributes
-    def delete_edge(self, source: NodeLike, destination: NodeLike):
+    def delete_edge(self, /, source: NodeLike, destination: NodeLike, *, edge_type: Optional[EdgeType] = None):
         """
         Delete an edge from the graph.
 
         See `cai_causal_graph.causal_graph.CausalGraph.delete_edge` for more details.
         """
-        super().delete_edge(source, destination)
+        super().delete_edge(source, destination, edge_type=edge_type)
 
     @_reset_ts_graph_attributes
     def add_edge(
@@ -639,6 +685,45 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         return edge
 
+    @_reset_ts_graph_attributes
+    def add_time_edge(
+        self,
+        /,
+        source_variable: str,
+        source_time: int,
+        destination_variable: str,
+        destination_time: int,
+        *,
+        meta: Optional[dict] = None,
+        **kwargs,
+    ) -> Edge:
+        """
+        Add a time edge to the graph from the variable at the source time to the variable at the destination time.
+
+        :param source_variable: The name of the source variable.
+        :param source_time: The time of the source variable.
+        :param destination_variable: The name of the destination variable.
+        :param destination_time: The time of the destination variable.
+        :param meta: The metadata for the edge.
+        :param kwargs: Additional keyword arguments to pass to the `cai_causal_graph.causal_graph.CausalGraph.add_edge`
+            method.
+        :return: The edge that was added.
+
+        Example:
+            - `add_time_edge('x', -2, 'x', 2)` will add an edge from the variable `x` at time -2 to the variable `x` at
+                time 2.
+        """
+
+        assert source_variable is not None
+        assert source_time is not None
+        assert destination_variable is not None
+        assert destination_time is not None
+
+        source = get_name_with_lag(source_variable, source_time)
+        destination = get_name_with_lag(destination_variable, destination_time)
+
+        return self.add_edge(source, destination, meta=meta, **kwargs)
+
     @classmethod
     def from_causal_graph(cls, causal_graph: CausalGraph) -> TimeSeriesCausalGraph:
         """
@@ -664,7 +749,10 @@ class TimeSeriesCausalGraph(CausalGraph):
         for edge in causal_graph.get_edges():
             source = ts_cg.get_node(edge.source)
             destination = ts_cg.get_node(edge.destination)
-            ts_cg.add_edge(source, destination, meta=edge.meta)
+            assert isinstance(source, TimeSeriesNode)  # for linting
+            assert isinstance(destination, TimeSeriesNode)  # for linting
+
+            ts_cg.add_edge(source, destination, meta=edge.meta, edge_type=edge.get_edge_type())
 
         ts_cg._sepsets = sepsets
 
@@ -860,6 +948,21 @@ class TimeSeriesCausalGraph(CausalGraph):
         # check all nodes are TimeSeriesNode
         assert all(isinstance(node, TimeSeriesNode) for node in nodes)
         return nodes  # type: ignore
+
+    def to_numpy_by_lag(self) -> Tuple[Dict[int, numpy.ndarray], List[str]]:
+        """
+        Return the adjacency matrices of the time series causal graph ordered by the time delta.
+
+        Different time deltas are represented by different adjacency matrices.
+        The keys of the dictionary are the time deltas and the values are the adjacency matrices.
+
+        :return: A tuple containing the dictionary for the adjacency matrices and the variable names.
+        """
+        # get the adjacency matrix
+        adjacency_matrices = self.adjacency_matrices
+
+        assert self.variables is not None
+        return adjacency_matrices, self.variables
 
     def __hash__(self) -> int:
         """

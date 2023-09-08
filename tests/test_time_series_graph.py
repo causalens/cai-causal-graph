@@ -22,7 +22,7 @@ import numpy
 from cai_causal_graph import CausalGraph, EdgeType, NodeVariableType, TimeSeriesCausalGraph
 from cai_causal_graph.exceptions import CausalGraphErrors
 from cai_causal_graph.graph_components import TimeSeriesNode
-from cai_causal_graph.utils import extract_names_and_lags, get_variable_name_and_lag
+from cai_causal_graph.utils import extract_names_and_lags, get_name_with_lag, get_variable_name_and_lag
 
 
 class TestTimeSeriesCausalGraph(unittest.TestCase):
@@ -39,7 +39,7 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         instantaneous edges:
             - X1(t) -> X3(t)
         """
-
+        self.rng = numpy.random.default_rng(42)
         self.nodes = ['X1', 'X1 lag(n=1)', 'X2 lag(n=1)', 'X3 lag(n=1)', 'X2', 'X3']
 
         # define a DAG
@@ -362,6 +362,33 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         with self.assertRaises(ValueError):
             TimeSeriesCausalGraph.from_causal_graph(cg)
 
+        # test with mixed graphs with random edges
+        cg = CausalGraph()
+        cg.add_nodes_from(self.nodes)
+        added_edges = 0
+        while added_edges < 5:
+            # add edge with random type
+            source = self.rng.choice(self.nodes)
+            destination = self.rng.choice(self.nodes)
+            vns, lags = get_variable_name_and_lag(source)
+            vnd, lagd = get_variable_name_and_lag(destination)
+            edge_type = self.rng.choice(list(EdgeType.__members__.values()))
+            if edge_type == EdgeType.DIRECTED_EDGE and lags > lagd:
+                # swap source and destination
+                source, destination = destination, source
+
+            # check for edge existence and self loops
+            if not cg.edge_exists(source, destination) and not source == destination:
+                cg.add_edge(source, destination, edge_type=edge_type)
+                added_edges += 1
+
+        # it should not raise
+        tscg = TimeSeriesCausalGraph.from_causal_graph(cg)
+
+        # check it preserves the edge types
+        for edge in cg.edges:
+            self.assertEqual(tscg.get_edge(edge.source, edge.destination).get_edge_type(), edge.get_edge_type())
+
     def test_from_adjacency_matrix(self):
         # test with the adjacency matrix corresponding to th minimal tsdag
         mg = self.tsdag.get_minimal_graph()
@@ -414,6 +441,14 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         self.assertEqual(summary_graph_1.identifier, '<X3>_<X1>_<X2>')
         self.assertEqual(summary_graph_1, self.ground_truth_summary_graph_1)
 
+        # test it fails when it is a DAG
+        for edge_type in EdgeType.__members__:
+            tscg = self.tsdag_1.copy()
+            tscg.change_edge_type('X1 lag(n=1)', 'X1', new_edge_type=edge_type)
+
+            with self.assertRaises(AssertionError):
+                _ = tscg.get_summary_graph()
+
     def test_variable_names(self):
         variables = self.tsdag.variables
         self.assertEqual(variables, ['X1', 'X2', 'X3'])
@@ -454,17 +489,17 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         self.assertEqual(mg, ground_truth_mg)
 
         # TODO: CAUSALAI-3397 - Need to test with CPGAG, MAG, and PAGs
-        # for edge_type in EdgeType.__members__:
-        #     tscg = TimeSeriesCausalGraph()
-        #     tscg.add_edge('x', 'x future(n=2)', edge_type=edge_type)
-        #     self.assertFalse(tscg.is_minimal_graph())
-        #
-        #     true_minimal = TimeSeriesCausalGraph()
-        #     true_minimal.add_edge('x lag(n=2)', 'x', edge_type=edge_type)
-        #     self.assertTrue(true_minimal.is_minimal_graph())
-        #
-        #     self.assertEqual(tscg.get_minimal_graph(), true_minimal)
-        #     self.assertTrue((tscg.get_minimal_graph().is_minimal_graph())
+        for edge_type in EdgeType.__members__:
+            tscg = TimeSeriesCausalGraph()
+            tscg.add_edge('x', 'x future(n=2)', edge_type=edge_type)
+            self.assertFalse(tscg.is_minimal_graph())
+
+            true_minimal = TimeSeriesCausalGraph()
+            true_minimal.add_edge('x lag(n=2)', 'x', edge_type=edge_type)
+            self.assertTrue(true_minimal.is_minimal_graph())
+
+            self.assertEqual(tscg.get_minimal_graph(), true_minimal)
+            self.assertTrue(tscg.get_minimal_graph().is_minimal_graph())
 
     def test_extend_backward(self):
         # with 1 steps
@@ -533,6 +568,27 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
         self.assertEqual(extended_dag_2, gr_ext_dag_2)
 
+        # test with other types of edges
+        tscg1 = self.ground_truth_minimal_graph_1.copy()
+
+        # change randomly the edge types of the graph
+        for edge in tscg1.get_edges():
+            edge._edge_type = self.rng.choice(list(EdgeType.__members__.values()))
+
+        extended_tscg1 = tscg1.extend_graph(backward_steps=2)
+
+        # create the extended graph from the previous extended graph
+        for edge in extended_tscg1.edges:
+            vars = edge.source.variable_name
+            vard = edge.destination.variable_name
+            time_delta = edge.source.time_lag - edge.destination.time_lag
+
+            # check if the corresponding edge in the minimal graph has same edge type
+            new_source = get_name_with_lag(vars, time_delta)
+            new_destination = get_name_with_lag(vard, 0)
+
+            self.assertEqual(tscg1.get_edge(new_source, new_destination).get_edge_type(), edge.get_edge_type())
+
     def test_extend_graph_forward(self):
         # with 1 steps
         # dag
@@ -597,6 +653,90 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         extended_graph_3.add_edge('F future(n=1)', 'F future(n=2)', edge_type=EdgeType.DIRECTED_EDGE)
 
         self.assertEqual(extended_dag_3, extended_graph_3)
+
+        # test with other types of edges
+        tscg3 = self.ground_truth_minimal_graph_3.copy()
+
+        # change randomly the edge types of the graph
+        for edge in tscg3.get_edges():
+            edge._edge_type = self.rng.choice(list(EdgeType.__members__.values()))
+
+        extended_tsdag_3 = tscg3.extend_graph(forward_steps=1)
+
+        tscg3.add_edge('A', 'A future(n=1)', edge_type=tscg3.get_edge('A lag(n=1)', 'A').get_edge_type())
+        tscg3.add_edge('B', 'B future(n=1)', edge_type=tscg3.get_edge('B lag(n=1)', 'B').get_edge_type())
+        tscg3.add_edge('A future(n=1)', 'C future(n=1)', edge_type=tscg3.get_edge('A', 'C').get_edge_type())
+        tscg3.add_edge('B future(n=1)', 'C future(n=1)', edge_type=tscg3.get_edge('B', 'C').get_edge_type())
+        tscg3.add_edge('C future(n=1)', 'D future(n=1)', edge_type=tscg3.get_edge('C', 'D').get_edge_type())
+        tscg3.add_edge('C future(n=1)', 'E future(n=1)', edge_type=tscg3.get_edge('C', 'E').get_edge_type())
+        tscg3.add_edge('D future(n=1)', 'E future(n=1)', edge_type=tscg3.get_edge('D', 'E').get_edge_type())
+        tscg3.add_edge('E future(n=1)', 'F future(n=1)', edge_type=tscg3.get_edge('E', 'F').get_edge_type())
+        tscg3.add_edge('F', 'F future(n=1)', edge_type=tscg3.get_edge('F lag(n=1)', 'F').get_edge_type())
+
+        self.assertEqual(extended_tsdag_3, tscg3)
+
+    def test_add_time_edge(self):
+        # test adding a time edge to a graph
+        tsgraph = TimeSeriesCausalGraph()
+        tsgraph.add_time_edge('A', -1, 'B', 2)
+
+        # create the ground truth graph
+        ground_truth_graph = TimeSeriesCausalGraph()
+        ground_truth_graph.add_edge('A lag(n=1)', 'B future(n=2)', edge_type=EdgeType.DIRECTED_EDGE)
+        self.assertEqual(tsgraph, ground_truth_graph)
+
+        tsgraph = TimeSeriesCausalGraph()
+        tsgraph.add_time_edge('A', 0, 'B', 0)
+        ground_truth_graph = TimeSeriesCausalGraph()
+        ground_truth_graph.add_edge('A', 'B', edge_type=EdgeType.DIRECTED_EDGE)
+        self.assertEqual(tsgraph, ground_truth_graph)
+
+    def test_is_stationary(self):
+
+        tscg = TimeSeriesCausalGraph()
+        tscg.add_edge('X1 lag(n=2)', 'X1 lag(n=1)')
+        tscg.add_edge('X2 lag(n=2)', 'X2 lag(n=1)')
+        tscg.add_edge('X1 lag(n=1)', 'X2 lag(n=1)')
+        tscg.add_edge('X1', 'X2')
+        tscg.add_edge('X2 lag(n=1)', 'X2')
+
+        self.assertFalse(tscg.is_stationary_graph())
+
+        # now make it stationary manually
+        tscg.add_edge('X1 lag(n=2)', 'X2 lag(n=2)')
+        tscg.add_edge('X1 lag(n=1)', 'X1')
+
+        self.assertTrue(tscg.is_stationary_graph())
+
+    def test_make_stationary(self):
+
+        tscg = TimeSeriesCausalGraph()
+        tscg.add_edge('X1 lag(n=2)', 'X1 lag(n=1)')
+        tscg.add_edge('X2 lag(n=2)', 'X2 lag(n=1)')
+        tscg.add_edge('X1 lag(n=1)', 'X2 lag(n=1)')
+        tscg.add_edge('X1', 'X2')
+        tscg.add_edge('X2 lag(n=1)', 'X2')
+
+        self.assertFalse(tscg.is_stationary_graph())
+
+        stat_tscg = tscg.get_stationary_graph()
+
+        self.assertTrue(stat_tscg.is_stationary_graph())
+
+    def test_to_numpy_by_lag(self):
+        # test with empty graph
+        tsdag = TimeSeriesCausalGraph()
+        adj_matrices, variables = tsdag.to_numpy_by_lag()
+        self.assertEqual(len(adj_matrices), 0)
+        self.assertEqual(len(variables), 0)
+
+        # test with a simple graph
+        adj_matrices, variables = self.tsdag_1.to_numpy_by_lag()
+        self.assertEqual(len(adj_matrices), 3)
+        self.assertEqual(len(variables), 3)
+        self.assertEqual(adj_matrices[0].shape, (3, 3))
+        self.assertEqual(adj_matrices[-1].shape, (3, 3))
+        self.assertEqual(adj_matrices[-2].shape, (3, 3))
 
 
 class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
