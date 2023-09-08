@@ -31,8 +31,8 @@ However, it is easier to just add nodes directly to the `cai_causal_graph.time_s
 
 The format of the identifier is the following: 
 - `f'{variable_name}'` if `time_lag == 0`
-- `f'{variable_name} lag(n={time_lag}'` if `time_lag < 0`
-- `f'{variable_name} future(n={time_lag}'` if `time_lag < 1`
+- `f'{variable_name} lag(n={time_lag})'` if `time_lag < 0`
+- `f'{variable_name} future(n={time_lag})'` if `time_lag > 0`
 
 ## Examples of time series causal graphs
 The following examples have been drawn from _Peters, J., Janzing, D. and Schölkopf, B., 2017. Elements of causal 
