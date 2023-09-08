@@ -691,7 +691,52 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         ground_truth_graph.add_edge('A', 'B', edge_type=EdgeType.DIRECTED_EDGE)
         self.assertEqual(tsgraph, ground_truth_graph)
 
+    def test_is_stationary(self):
 
+        tscg = TimeSeriesCausalGraph()
+        tscg.add_edge('X1 lag(n=2)', 'X1 lag(n=1)')
+        tscg.add_edge('X2 lag(n=2)', 'X2 lag(n=1)')
+        tscg.add_edge('X1 lag(n=1)', 'X2 lag(n=1)')
+        tscg.add_edge('X1', 'X2')
+        tscg.add_edge('X2 lag(n=1)', 'X2')
+
+        self.assertFalse(tscg.is_stationary_graph())
+
+        # now make it stationary manually
+        tscg.add_edge('X1 lag(n=2)', 'X2 lag(n=2)')
+        tscg.add_edge('X1 lag(n=1)', 'X1')
+
+        self.assertTrue(tscg.is_stationary_graph())
+
+    def test_make_stationary(self):
+
+        tscg = TimeSeriesCausalGraph()
+        tscg.add_edge('X1 lag(n=2)', 'X1 lag(n=1)')
+        tscg.add_edge('X2 lag(n=2)', 'X2 lag(n=1)')
+        tscg.add_edge('X1 lag(n=1)', 'X2 lag(n=1)')
+        tscg.add_edge('X1', 'X2')
+        tscg.add_edge('X2 lag(n=1)', 'X2')
+
+        self.assertFalse(tscg.is_stationary_graph())
+
+        stat_tscg = tscg.get_stationary_graph()
+
+        self.assertTrue(stat_tscg.is_stationary_graph())
+
+    def test_to_numpy_by_lag(self):
+        # test with empty graph
+        tsdag = TimeSeriesCausalGraph()
+        adj_matrices, variables = tsdag.to_numpy_by_lag()
+        self.assertEqual(len(adj_matrices), 0)
+        self.assertEqual(len(variables), 0)
+        
+        # test with a simple graph
+        adj_matrices, variables = self.tsdag_1.to_numpy_by_lag()
+        self.assertEqual(len(adj_matrices), 2)
+        self.assertEqual(len(variables), 2)
+        self.assertEqual(adj_matrices[0].shape, (2, 2))
+        self.assertEqual(adj_matrices[1].shape, (2, 2))
+      
 class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
     def test_default_nodes_and_edges(self):
         cg = TimeSeriesCausalGraph()
@@ -889,35 +934,3 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
         self.assertEqual(repr(cg['banana']), 'TimeSeriesNode("banana", type="continuous")')
         self.assertEqual(repr(cg['carrot lag(n=3)']), 'TimeSeriesNode("carrot lag(n=3)")')
         self.assertEqual(repr(cg['donut future(n=2)']), 'TimeSeriesNode("donut future(n=2)")')
-
-    def test_is_stationary(self):
-
-        tscg = TimeSeriesCausalGraph()
-        tscg.add_edge('X1 lag(n=2)', 'X1 lag(n=1)')
-        tscg.add_edge('X2 lag(n=2)', 'X2 lag(n=1)')
-        tscg.add_edge('X1 lag(n=1)', 'X2 lag(n=1)')
-        tscg.add_edge('X1', 'X2')
-        tscg.add_edge('X2 lag(n=1)', 'X2')
-
-        self.assertFalse(tscg.is_stationary_graph())
-
-        # now make it stationary manually
-        tscg.add_edge('X1 lag(n=2)', 'X2 lag(n=2)')
-        tscg.add_edge('X1 lag(n=1)', 'X1')
-
-        self.assertTrue(tscg.is_stationary_graph())
-
-    def test_make_stationary(self):
-
-        tscg = TimeSeriesCausalGraph()
-        tscg.add_edge('X1 lag(n=2)', 'X1 lag(n=1)')
-        tscg.add_edge('X2 lag(n=2)', 'X2 lag(n=1)')
-        tscg.add_edge('X1 lag(n=1)', 'X2 lag(n=1)')
-        tscg.add_edge('X1', 'X2')
-        tscg.add_edge('X2 lag(n=1)', 'X2')
-
-        self.assertFalse(tscg.is_stationary_graph())
-
-        stat_tscg = tscg.get_stationary_graph()
-
-        self.assertTrue(stat_tscg.is_stationary_graph())
