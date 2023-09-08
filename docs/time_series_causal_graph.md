@@ -390,7 +390,8 @@ Conversely, if the graph is not stationary, it can only be used to predict the f
 Thus, in a stationary graph, if the edge `X lag(n=1) -> Y lag(n=1)` exists, also the edge `X lag(n=2) -> Y lag(n=2)` 
 must be present if the nodes `X lag(n=2)` and `Y lag(n=2)` are also present.
 
-You can check whether the graph is stationary by calling the `is_stationary_gragh` method.
+You can check whether the graph is stationary by calling the `is_stationary_gragh` method. The stationary graph is obtained by extending (in time) the minimal graph with all the edges to the correct backward and forward time lags.
+
 
 ```python
 
@@ -411,8 +412,6 @@ ts_cg: TimeSeriesCausalGraph
 
 stationary_graph = ts_cg.get_stationary_graph()
 ```
-
-The stationary graph is obtained by extending (in time) the minimal graph with all the edges to the correct backward and forward time lags.
 
 It is important to note that the minimal graph is not necessarily stationary. This does not mean that the underlying process is not stationary. 
 It only means that the graph is missing at least one of the corresponding edges in time. Please refer to the image example for a visualization of a minimal graph that is not stationary.
