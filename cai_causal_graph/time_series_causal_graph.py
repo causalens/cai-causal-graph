@@ -174,12 +174,13 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         stationary_graph = self.get_stationary_graph()
 
-        # now check if the extended minimal graph is equal to the current graph
+        # now check if the stationary graph is equal to the current graph
         return stationary_graph == self
 
     def get_stationary_graph(self) -> TimeSeriesCausalGraph:
         """
         Make the graph stationary by adding the missing edges if needed.
+
         If there exists the edge X(t-1) -> X(t), then there must be the edge X(t-2) -> X(t-1), etc.
         """
         if self._stationary_graph is not None:
