@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.2.1
 
 - Fixed `repr` bug in the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class.
 - Added `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.to_numpy_by_lag` method to convert the
