@@ -178,7 +178,6 @@ X1(t+1) -> X2(t+1)
 Minimal graph.
 X1(t-1) -> X1(t)
 X2(t-1) -> X2(t)
-X1(t-1) -> X2(t-1)
 X1(t) -> X2(t)
 ![ts_minimal_graph](images/ts_minimal_graph.png)
 
