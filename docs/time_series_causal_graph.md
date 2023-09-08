@@ -392,7 +392,6 @@ must be present if the nodes `X lag(n=2)` and `Y lag(n=2)` are also present.
 
 You can check whether the graph is stationary by calling the `is_stationary_gragh` method. The stationary graph is obtained by extending (in time) the minimal graph with all the edges to the correct backward and forward time lags.
 
-
 ```python
 
 from cai_causal_graph import TimeSeriesCausalGraph
