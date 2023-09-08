@@ -6,7 +6,10 @@
 - Added equality method for the `cai_causal_graph.graph_components.TimeSeriesNode` class.
 - Extended unit tests for `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` and
   `cai_causal_graph.graph_components.TimeSeriesNode` classes.
-- Added `cai_causal_graph.time_series_causal_graph.`  method
+- Added `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.to_numpy_by_lag` method to convert the
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` to a dictionary of adjacency matrices where the
+  keys are the time lags with the values being the adjacency matrices with respect to the variables.
+- Fixed edge type in the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_gragh` method.
 
 ## 0.2.0
 
