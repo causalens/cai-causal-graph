@@ -948,6 +948,21 @@ class TimeSeriesCausalGraph(CausalGraph):
         assert all(isinstance(node, TimeSeriesNode) for node in nodes)
         return nodes  # type: ignore
 
+    def to_numpy_by_lag(self) -> Tuple[Dict[int, numpy.ndarray], List[str]]:
+        """
+        Return the adjacency matrices of the time series causal graph ordered by the time delta.
+
+        Different time deltas are represented by different adjacency matrices.
+        The keys of the dictionary are the time deltas and the values are the adjacency matrices.
+
+        :return: A tuple containing the dictionary for the adjacency matrices and the variable names.
+        """
+        # get the adjacency matrix
+        adjacency_matrices = self.adjacency_matrices
+
+        assert self.variables is not None
+        return adjacency_matrices, self.variables
+
     def __hash__(self) -> int:
         """
         Return a hash representation of the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` instance.
