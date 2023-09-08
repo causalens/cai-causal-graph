@@ -412,7 +412,7 @@ stationary_graph = ts_cg.get_stationary_graph()
 ```
 
 It is important to note that the minimal graph is not necessarily stationary. This does not mean that the underlying process is not stationary. 
-It only means that the graph is missing at least one of the corresponding edges. Please refer to the image example for a visualization of a minimal graph that is not stationary.
+It only means that the graph is missing at least one of the corresponding edges in time. Please refer to the image example for a visualization of a minimal graph that is not stationary.
 
 ## Other methods
 For all the other base properties and methods (e.g. how to query nodes and edges), please refer to the documentation of `cai_causal_graph.causal_graph.CausalGraph`,
