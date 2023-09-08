@@ -729,14 +729,15 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         adj_matrices, variables = tsdag.to_numpy_by_lag()
         self.assertEqual(len(adj_matrices), 0)
         self.assertEqual(len(variables), 0)
-        
+
         # test with a simple graph
         adj_matrices, variables = self.tsdag_1.to_numpy_by_lag()
         self.assertEqual(len(adj_matrices), 2)
         self.assertEqual(len(variables), 2)
-        self.assertEqual(adj_matrices[0].shape, (2, 2))
-        self.assertEqual(adj_matrices[1].shape, (2, 2))
-      
+        self.assertEqual(adj_matrices[0].shape, (3, 3))
+        self.assertEqual(adj_matrices[1].shape, (3, 3))
+
+
 class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
     def test_default_nodes_and_edges(self):
         cg = TimeSeriesCausalGraph()
