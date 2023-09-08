@@ -382,14 +382,15 @@ variables = ts_cg.variables
 ```
 ### Stationarity
 
-It may be useful to check whether the time series graph is stationary. By stationary, we mean that the graph is not
-dependent on the time lag. In other words, the graph is the same for all time lags. This is useful for example when
-we want to use the graph to predict the future. If the graph is stationary, we can use the graph to predict the future
-for any time lag. If the graph is not stationary, we can only use the graph to predict the future for the time lag
-that the graph was built for. Thus, if the edge `X lag(n=1) -> Y lag(n=1)` exists, also the edge `X lag(n=2) -> Y lag(n=2)` 
-must be present if the nodes `X lag(n=2)` and `Y lag(n=2)` are presented.
+It may be useful to check whether the time series graph is stationary, i.e. its edges are not
+dependent on the corresponding time lags. In other words, the graph is the same for all time lags.
+Stationarity is a useful concept for future prediction: if the graph is stationary, it can be used to predict the future
+for any time lag.
+Conversely, if the graph is not stationary, it can only be used to predict the future for the specified time lags.
+Thus, in a stationary graph, if the edge `X lag(n=1) -> Y lag(n=1)` exists, also the edge `X lag(n=2) -> Y lag(n=2)` 
+must be present if the nodes `X lag(n=2)` and `Y lag(n=2)` are also present.
 
-You can check if the graph is stationary by calling the `is_stationary_gragh` method.
+You can check whether the graph is stationary by calling the `is_stationary_gragh` method.
 
 ```python
 
