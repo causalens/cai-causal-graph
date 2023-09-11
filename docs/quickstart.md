@@ -69,7 +69,7 @@ ts_causal_graph = TimeSeriesCausalGraph()
 
 # add edges to the causal graph
 ts_causal_graph.add_time_edge('X1', -1, 'X2', 0)
-ts_causal_graph.add_time_edge('X2,' -1, 'X2', 0)
+ts_causal_graph.add_time_edge('X2', -1, 'X2', 0)
 ```
 
 `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` is aware of the time lags of the variables and can 
@@ -112,6 +112,7 @@ ts_causal_graph = TimeSeriesCausalGraph.from_causal_graph(causal_graph)
 
 # Can also just construct the TimeSeriesCausalGraph directly
 ts_causal_graph = TimeSeriesCausalGraph()
+# Add edges. Could also use add_time_edge instead, as shown above.
 ts_causal_graph.add_edge('X1 lag(n=1)', 'X2')
 ts_causal_graph.add_edge('X2 lag(n=1)', 'X2')
 ```

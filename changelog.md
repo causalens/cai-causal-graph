@@ -1,5 +1,9 @@
 # Changelog
 
+## NEXT
+
+- Fixed typo in the quickstart documentation.
+
 ## 0.2.1
 
 - Fixed `repr` bug in the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class.
