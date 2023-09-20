@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import re
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 from cai_causal_graph.type_definitions import HasIdentifier, NodeLike
 
@@ -112,3 +112,8 @@ def extract_names_and_lags(
         names_and_lags.append({variable_name: lag})
 
     return names_and_lags, max_lag
+
+
+def to_list(var: Any) -> List[Any]:
+    """Helper to make sure a var is always a list"""
+    return var if isinstance(var, list) else [var]
