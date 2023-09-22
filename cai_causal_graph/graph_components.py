@@ -326,6 +326,12 @@ class TimeSeriesNode(Node):
         return super().__hash__()
 
     def to_dict(self, include_meta: bool = True) -> dict:
+        """
+        Return a dictionary representation of the time series node.
+
+        :param include_meta: Whether to include the metadata in the dictionary. Default is `True`.
+        :return: The dictionary representation of the time series node.
+        """
         dictionary = super().to_dict(include_meta)
         # add the time lag and variable name to the dictionary
         dictionary.update({TIME_LAG: self.time_lag, VARIABLE_NAME: self.variable_name})
