@@ -332,26 +332,6 @@ class TimeSeriesNode(Node):
         return dictionary
 
     @classmethod
-    def from_dict(cls, d: dict) -> TimeSeriesNode:
-        """
-        Create a time series node from a dictionary.
-
-        :param d: The dictionary from which to create the time series node.
-        :return: The time series node created from the dictionary.
-        """
-        assert 'identifier' in d, 'The dictionary must contain the `identifier` key.'
-        assert TIME_LAG in d, f'The dictionary must contain the `{TIME_LAG}` key.'
-        assert VARIABLE_NAME in d, f'The dictionary must contain the `{VARIABLE_NAME}` key.'
-
-        return cls(
-            identifier=d.get('identifier'),
-            time_lag=d.get(TIME_LAG),
-            variable_name=d.get(VARIABLE_NAME),
-            meta=d.get('meta', None),
-            variable_type=d.get('variable_type', NodeVariableType.UNSPECIFIED),
-        )
-
-    @classmethod
     def from_dict(cls, dictionary: dict) -> TimeSeriesNode:
         """
         Create a time series node from a dictionary.

@@ -549,7 +549,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             raise CausalGraphErrors.NodeDuplicatedError(f'Node already exists: {identifier}')
         return identifier
 
-    def _prepare_nodes(self, source: NodeLike, destination: NodeLike) -> Tuple[Node, Node]:
+    def _prepare_nodes(self, source: NodeLike, destination: NodeLike) -> Tuple[List[Node], List[Node]]:
         """Prepare the source and destination nodes for adding an edge."""
         source_meta = None
         if isinstance(source, HasMetadata):
