@@ -382,6 +382,14 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         self._skeleton = Skeleton(graph=self)
         self._sepsets: dict = dict()
 
+    @staticmethod
+    def _node_class():
+        return Node
+
+    @staticmethod
+    def _edge_class():
+        return Edge
+
     def __copy__(self) -> CausalGraph:
         """Copy a `cai_causal_graph.causal_graph.CausalGraph` instance."""
         return self.copy()
@@ -533,6 +541,75 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
     def is_empty(self) -> bool:
         """Return True if there are no nodes and edges. False otherwise."""
         return len(self.nodes) == 0 and len(self.edges) == 0
+
+    def _check_node(self, identifier: NodeLike) -> str:
+        identifier = Node.identifier_from(identifier)
+
+        if identifier in self._nodes_by_identifier:
+            raise CausalGraphErrors.NodeDuplicatedError(f'Node already exists: {identifier}')
+        return identifier
+
+    def _prepare_nodes(self, source: NodeLike, destination: NodeLike) -> Tuple[Node, Node]:
+        """Prepare the source and destination nodes for adding an edge."""
+        source_meta = None
+        if isinstance(source, HasMetadata):
+            source_meta = source.get_metadata()
+
+        destination_meta = None
+        if isinstance(destination, HasMetadata):
+            destination_meta = destination.get_metadata()
+
+        source = Node.identifier_from(source)
+        destination = Node.identifier_from(destination)
+
+        # check that the source is not equal to destination
+        if source == destination:
+            raise CausalGraphErrors.CyclicConnectionError(
+                f'Adding an edge from {source} to {destination} would create a self-loop, no matter the edge type. '
+                f'This is currently not supported.'
+            )
+
+        source_nodes = self.get_nodes(source)
+        destination_nodes = self.get_nodes(destination)
+        edges = self.get_edges(source, destination)
+
+        if len(source_nodes) != 1:
+            # The node was not explicitly defined by the user, so we will add it implicitly based on the edge info
+            self.add_node(source, meta=source_meta)
+            source_nodes = self.get_nodes(source)
+        if len(destination_nodes) != 1:
+            # The node was not explicitly defined by the user, so we will add it implicitly based on the edge info
+            self.add_node(destination, meta=destination_meta)
+            destination_nodes = self.get_nodes(destination)
+        if len(edges) != 0:
+            # We don't allow implicit edge override. The user should delete the node or modify it.
+            raise CausalGraphErrors.EdgeDuplicatedError(
+                f'An edge already exists between {source} and {destination}. '
+                f'Please modify or delete this and then create the new edge explicitly.'
+            )
+        return source_nodes, destination_nodes
+
+    def _set_edge(self, source: NodeLike, destination: NodeLike, edge: Edge):
+        if isinstance(source, HasIdentifier):
+            source = source.identifier
+        if isinstance(destination, HasIdentifier):
+            destination = destination.identifier
+        self._edges_by_source[source][destination] = edge
+        self._edges_by_destination[destination][source] = edge
+
+        # only add edges to inbound / outbound edges of a node if the specified edge type is directed
+        if edge._edge_type == EdgeType.DIRECTED_EDGE:
+            self._nodes_by_identifier[destination]._add_inbound_edge(edge)
+            self._nodes_by_identifier[source]._add_outbound_edge(edge)
+
+        # check that there are no cycles of directed edges
+        try:
+            self._assert_node_does_not_depend_on_itself(destination)
+        except AssertionError:
+            self.delete_edge(source, destination)
+            raise CausalGraphErrors.CyclicConnectionError(
+                f'Adding an edge from {source} to {destination} would create a cyclic connection.'
+            )
 
     def _is_fully_directed(self) -> bool:
         """
@@ -695,10 +772,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
                 'or provide a constructed `Node` object using the `node` parameter.'
             )
 
-        identifier = Node.identifier_from(identifier)
-
-        if identifier in self._nodes_by_identifier:
-            raise CausalGraphErrors.NodeDuplicatedError(f'Node already exists: {identifier}')
+        identifier = self._check_node(identifier)
 
         node = Node(identifier, variable_type=variable_type)
 
@@ -1023,66 +1097,14 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
                 'or provide a constructed `Edge` object using the `edge` parameter.'
             )
 
-        source_meta = None
-        if isinstance(source, HasMetadata):
-            source_meta = source.get_metadata()
-
-        destination_meta = None
-        if isinstance(destination, HasMetadata):
-            destination_meta = destination.get_metadata()
-
-        source = Node.identifier_from(source)
-        destination = Node.identifier_from(destination)
-
-        # check that the source is not equal to destination
-        if source == destination:
-            raise CausalGraphErrors.CyclicConnectionError(
-                f'Adding an edge from {source} to {destination} would create a self-loop, no matter the edge type. '
-                f'This is currently not supported.'
-            )
-
-        source_nodes = self.get_nodes(source)
-        destination_nodes = self.get_nodes(destination)
-        edges = self.get_edges(source, destination)
-
-        if len(source_nodes) != 1:
-            # The node was not explicitly defined by the user, so we will add it implicitly based on the edge info
-            self.add_node(source, meta=source_meta)
-            source_nodes = self.get_nodes(source)
-        if len(destination_nodes) != 1:
-            # The node was not explicitly defined by the user, so we will add it implicitly based on the edge info
-            self.add_node(destination, meta=destination_meta)
-            destination_nodes = self.get_nodes(destination)
-        if len(edges) != 0:
-            # We don't allow implicit edge override. The user should delete the node or modify it.
-            raise CausalGraphErrors.EdgeDuplicatedError(
-                f'An edge already exists between {source} and {destination}. '
-                f'Please modify or delete this and then create the new edge explicitly.'
-            )
-
+        source_nodes, destination_nodes = self._prepare_nodes(source, destination)
         edge = Edge(source_nodes[0], destination_nodes[0], edge_type=edge_type)
 
         # Add any meta
         if meta is not None:
             edge.meta = meta
 
-        self._edges_by_source[source][destination] = edge
-        self._edges_by_destination[destination][source] = edge
-
-        # only add edges to inbound / outbound edges of a node if the specified edge type is directed
-        if edge_type == EdgeType.DIRECTED_EDGE:
-            self._nodes_by_identifier[destination]._add_inbound_edge(edge)
-            self._nodes_by_identifier[source]._add_outbound_edge(edge)
-
-        # check that there are no cycles of directed edges
-        try:
-            self._assert_node_does_not_depend_on_itself(destination)
-        except AssertionError:
-            self.delete_edge(source, destination)
-            raise CausalGraphErrors.CyclicConnectionError(
-                f'Adding an edge from {source} to {destination} would create a cyclic connection.'
-            )
-
+        self._set_edge(source, destination, edge)
         return edge
 
     def add_edges_from(self, pairs: List[Tuple[NodeLike, NodeLike]]):
@@ -1711,21 +1733,22 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """Construct a `cai_causal_graph.causal_graph.CausalGraph` instance from a Python dictionary."""
         graph = cls()
 
-        for identifier, node_dictionary in d['nodes'].items():
-            graph.add_node(
-                identifier,
-                variable_type=node_dictionary.get('variable_type', NodeVariableType.UNSPECIFIED),
-                meta=node_dictionary.get('meta', {}),
-            )
+        node_class = cls._node_class()
+        for identifier, node_dict in d['nodes'].items():
+            node = node_class.from_dict(node_dict)
+            graph.add_node(node=node)
 
+        edge_class = cls._edge_class()
         for source, destinations in d['edges'].items():
-            for destination, edge_dictionary in destinations.items():
-                graph.add_edge(
-                    source,
-                    destination,
-                    edge_type=EdgeType.DIRECTED_EDGE if d['version'] == 2 else edge_dictionary['edge_type'],
-                    meta=edge_dictionary.get('meta', {}),
-                )
+            for destination, edge_dict in destinations.items():
+                edge = edge_class.from_dict(edge_dict)
+                # check the nodes have correct types
+                if not isinstance(edge.source, node_class) and isinstance(edge.source, Node):
+                    # it is a time series node, change the node types
+                    # can be avoided if we created a TimeSeriesEdge class
+                    edge._source = node_class.from_dict(edge_dict['source'])
+                    edge._destination = node_class.from_dict(edge_dict['destination'])
+                graph.add_edge(edge=edge)
 
         return graph
 

@@ -116,6 +116,10 @@ class TimeSeriesCausalGraph(CausalGraph):
         self._stationary_graph: Optional[TimeSeriesCausalGraph] = None
         self._minimal_graph: Optional[TimeSeriesCausalGraph] = None
 
+    @staticmethod
+    def _node_class():
+        return TimeSeriesNode
+
     def __eq__(self, other: object) -> bool:
         """
         Return True if the graphs are equal.
