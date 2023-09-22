@@ -865,7 +865,7 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
             cg.add_node('apple lag(n=2)', None, -2)
 
         with self.assertRaises(AssertionError):
-            cg.add_node('apple lag(n=2)', 'apple', -2)
+            cg.add_node('apple lag(n=3)', 'apple', -2)
 
         with self.assertRaises(CausalGraphErrors.NodeDuplicatedError):
             cg.add_node(node=node)
