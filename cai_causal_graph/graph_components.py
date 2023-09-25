@@ -346,12 +346,19 @@ class TimeSeriesNode(Node):
         :return: The time series node created from the dictionary.
         """
         assert 'identifier' in dictionary, 'The dictionary must contain the `identifier` key.'
-        assert TIME_LAG in dictionary, f'The dictionary must contain the `{TIME_LAG}` key.'
-        assert VARIABLE_NAME in dictionary, f'The dictionary must contain the `{VARIABLE_NAME}` key.'
+
+        if TIME_LAG not in dictionary or VARIABLE_NAME not in dictionary:
+            dictionary = dictionary.copy()
+            # reconstruct from identifier
+            variable_name, time_lag = get_variable_name_and_lag(dictionary.get('identifier'))  # type: ignore
+            dictionary[TIME_LAG] = time_lag
+            dictionary[VARIABLE_NAME] = variable_name
 
         return cls(
             identifier=dictionary.get('identifier'),
-            time_lag=dictionary.get(TIME_LAG),
+            time_lag=dictionary.get(
+                TIME_LAG,
+            ),
             variable_name=dictionary.get(VARIABLE_NAME),
             meta=dictionary.get('meta', None),
             variable_type=dictionary.get('variable_type', NodeVariableType.UNSPECIFIED),
@@ -497,12 +504,9 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
 
         edge_type = edge_dict['edge_type']
 
-        if 'meta' in edge_dict:
-            meta = edge_dict['meta']
-        else:
-            meta = None
+        meta = edge_dict.get('meta', None)
 
-        return cls(source, destination, edge_type, meta)
+        return cls(source=source, destination=destination, edge_type=edge_type, meta=meta)
 
     def to_dict(self, include_meta: bool = True) -> dict:
         """

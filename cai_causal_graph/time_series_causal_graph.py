@@ -64,6 +64,8 @@ class TimeSeriesCausalGraph(CausalGraph):
     - `cai_causal_graph.type_definitions.VARIABLE_NAME`: the name of the variable (without the lag information)
     """
 
+    _NodeCls = TimeSeriesNode
+
     def __init__(
         self,
         input_list: Optional[List[NodeLike]] = None,
@@ -115,10 +117,6 @@ class TimeSeriesCausalGraph(CausalGraph):
         self._summary_graph: Optional[CausalGraph] = None
         self._stationary_graph: Optional[TimeSeriesCausalGraph] = None
         self._minimal_graph: Optional[TimeSeriesCausalGraph] = None
-
-    @staticmethod
-    def _node_class():
-        return TimeSeriesNode
 
     def __eq__(self, other: object) -> bool:
         """
@@ -559,10 +557,8 @@ class TimeSeriesCausalGraph(CausalGraph):
             variable_type=variable_type,
             meta=meta,
         )
-        identifier = node.identifier
-        if identifier in self._nodes_by_identifier:
-            raise CausalGraphErrors.NodeDuplicatedError(f'Node already exists: {identifier}')
 
+        identifier = self._check_node_exists(node)
         self._nodes_by_identifier[identifier] = node
 
         return node
@@ -622,24 +618,16 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         super().delete_edge(source, destination, edge_type=edge_type)
 
-    @_reset_ts_graph_attributes
-    def add_edge(
+    def _check_nodes_and_edge(
         self,
         /,
         source: Optional[NodeLike] = None,
         destination: Optional[NodeLike] = None,
         *,
         edge_type: EdgeType = EdgeType.DIRECTED_EDGE,
-        meta: Optional[dict] = None,
         edge: Optional[Edge] = None,
-        **kwargs,
-    ) -> Edge:
-        """
-        Add an edge to the graph. See `cai_causal_graph.causal_graph.CausalGraph.add_edge` for more details.
-
-        In addition to the `cai_causal_graph.causal_graph.CausalGraph.add_edge` method, this method also populates the
-        metadata of the nodes with the variable name and the time lag.
-        """
+    ):
+        """Check that the source and destination nodes exist and that the edge is valid."""
         # if the source and destination time series nodes do not exist, create them
         if source is not None and not self.node_exists(source):
             source_meta = None
@@ -685,7 +673,34 @@ class TimeSeriesCausalGraph(CausalGraph):
                 )
         # No else needed as we don't need to check time direction for other edge types.
 
-        edge = super().add_edge(source, destination, edge_type=edge_type, meta=meta, edge=edge, **kwargs)
+    @_reset_ts_graph_attributes
+    def add_edge(
+        self,
+        /,
+        source: Optional[NodeLike] = None,
+        destination: Optional[NodeLike] = None,
+        *,
+        edge_type: EdgeType = EdgeType.DIRECTED_EDGE,
+        meta: Optional[dict] = None,
+        edge: Optional[Edge] = None,
+        **kwargs,
+    ) -> Edge:
+        """
+        Add an edge to the graph. See `cai_causal_graph.causal_graph.CausalGraph.add_edge` for more details.
+
+        In addition to the `cai_causal_graph.causal_graph.CausalGraph.add_edge` method, this method also populates the
+        metadata of the nodes with the variable name and the time lag.
+        """
+        # if the nodes are Node but not TimeSeriesNodes, covert them to TimeSeriesNodes
+        if edge is not None and isinstance(edge.source, Node) and not isinstance(edge.source, TimeSeriesNode):
+            new_source = TimeSeriesNode.from_dict(edge.source.to_dict())
+            new_destination = TimeSeriesNode.from_dict(edge.destination.to_dict())
+            edge = Edge(new_source, new_destination, edge_type=edge_type, meta=meta, **kwargs)
+
+        self._check_nodes_and_edge(source=source, destination=destination, edge_type=edge_type, edge=edge)
+        edge = super().add_edge(
+            source=source, destination=destination, edge_type=edge_type, meta=meta, edge=edge, **kwargs
+        )
 
         return edge
 

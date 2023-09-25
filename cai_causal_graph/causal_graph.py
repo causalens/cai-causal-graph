@@ -291,6 +291,9 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
 class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeserialize):
     """A low-level class that uniquely defines the state of a causal graph."""
 
+    _NodeCls = Node
+    _EdgeCls = Edge
+
     def __init__(
         self,
         input_list: Optional[List[NodeLike]] = None,
@@ -381,14 +384,6 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         # construct the skeleton and separation sets
         self._skeleton = Skeleton(graph=self)
         self._sepsets: dict = dict()
-
-    @staticmethod
-    def _node_class():
-        return Node
-
-    @staticmethod
-    def _edge_class():
-        return Edge
 
     def __copy__(self) -> CausalGraph:
         """Copy a `cai_causal_graph.causal_graph.CausalGraph` instance."""
@@ -542,22 +537,27 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """Return True if there are no nodes and edges. False otherwise."""
         return len(self.nodes) == 0 and len(self.edges) == 0
 
-    def _check_node(self, identifier: NodeLike) -> str:
+    def _check_node_exists(self, identifier: NodeLike) -> str:
+        """Check the node identifier."""
         identifier = Node.identifier_from(identifier)
 
         if identifier in self._nodes_by_identifier:
             raise CausalGraphErrors.NodeDuplicatedError(f'Node already exists: {identifier}')
         return identifier
 
-    def _prepare_nodes(self, source: NodeLike, destination: NodeLike) -> Tuple[List[Node], List[Node]]:
-        """Prepare the source and destination nodes for adding an edge."""
-        source_meta = None
-        if isinstance(source, HasMetadata):
-            source_meta = source.get_metadata()
+    def _prepare_nodes(self, source: NodeLike, destination: NodeLike) -> Tuple[Node, Node]:
+        """
+        Prepare the source and destination nodes for adding an edge and return the source and destination nodes.
 
-        destination_meta = None
-        if isinstance(destination, HasMetadata):
-            destination_meta = destination.get_metadata()
+        It will add the nodes to the graph if they do not exist yet. Additionally, it will check that if the an edge
+        already exists, it is of the same type as the edge to be added.
+
+        :param source: The source node.
+        :param destination: The destination node.
+        :return: A tuple of source and destination nodes.
+        """
+        source_meta = source.get_metadata() if isinstance(source, HasMetadata) else None
+        destination_meta = destination.get_metadata() if isinstance(destination, HasMetadata) else None
 
         source = Node.identifier_from(source)
         destination = Node.identifier_from(destination)
@@ -587,9 +587,10 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
                 f'An edge already exists between {source} and {destination}. '
                 f'Please modify or delete this and then create the new edge explicitly.'
             )
-        return source_nodes, destination_nodes
+        return source_nodes[0], destination_nodes[0]
 
     def _set_edge(self, source: NodeLike, destination: NodeLike, edge: Edge):
+        """Set the edge in the graph."""
         if isinstance(source, HasIdentifier):
             source = source.identifier
         if isinstance(destination, HasIdentifier):
@@ -772,7 +773,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
                 'or provide a constructed `Node` object using the `node` parameter.'
             )
 
-        identifier = self._check_node(identifier)
+        identifier = self._check_node_exists(identifier)
 
         node = Node(identifier, variable_type=variable_type)
 
@@ -1097,8 +1098,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
                 'or provide a constructed `Edge` object using the `edge` parameter.'
             )
 
-        source_nodes, destination_nodes = self._prepare_nodes(source, destination)
-        edge = Edge(source_nodes[0], destination_nodes[0], edge_type=edge_type)
+        source_node, destination_node = self._prepare_nodes(source, destination)
+        edge = Edge(source_node, destination_node, edge_type=edge_type)
 
         # Add any meta
         if meta is not None:
@@ -1733,21 +1734,13 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """Construct a `cai_causal_graph.causal_graph.CausalGraph` instance from a Python dictionary."""
         graph = cls()
 
-        node_class = cls._node_class()
         for identifier, node_dict in d['nodes'].items():
-            node = node_class.from_dict(node_dict)
+            node = cls._NodeCls.from_dict(node_dict)
             graph.add_node(node=node)
 
-        edge_class = cls._edge_class()
         for source, destinations in d['edges'].items():
             for destination, edge_dict in destinations.items():
-                edge = edge_class.from_dict(edge_dict)
-                # check the nodes have correct types
-                if not isinstance(edge.source, node_class) and isinstance(edge.source, Node):
-                    # it is a time series node, change the node types
-                    # can be avoided if we created a TimeSeriesEdge class
-                    edge._source = node_class.from_dict(edge_dict['source'])
-                    edge._destination = node_class.from_dict(edge_dict['destination'])
+                edge = cls._EdgeCls.from_dict(edge_dict)
                 graph.add_edge(edge=edge)
 
         return graph

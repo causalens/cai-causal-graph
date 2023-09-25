@@ -112,8 +112,3 @@ def extract_names_and_lags(
         names_and_lags.append({variable_name: lag})
 
     return names_and_lags, max_lag
-
-
-def to_list(var: Any) -> List[Any]:
-    """Helper to make sure a var is always a list"""
-    return var if isinstance(var, list) else [var]
