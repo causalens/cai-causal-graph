@@ -690,6 +690,15 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         In addition to the `cai_causal_graph.causal_graph.CausalGraph.add_edge` method, this method also populates the
         metadata of the nodes with the variable name and the time lag.
+
+        :param source: The source node of the edge.
+        :param destination: The destination node of the edge.
+        :param edge_type: The type of edge to add.
+        :param meta: The metadata to add to the edge.
+        :param edge: The edge to add.
+        :param kwargs: Additional keyword arguments to pass to the `cai_causal_graph.causal_graph.CausalGraph.add_edge`
+            method.
+        :return: The edge that was added.
         """
         # if the nodes are Node but not TimeSeriesNodes, covert them to TimeSeriesNodes
         if edge is not None and isinstance(edge.source, Node) and not isinstance(edge.source, TimeSeriesNode):

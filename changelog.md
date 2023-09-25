@@ -2,7 +2,9 @@
 
 ## NEXT
 
-- Added the method `from_dict` for all node and edges.
+- Added the deserialization method `from_dict` for all node and edges to the classes
+  `cai_causal_graph.graph_components.Node.from_dict`, `cai_causal_graph.graph_components.Edge.from_dict` and
+  `cai_causal_graph.graph_components.TimeSeriesNode.from_dict`.
 - Changed behaviour of `cai_causal_graph.time_series.causal_graph.TimeSeriesCausalGraph.add_node` when both `identifier` and (`time_lag`, `variable_name`) are provided. Now, if all are provided, the method will raise an error only if `identifier` is not
   equal to `get_name_with_lag(time_lag, variable_name)`, that is, the correct name.
 
