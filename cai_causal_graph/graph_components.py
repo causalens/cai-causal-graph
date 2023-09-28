@@ -330,7 +330,7 @@ class TimeSeriesNode(Node):
         if not isinstance(other, TimeSeriesNode):
             return False
         # As TimeSeriesNode is a subclass of Node, we can use the Node.__eq__ method and then check for the properties
-        if not super().__eq__(other, deep=deep):
+        if not super().__eq__(other, deep):
             return False
         return self.variable_name == other.variable_name and self.time_lag == other.time_lag
 
@@ -368,10 +368,10 @@ class TimeSeriesNode(Node):
             dictionary['meta'] = {}
 
         if time_lag is None:
-            time_lag = dictionary.get('meta').get(TIME_LAG, None)
+            time_lag = dictionary['meta'].get(TIME_LAG, None)
         else:
             # check that the time lag in the meta matches the time lag in the dictionary
-            time_lag_meta = dictionary.get('meta').get(TIME_LAG, None)
+            time_lag_meta = dictionary['meta'].get(TIME_LAG, None)
 
             if time_lag != time_lag_meta:
                 dictionary['meta'][TIME_LAG] = time_lag
@@ -380,10 +380,10 @@ class TimeSeriesNode(Node):
                 )
 
         if variable_name is None:
-            variable_name = dictionary.get('meta').get(VARIABLE_NAME, None)
+            variable_name = dictionary['meta'].get(VARIABLE_NAME, None)
         else:
             # check that the variable name in the meta matches the variable name in the dictionary
-            variable_name_meta = dictionary.get('meta').get(VARIABLE_NAME, None)
+            variable_name_meta = dictionary['meta'].get(VARIABLE_NAME, None)
 
             if variable_name != variable_name_meta:
                 dictionary['meta'][VARIABLE_NAME] = variable_name
@@ -392,7 +392,7 @@ class TimeSeriesNode(Node):
                     f'dictionary ({variable_name}).'
                 )
 
-        variable_name_identifier, time_lag_identifier = get_variable_name_and_lag(dictionary.get('identifier'))
+        variable_name_identifier, time_lag_identifier = get_variable_name_and_lag(dictionary['identifier'])
 
         if time_lag is not None and variable_name is not None:
             # now if time lag and variable name are not None, check they match the identifier
@@ -410,7 +410,7 @@ class TimeSeriesNode(Node):
             variable_name = variable_name_identifier
 
         return cls(
-            identifier=dictionary.get('identifier'),
+            identifier=dictionary['identifier'],
             time_lag=time_lag,
             variable_name=variable_name,
             meta=dictionary.get('meta'),
@@ -580,10 +580,13 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         ), f'Destination node class is not a valid class. Got {destination_node_class} and supported types are '
         f'{list(_NodeClassDict)}.'
 
-        assert issubclass(_NodeClassDict[source_node_class], Node)   # for linting
+        SourceNodeCls = _NodeClassDict[source_node_class]
+        DestinationNodeCls = _NodeClassDict[destination_node_class]
+        assert issubclass(SourceNodeCls, Node)   # for linting
+        assert issubclass(DestinationNodeCls, Node)   # for linting
 
-        source = _NodeClassDict[source_node_class].from_dict(edge_dict['source'])
-        destination = _NodeClassDict[destination_node_class].from_dict(edge_dict['destination'])
+        source = SourceNodeCls.from_dict(edge_dict['source'])
+        destination = DestinationNodeCls.from_dict(edge_dict['destination'])
 
         edge_type = edge_dict['edge_type']
 
