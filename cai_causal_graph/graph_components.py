@@ -202,7 +202,7 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
 
     @classmethod
     def from_dict(cls, node_dict: dict) -> Node:
-        """Return a `cai_causal_graph.graph_components.Node` (or a subclass) instance from a dictionary."""
+        """Return a `cai_causal_graph.graph_components.Node` instance from a dictionary."""
         return cls(
             identifier=node_dict['identifier'],
             variable_type=node_dict.get('variable_type', NodeVariableType.UNSPECIFIED),
@@ -328,10 +328,10 @@ class TimeSeriesNode(Node):
 
     def to_dict(self, include_meta: bool = True) -> dict:
         """
-        Return a dictionary representation of the time series node.
+        Serialize a `cai_causal_graph.graph_components.TimeSeriesNode` instance to a dictionary.
 
-        :param include_meta: Whether to include the metadata in the dictionary. Default is `True`.
-        :return: The dictionary representation of the time series node.
+        :param include_meta: Whether to include meta information about the node in the dictionary. Default is `True`.
+        :return: The dictionary representation of the `cai_causal_graph.graph_components.TimeSeriesNode` instance.
         """
         dictionary = super().to_dict(include_meta)
         # add the time lag and variable name to the dictionary
@@ -341,7 +341,7 @@ class TimeSeriesNode(Node):
     @classmethod
     def from_dict(cls, dictionary: dict) -> TimeSeriesNode:
         """
-        Create a time series node from a dictionary.
+        Return a `cai_causal_graph.graph_components.TimeSeriesNode` instance from a dictionary.
 
         :param dictionary: The dictionary from which to create the time series node.
         :return: The time series node created from the dictionary.
@@ -506,8 +506,15 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         :param edge_dict: The dictionary representation of the `cai_causal_graph.graph_components.Edge` instance.
         :return: The `cai_causal_graph.graph_components.Edge` instance.
         """
-        NodeCls = NodeClassDict[edge_dict['source']['node_class']]
-        assert isinstance(NodeCls, Node)
+        source_node_class = edge_dict['source'].get('node_class', 'Node')
+        destination_node_class = edge_dict['destination'].get('node_class', 'Node')
+        assert source_node_class in NodeClassDict, f'Source node class not in NodeClassDict. Got {source_node_class}.'
+        assert (
+            destination_node_class in NodeClassDict
+        ), f'Destination node class not in NodeClassDict. Got {destination_node_class}.'
+        NodeCls = NodeClassDict[source_node_class]
+
+        assert issubclass(NodeCls, Node)   # for linting
 
         source = NodeCls.from_dict(edge_dict['source'])
         destination = NodeCls.from_dict(edge_dict['destination'])

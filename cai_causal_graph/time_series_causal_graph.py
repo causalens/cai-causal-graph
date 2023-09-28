@@ -643,19 +643,21 @@ class TimeSeriesCausalGraph(CausalGraph):
             destination = self.add_node(destination, meta=destination_meta)
 
         # For directed edge, confirm time of destination is greater than or equal to time of source.
-        if edge is not None and edge.get_edge_type() == EdgeType.DIRECTED_EDGE:
+        if edge is not None:
             source_node = edge.source
             destination_node = edge.destination
             assert isinstance(source_node, TimeSeriesNode)  # for linting
             assert isinstance(destination_node, TimeSeriesNode)  # for linting
-            time_source = source_node.time_lag
-            time_destination = destination_node.time_lag
-            if time_destination < time_source:
-                raise ValueError(
-                    f'For a directed edge, the time at the destination must be greater than or equal to the time at '
-                    f'the source. The time lag for the source and destination are {time_source} and '
-                    f'{time_destination}, respectively.'
-                )
+
+            if edge.get_edge_type() == EdgeType.DIRECTED_EDGE:
+                time_source = source_node.time_lag
+                time_destination = destination_node.time_lag
+                if time_destination < time_source:
+                    raise ValueError(
+                        f'For a directed edge, the time at the destination must be greater than or equal to the time at '
+                        f'the source. The time lag for the source and destination are {time_source} and '
+                        f'{time_destination}, respectively.'
+                    )
         elif edge_type == EdgeType.DIRECTED_EDGE:
             # Check these are not None before trying to get node.
             assert source is not None
@@ -687,19 +689,28 @@ class TimeSeriesCausalGraph(CausalGraph):
         **kwargs,
     ) -> Edge:
         """
-        Add an edge to the graph. See `cai_causal_graph.causal_graph.CausalGraph.add_edge` for more details.
-
+        Add an edge from a source to a destination node with a specific edge type.
         In addition to the `cai_causal_graph.causal_graph.CausalGraph.add_edge` method, this method also populates the
         metadata of the nodes with the variable name and the time lag.
 
-        :param source: The source node of the edge.
-        :param destination: The destination node of the edge.
-        :param edge_type: The type of edge to add.
-        :param meta: The metadata to add to the edge.
-        :param edge: The edge to add.
-        :param kwargs: Additional keyword arguments to pass to the
-            `cai_causal_graph.causal_graph.TimeSeriesCausalGraph.add_edge` method.
-        :return: The edge that was added.
+        If these two nodes are already connected in any way, then an error will be raised. An error will also be raised
+        if the new edge would create a cyclic connection of directed edges. In this case, the
+        `cai_causal_graph.causal_graph.TimeSeriesCausalGraph` instance will be restored to its original state and the
+        edge will not be added. It is possible to specify an edge type from source to destination as well,
+        with the default being a forward directed edge, i.e., source -> destination.
+
+        :param source: String identifying the node from which the edge will originate. Can be `None`, if an `edge`
+            parameter is specified.
+        :param destination: String identifying the node at which the edge will terminate. Can be `None`, if an `edge`
+            parameter is specified.
+        :param edge_type: The type of the edge to be added. Default is
+            `cai_causal_graph.type_definitions.EdgeType.DIRECTED_EDGE`. See `cai_causal_graph.type_definitions.EdgeType`
+            for the list of possible edge types.
+        :param meta: The meta values for the edge.
+        :param edge: A `cai_causal_graph.graph_components.Edge` edge to be used to construct a new edge. All the
+            properties of the provided edge will be deep copied to the constructed edge, including metadata. If
+            provided, then all other parameters to the method must not be specified. Default is `None`.
+        :return: The created edge object.
         """
         if edge is not None:
             assert isinstance(edge, self._EdgeCls), 'NICE ERROR MESSAGE'

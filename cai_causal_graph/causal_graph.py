@@ -252,7 +252,7 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
         object.
         """
         # Convert node names to strings.
-        node_names: List[str] = [_NodeCls.identifier_from(CausalGraph.coerce_to_nodelike(node)) for node in g.nodes()]
+        node_names: List[str] = [Node.identifier_from(CausalGraph.coerce_to_nodelike(node)) for node in g.nodes()]
         return Skeleton.from_adjacency_matrix(networkx.to_numpy_array(g), node_names)  # type: ignore
 
     @staticmethod

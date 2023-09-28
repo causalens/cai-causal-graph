@@ -17,7 +17,7 @@ limitations under the License.
 import unittest
 
 from cai_causal_graph import EdgeType, NodeVariableType
-from cai_causal_graph.graph_components import Edge, Node
+from cai_causal_graph.graph_components import Edge, Node, TimeSeriesNode
 
 
 class TestGraphComponents(unittest.TestCase):
@@ -30,3 +30,45 @@ class TestGraphComponents(unittest.TestCase):
         edge_dict = edge.to_dict()
         self.assertDictEqual(edge_dict['source'], source.to_dict())
         self.assertDictEqual(edge_dict['destination'], destination.to_dict())
+
+        # test serialization with dicts
+        edge1 = Edge.from_dict(edge_dict)
+        self.assertEqual(edge, edge1)
+
+        # test edge with mixed nodes
+        source = Node(identifier='a', meta={'color': 'blue'}, variable_type=NodeVariableType.BINARY)
+        destination = TimeSeriesNode(identifier='b', meta={'color': 'green'}, variable_type=NodeVariableType.CONTINUOUS)
+        edge = Edge(
+            source=source, destination=destination, edge_type=EdgeType.UNKNOWN_DIRECTED_EDGE, meta={'color': 'red'}
+        )
+
+        # check node class is preserved
+        edge2 = Edge.from_dict(edge.to_dict())
+        self.assertEqual(edge, edge2)
+
+        # test node serialization-deserialization
+        node = Node(identifier='a', meta={'color': 'blue'}, variable_type=NodeVariableType.BINARY)
+        node1 = Node.from_dict(node.to_dict())
+
+        self.assertEqual(node, node1)
+
+        # test time series node serialization-deserialization
+        node = TimeSeriesNode(identifier='a lag(n=2)', meta={'color': 'blue'}, variable_type=NodeVariableType.BINARY)
+        node1 = TimeSeriesNode.from_dict(node.to_dict())
+
+        self.assertEqual(node, node1)
+
+        # test N -> TSN
+        node = Node(identifier='a', meta={'color': 'blue'}, variable_type=NodeVariableType.BINARY)
+        node1 = TimeSeriesNode.from_dict(node.to_dict())
+
+        self.assertNotEqual(node, node1)
+        self.assertEqual(node.identifier, node1.identifier)
+
+        # test TSN -> N
+        node = TimeSeriesNode(identifier='a lag(n=2)', meta={'color': 'blue'}, variable_type=NodeVariableType.BINARY)
+        node1 = Node.from_dict(node.to_dict())
+
+        self.assertNotEqual(node, node1)
+        self.assertEqual(node.identifier, node1.identifier)
+        self.assertEqual(node.variable_type, node1.variable_type)

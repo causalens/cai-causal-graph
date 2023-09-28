@@ -339,6 +339,15 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         )
 
     def test_cg_to_tscg_serialization(self):
+
+        # create a non-DAG graph
+        cg = CausalGraph()
+        cg.add_edge('X1', 'X2', edge_type=EdgeType.UNDIRECTED_EDGE)
+        cg.add_edge('X2 lag(n=1)', 'X3', edge_type=EdgeType.BIDIRECTED_EDGE)
+
+        # test it does not fail
+        tscg1 = TimeSeriesCausalGraph.from_dict(cg.to_dict())
+
         for tscg in [
             self.tsdag,
             self.tsdag_1,
@@ -346,6 +355,7 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
             self.tsdag_3,
             self.ground_truth_minimal_graph_1,
             self.ground_truth_minimal_graph_3,
+            tscg1,
         ]:
             cg = CausalGraph.from_dict(tscg.to_dict())
             ts_cg_back = TimeSeriesCausalGraph.from_dict(cg.to_dict())
@@ -353,6 +363,12 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
             self.assertEqual(tscg, ts_cg_back)
 
     def test_tscg_to_cg_serialization(self):
+        # create a non-DAG graph
+        cg = CausalGraph()
+        cg.add_edge('X1 lag(n=2)', 'X2', edge_type=EdgeType.UNDIRECTED_EDGE)
+        cg.add_edge('X2', 'X3', edge_type=EdgeType.BIDIRECTED_EDGE)
+        tscg1 = TimeSeriesCausalGraph.from_dict(cg.to_dict())
+
         for tscg in [
             self.tsdag,
             self.tsdag_1,
@@ -360,6 +376,7 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
             self.tsdag_3,
             self.ground_truth_minimal_graph_1,
             self.ground_truth_minimal_graph_3,
+            tscg1,
         ]:
             cg = CausalGraph.from_dict(tscg.to_dict())
 
