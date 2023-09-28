@@ -713,7 +713,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         :return: The created edge object.
         """
         if edge is not None:
-            assert isinstance(edge, self._EdgeCls), 'NICE ERROR MESSAGE'
+            assert isinstance(edge, self._EdgeCls), f'Edge class must be of type {self._EdgeCls.__name__}.'
             # Check source node type
             source_node = edge.source
             if isinstance(source_node, Node) and not isinstance(source_node, self._NodeCls):
