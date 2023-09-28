@@ -364,29 +364,56 @@ class TimeSeriesNode(Node):
         time_lag = dictionary.get(TIME_LAG, None)
         variable_name = dictionary.get(VARIABLE_NAME, None)
 
-        time_lag_meta = dictionary.get('meta', {}).get(TIME_LAG, None)
-        variable_name_meta = dictionary.get('meta', {}).get(VARIABLE_NAME, None)
+        if 'meta' not in dictionary:
+            dictionary['meta'] = {}
 
-        assert (
-            time_lag == time_lag_meta
-        ), f'The time lag in the meta ({time_lag_meta}) does not match the time lag in the dictionary ({time_lag}).'
-        assert variable_name == variable_name_meta, (
-            f'The variable name in the meta ({variable_name_meta}) does not match the variable name in the '
-            f'dictionary ({variable_name}).'
-        )
+        if time_lag is None:
+            time_lag = dictionary.get('meta').get(TIME_LAG, None)
+        else:
+            # check that the time lag in the meta matches the time lag in the dictionary
+            time_lag_meta = dictionary.get('meta').get(TIME_LAG, None)
 
-        if time_lag is None or VARIABLE_NAME is None:
-            dictionary = dictionary.copy()
+            if time_lag != time_lag_meta:
+                dictionary['meta'][TIME_LAG] = time_lag
+                logger.warning(
+                    f'The time lag in the meta ({time_lag_meta}) does not match the time lag in the dictionary ({time_lag}).'
+                )
+
+        if variable_name is None:
+            variable_name = dictionary.get('meta').get(VARIABLE_NAME, None)
+        else:
+            # check that the variable name in the meta matches the variable name in the dictionary
+            variable_name_meta = dictionary.get('meta').get(VARIABLE_NAME, None)
+
+            if variable_name != variable_name_meta:
+                dictionary['meta'][VARIABLE_NAME] = variable_name
+                logger.warning(
+                    f'The variable name in the meta ({variable_name_meta}) does not match the variable name in the '
+                    f'dictionary ({variable_name}).'
+                )
+
+        variable_name_identifier, time_lag_identifier = get_variable_name_and_lag(dictionary.get('identifier'))
+
+        if time_lag is not None and variable_name is not None:
+            # now if time lag and variable name are not None, check they match the identifier
+            assert (
+                time_lag == time_lag_identifier
+            ), f'The time lag in the identifier ({time_lag_identifier}) does not match the time lag in the dictionary '
+            'f({time_lag}).'
+            assert variable_name == variable_name_identifier, (
+                f'The variable name in the identifier ({variable_name_identifier}) does not match the variable name in '
+                f'the dictionary ({variable_name}).'
+            )
+        else:
             # reconstruct from identifier
-            variable_name, time_lag = get_variable_name_and_lag(dictionary.get('identifier'))  # type: ignore
-            dictionary[TIME_LAG] = time_lag
-            dictionary[VARIABLE_NAME] = variable_name
+            time_lag = time_lag_identifier
+            variable_name = variable_name_identifier
 
         return cls(
             identifier=dictionary.get('identifier'),
-            time_lag=dictionary.get(TIME_LAG),
-            variable_name=dictionary.get(VARIABLE_NAME),
-            meta=dictionary.get('meta', None),
+            time_lag=time_lag,
+            variable_name=variable_name,
+            meta=dictionary.get('meta'),
             variable_type=dictionary.get('variable_type', NodeVariableType.UNSPECIFIED),
         )
 
