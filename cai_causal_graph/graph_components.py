@@ -412,9 +412,10 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         """Return the edge metadata."""
         return self.metadata
 
-    def get_edge_pair(self) -> Tuple[str, str]:
-        """Return a tuple of the source node and destination node identifiers."""
-        return self._source.identifier, self._destination.identifier
+    @property
+    def edge_type(self) -> EdgeType:
+        """Return the edge type."""
+        return self._edge_type
 
     def get_edge_type(self) -> EdgeType:
         """
@@ -425,6 +426,10 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         graph.
         """
         return self._edge_type
+
+    def get_edge_pair(self) -> Tuple[str, str]:
+        """Return a tuple of the source node and destination node identifiers."""
+        return self._source.identifier, self._destination.identifier
 
     def __repr__(self) -> str:
         """Return a string description of the object."""

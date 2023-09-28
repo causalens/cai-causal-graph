@@ -1,5 +1,10 @@
 # Changelog
 
+## NEXT
+
+- Added `cai_causal_graph.graph_components.Edge.edge_type` property to the `cai_causal_graph.graph_components.Edge`
+  class.
+
 ## 0.2.2
 
 - Fixed typo in the quickstart documentation.
