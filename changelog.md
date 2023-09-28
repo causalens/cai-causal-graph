@@ -2,7 +2,7 @@
 
 ## NEXT
 
-- Added an `cai_causal_graph.graph_components.Edge.edge_type` property to the `cai_causal_graph.graph_components.Edge`
+- Added `cai_causal_graph.graph_components.Edge.edge_type` property to the `cai_causal_graph.graph_components.Edge`
   class.
 
 ## 0.2.2
