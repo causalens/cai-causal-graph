@@ -418,7 +418,7 @@ class TimeSeriesNode(Node):
         )
 
 
-NodeClassDict = {'Node': Node, 'TimeSeriesNode': TimeSeriesNode}
+_NodeClassDict = {'Node': Node, 'TimeSeriesNode': TimeSeriesNode}
 
 
 class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
@@ -571,19 +571,19 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         source_node_class = edge_dict['source'].get('node_class', 'Node')
         destination_node_class = edge_dict['destination'].get('node_class', 'Node')
         assert (
-            source_node_class in NodeClassDict
+            source_node_class in _NodeClassDict
         ), f'Source node class is not a valid class. Got {source_node_class} and supported types are '
-        f'{list(NodeClassDict)}.'
+        f'{list(_NodeClassDict)}.'
 
         assert (
-            destination_node_class in NodeClassDict
+            destination_node_class in _NodeClassDict
         ), f'Destination node class is not a valid class. Got {destination_node_class} and supported types are '
-        f'{list(NodeClassDict)}.'
+        f'{list(_NodeClassDict)}.'
 
-        assert issubclass(NodeClassDict[source_node_class], Node)   # for linting
+        assert issubclass(_NodeClassDict[source_node_class], Node)   # for linting
 
-        source = NodeClassDict[source_node_class].from_dict(edge_dict['source'])
-        destination = NodeClassDict[destination_node_class].from_dict(edge_dict['destination'])
+        source = _NodeClassDict[source_node_class].from_dict(edge_dict['source'])
+        destination = _NodeClassDict[destination_node_class].from_dict(edge_dict['destination'])
 
         edge_type = edge_dict['edge_type']
 
