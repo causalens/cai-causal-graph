@@ -364,7 +364,7 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
             cg = CausalGraph.from_dict(tscg.to_dict())
 
             # check same node identifiers
-            self.assertEqual([node.identifier for node in tscg.nodes], [node.identifier for node in cg.nodes])
+            self.assertListEqual([node.identifier for node in tscg.nodes], [node.identifier for node in cg.nodes])
 
             # check same edges
             for edge in tscg.edges:

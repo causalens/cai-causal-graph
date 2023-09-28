@@ -252,7 +252,7 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
         object.
         """
         # Convert node names to strings.
-        node_names: List[str] = [Node.identifier_from(CausalGraph.coerce_to_nodelike(node)) for node in g.nodes()]
+        node_names: List[str] = [_NodeCls.identifier_from(CausalGraph.coerce_to_nodelike(node)) for node in g.nodes()]
         return Skeleton.from_adjacency_matrix(networkx.to_numpy_array(g), node_names)  # type: ignore
 
     @staticmethod
@@ -539,7 +539,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
     def _check_node_exists(self, identifier: NodeLike) -> str:
         """Validate and return the node identifier."""
-        identifier = Node.identifier_from(identifier)
+        identifier = self._NodeCls.identifier_from(identifier)
 
         if identifier in self._nodes_by_identifier:
             raise CausalGraphErrors.NodeDuplicatedError(f'Node already exists: {identifier}')
@@ -559,8 +559,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         source_meta = source.get_metadata() if isinstance(source, HasMetadata) else None
         destination_meta = destination.get_metadata() if isinstance(destination, HasMetadata) else None
 
-        source = Node.identifier_from(source)
-        destination = Node.identifier_from(destination)
+        source = self._NodeCls.identifier_from(source)
+        destination = self._NodeCls.identifier_from(destination)
 
         # check that the source is not equal to destination
         if source == destination:
@@ -672,7 +672,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
     def get_node(self, identifier: NodeLike) -> Node:
         """Return a node based on its identifier."""
-        return self._nodes_by_identifier[Node.identifier_from(identifier)]
+        return self._nodes_by_identifier[self._NodeCls.identifier_from(identifier)]
 
     def get_nodes(self, identifier: Optional[Union[NodeLike, List[NodeLike]]] = None) -> List[Node]:
         """
@@ -688,14 +688,14 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """
         if identifier is not None:
             if isinstance(identifier, str):
-                identifier = Node.identifier_from(identifier)
+                identifier = self._NodeCls.identifier_from(identifier)
                 node_list = (
                     [self._nodes_by_identifier[identifier]] if identifier in self._nodes_by_identifier else list()
                 )
             elif isinstance(identifier, list):
                 node_list = list()
                 for node_like_id in identifier:
-                    node_id = Node.identifier_from(node_like_id)
+                    node_id = self._NodeCls.identifier_from(node_like_id)
                     if node_id in self._nodes_by_identifier:
                         node_list.append(self._nodes_by_identifier[node_id])
                     else:
@@ -775,7 +775,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
         identifier = self._check_node_exists(identifier)
 
-        node = Node(identifier, variable_type=variable_type)
+        node = self._NodeCls(identifier, variable_type=variable_type)
 
         node.meta = meta if meta is not None else dict()
 
@@ -806,7 +806,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         :param identifier: String identifying the node to be deleted.
         """
         # get the identifier and node
-        identifier = Node.identifier_from(identifier)
+        identifier = self._NodeCls.identifier_from(identifier)
         node = self.get_node(identifier)
 
         # get a list of edges to delete depending on whether they contain the node to be deleted
@@ -894,13 +894,13 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """Return an edge based on its source, destination and (optional) edge_type."""
         # get edge with the specified source and destination
         try:
-            source_identifier = Node.identifier_from(source)
-            destination_identifier = Node.identifier_from(destination)
+            source_identifier = self._NodeCls.identifier_from(source)
+            destination_identifier = self._NodeCls.identifier_from(destination)
             edge = self._edges_by_source[source_identifier][destination_identifier]
         except KeyError:
             raise CausalGraphErrors.EdgeDoesNotExistError(
                 f'The specified edge '
-                f'({Node.identifier_from(source)}, {Node.identifier_from(destination)}) '
+                f'({self._NodeCls.identifier_from(source)}, {self._NodeCls.identifier_from(destination)}) '
                 f'does not exist.'
             )
 
@@ -941,9 +941,9 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         :return: List of matching edges, sorted alphabetically by source identifier and then by destination identifier.
         """
         if source is not None:
-            source = Node.identifier_from(source)
+            source = self._NodeCls.identifier_from(source)
         if destination is not None:
-            destination = Node.identifier_from(destination)
+            destination = self._NodeCls.identifier_from(destination)
 
         # retrieve edges based on source and destination
         edges: List[Edge]
@@ -1041,7 +1041,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         :param new_edge_type: New edge type of the edge. If the new edge type matches existing edge type, no action is
             performed.
         """
-        source, destination = Node.identifier_from(source), Node.identifier_from(destination)
+        source, destination = self._NodeCls.identifier_from(source), self._NodeCls.identifier_from(destination)
         edge = self.get_edge(source=source, destination=destination)
         if edge.get_edge_type() != new_edge_type:
             meta = edge.meta
@@ -1099,7 +1099,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             )
 
         source_node, destination_node = self._prepare_nodes(source, destination)
-        edge = Edge(source_node, destination_node, edge_type=edge_type)
+        edge = self._EdgeCls(source_node, destination_node, edge_type=edge_type)
 
         # Add any meta
         if meta is not None:
@@ -1178,7 +1178,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
     def get_children(self, node: NodeLike) -> List[str]:
         """Get node identifiers for all children nodes for a specific node."""
-        identifier = Node.identifier_from(node)
+        identifier = self._NodeCls.identifier_from(node)
         assert self.node_exists(node), (
             f'The provided node with identifier {identifier} is not present in the graph with nodes: '
             f'{self.get_node_names()}'
@@ -1197,7 +1197,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         This method returns a star graph, such that all edges are going from the provided node. Any edges between the
         children nodes are not present in the returned graph.
         """
-        identifier = Node.identifier_from(node)
+        identifier = self._NodeCls.identifier_from(node)
         assert self.node_exists(node), (
             f'The provided node with identifier {identifier} is not present in the graph with nodes: '
             f'{self.get_node_names()}'
@@ -1223,7 +1223,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
     def get_parents(self, node: NodeLike) -> List[str]:
         """Get node identifiers for all parent nodes for a specific node."""
-        identifier = Node.identifier_from(node)
+        identifier = self._NodeCls.identifier_from(node)
         assert self.node_exists(node), (
             f'The provided node with identifier {identifier} is not present in the graph with nodes: '
             f'{self.get_node_names()}'
@@ -1242,7 +1242,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         This method returns a star graph, such that all edges are going to the provided node. Any edges between the
         parents nodes are not present in the returned graph.
         """
-        identifier = Node.identifier_from(node)
+        identifier = self._NodeCls.identifier_from(node)
         assert self.node_exists(node), (
             f'The provided node with identifier {identifier} is not present in the graph with nodes: '
             f'{self.get_node_names()}'
@@ -1272,7 +1272,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
         This method is only applicable if the graph is a valid DAG (i.e., all edges are directed).
         """
-        identifier = Node.identifier_from(node)
+        identifier = self._NodeCls.identifier_from(node)
         assert self.node_exists(node), (
             f'The provided node with identifier {identifier} is not present in the graph with nodes: '
             f'{self.get_node_names()}'
@@ -1284,7 +1284,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """
         Get a sub causal graph that only includes the ancestors of a specific node and the node itself.
         """
-        identifier = Node.identifier_from(node)
+        identifier = self._NodeCls.identifier_from(node)
         ancestors: List[str] = [*self.get_ancestors(node), identifier]
 
         ancestral_graph = self.copy()
@@ -1301,7 +1301,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
         This method is only applicable if the graph is a valid DAG (i.e., all edges are directed).
         """
-        identifier = Node.identifier_from(node)
+        identifier = self._NodeCls.identifier_from(node)
         assert self.node_exists(node), (
             f'The provided node with identifier {identifier} is not present in the graph with nodes: '
             f'{self.get_node_names()}'
@@ -1313,7 +1313,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """
         Get a sub causal graph that only includes the descendants of a specific node and the node itself.
         """
-        identifier = Node.identifier_from(node)
+        identifier = self._NodeCls.identifier_from(node)
         descendants: List[str] = [*self.get_descendants(node), identifier]
 
         descendant_graph = self.copy()
@@ -1415,8 +1415,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """
         assert self.is_dag(), 'This method only works for DAGs but the current graph is not a DAG.'
 
-        node_1 = Node.identifier_from(node_1)
-        node_2 = Node.identifier_from(node_2)
+        node_1 = self._NodeCls.identifier_from(node_1)
+        node_2 = self._NodeCls.identifier_from(node_2)
 
         assert all(
             node in self.get_node_names() for node in [node_1, node_2]
@@ -1467,9 +1467,9 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             else nodes_2
         )
 
-        nodes_1 = set(Node.identifier_from(node) for node in nodes_1)
-        nodes_2 = set(Node.identifier_from(node) for node in nodes_2)
-        separation_set = set(Node.identifier_from(node) for node in separation_set)
+        nodes_1 = set(self._NodeCls.identifier_from(node) for node in nodes_1)
+        nodes_2 = set(self._NodeCls.identifier_from(node) for node in nodes_2)
+        separation_set = set(self._NodeCls.identifier_from(node) for node in separation_set)
 
         assert all(
             node in self.get_node_names() for node in [*nodes_1, *nodes_2, *separation_set]
@@ -1495,9 +1495,9 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         if separation_set is None:
             separation_set = set()
 
-        node_1_id = Node.identifier_from(node_1)
-        node_2_id = Node.identifier_from(node_2)
-        separation_set_id = set(Node.identifier_from(node) for node in separation_set)
+        node_1_id = self._NodeCls.identifier_from(node_1)
+        node_2_id = self._NodeCls.identifier_from(node_2)
+        separation_set_id = set(self._NodeCls.identifier_from(node) for node in separation_set)
 
         assert all(
             node in self.get_node_names() for node in [node_1_id, node_2_id, *separation_set_id]
@@ -1548,8 +1548,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
         assert self.is_dag(), 'This method only works for DAGs but the current graph is not a DAG.'
 
-        source = Node.identifier_from(source)
-        destination = Node.identifier_from(destination)
+        source = self._NodeCls.identifier_from(source)
+        destination = self._NodeCls.identifier_from(destination)
 
         assert all(node in self.get_node_names() for node in [source, destination])
 
@@ -1567,8 +1567,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         :return: True if there exists a directed path between the source and destination, False otherwise.
         """
         # get proper node identifiers and verify that they exist in the graph
-        source = Node.identifier_from(source)
-        destination = Node.identifier_from(destination)
+        source = self._NodeCls.identifier_from(source)
+        destination = self._NodeCls.identifier_from(destination)
 
         assert all(node in self.get_node_names() for node in [source, destination])
 
@@ -1606,7 +1606,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
     def _assert_node_does_not_depend_on_itself(self, identifier: NodeLike):
         """Check that the given node does not depend on itself, and raise an error if it does."""
-        identifier = Node.identifier_from(identifier)
+        identifier = self._NodeCls.identifier_from(identifier)
 
         checked: Set[str] = set()
         to_check = [identifier]

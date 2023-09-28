@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import re
-from typing import Any, Dict, List, Tuple
+from typing import Dict, List, Tuple
 
 from cai_causal_graph.type_definitions import HasIdentifier, NodeLike
 

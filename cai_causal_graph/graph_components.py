@@ -193,6 +193,7 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         node_dict = {
             'identifier': self.identifier,
             'variable_type': self.variable_type,
+            'node_class': self.__class__.__name__,
         }
         if include_meta:
             node_dict['meta'] = deepcopy(self.meta)   # type: ignore
@@ -201,11 +202,11 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
 
     @classmethod
     def from_dict(cls, node_dict: dict) -> Node:
-        """Return a `cai_causal_graph.graph_components.Node` instance from a dictionary."""
+        """Return a `cai_causal_graph.graph_components.Node` (or a subclass) instance from a dictionary."""
         return cls(
             identifier=node_dict['identifier'],
-            variable_type=node_dict['variable_type'],
-            meta=node_dict.get('meta', {}),
+            variable_type=node_dict.get('variable_type', NodeVariableType.UNSPECIFIED),
+            meta=node_dict.get('meta', None),
         )
 
 
@@ -245,7 +246,7 @@ class TimeSeriesNode(Node):
             `cai_causal_graph.type_definitions.NodeVariableType` enum. Default is `NodeVariableType.UNSPECIFIED`.
         """
         if time_lag is not None and variable_name is not None:
-            # if identifier is None and both time_lag and variable_name are provided, check that the identifier is correct
+            # if identifier is not None and both time_lag and variable_name are provided, check that the identifier is correct
             rec_identifier = get_name_with_lag(variable_name, time_lag)
             assert identifier is None or identifier == rec_identifier, (
                 'The provided identifier does not match the provided time lag and variable name. Either provide a '
@@ -356,13 +357,14 @@ class TimeSeriesNode(Node):
 
         return cls(
             identifier=dictionary.get('identifier'),
-            time_lag=dictionary.get(
-                TIME_LAG,
-            ),
+            time_lag=dictionary.get(TIME_LAG),
             variable_name=dictionary.get(VARIABLE_NAME),
             meta=dictionary.get('meta', None),
             variable_type=dictionary.get('variable_type', NodeVariableType.UNSPECIFIED),
         )
+
+
+NodeClassDict = {'Node': Node, 'TimeSeriesNode': TimeSeriesNode}
 
 
 class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
@@ -499,8 +501,11 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         :param edge_dict: The dictionary representation of the `cai_causal_graph.graph_components.Edge` instance.
         :return: The `cai_causal_graph.graph_components.Edge` instance.
         """
-        source = Node.from_dict(edge_dict['source'])
-        destination = Node.from_dict(edge_dict['destination'])
+        NodeCls = NodeClassDict[edge_dict['source']['node_class']]
+        assert isinstance(NodeCls, Node)
+
+        source = NodeCls.from_dict(edge_dict['source'])
+        destination = NodeCls.from_dict(edge_dict['destination'])
 
         edge_type = edge_dict['edge_type']
 

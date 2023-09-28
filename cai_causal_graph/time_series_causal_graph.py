@@ -65,6 +65,7 @@ class TimeSeriesCausalGraph(CausalGraph):
     """
 
     _NodeCls = TimeSeriesNode
+    _EdgeCls = Edge
 
     def __init__(
         self,
@@ -700,11 +701,21 @@ class TimeSeriesCausalGraph(CausalGraph):
             `cai_causal_graph.causal_graph.TimeSeriesCausalGraph.add_edge` method.
         :return: The edge that was added.
         """
-        # if the nodes are Node but not TimeSeriesNodes, covert them to TimeSeriesNodes
-        if edge is not None and isinstance(edge.source, Node) and not isinstance(edge.source, TimeSeriesNode):
-            new_source = TimeSeriesNode.from_dict(edge.source.to_dict())
-            new_destination = TimeSeriesNode.from_dict(edge.destination.to_dict())
-            edge = Edge(new_source, new_destination, edge_type=edge_type, meta=meta, **kwargs)
+        if edge is not None:
+            assert isinstance(edge, self._EdgeCls), 'NICE ERROR MESSAGE'
+            # Check source node type
+            source_node = edge.source
+            if isinstance(source_node, Node) and not isinstance(source_node, self._NodeCls):
+                source_node = self._NodeCls.from_dict(source_node.to_dict())
+            # Check destination node type
+            destination_node = edge.destination
+            if isinstance(destination_node, Node) and not isinstance(destination_node, self._NodeCls):
+                destination_node = self._NodeCls.from_dict(destination_node.to_dict())
+            # See if either node was recreated, if yes, then create new edge with appropriate nodes
+            if source_node != edge.source or destination_node != edge.destination:
+                edge = self._EdgeCls(
+                    source_node, destination_node, edge_type=edge.get_edge_type(), meta=edge.get_metadata()
+                )
 
         self._check_nodes_and_edge(source=source, destination=destination, edge_type=edge_type, edge=edge)
         edge = super().add_edge(
