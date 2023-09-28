@@ -538,7 +538,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         return len(self.nodes) == 0 and len(self.edges) == 0
 
     def _check_node_exists(self, identifier: NodeLike) -> str:
-        """Check the node identifier."""
+        """Validate and return the node identifier."""
         identifier = Node.identifier_from(identifier)
 
         if identifier in self._nodes_by_identifier:
