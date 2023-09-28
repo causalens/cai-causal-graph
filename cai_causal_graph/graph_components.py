@@ -67,7 +67,8 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         """
         Check if a node is equal to another node.
 
-        This method checks for the node identifier, but ignores variable type, inbound/outbound edges, and any metadata.
+        This method checks for the node identifier, but ignores variable type, inbound/outbound edges, and any metadata,
+        unless deep is True.
 
         :param other: The other node to compare to.
         :param deep: If True, then the variable type, inbound/outbound edges, and metadata are also checked.
@@ -212,6 +213,7 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
     @classmethod
     def from_dict(cls, node_dict: dict) -> Node:
         """Return a `cai_causal_graph.graph_components.Node` instance from a dictionary."""
+        assert 'identifier' in node_dict, 'The provided dictionary does not contain an identifier.'
         return cls(
             identifier=node_dict['identifier'],
             variable_type=node_dict.get('variable_type', NodeVariableType.UNSPECIFIED),
@@ -322,7 +324,7 @@ class TimeSeriesNode(Node):
         Check if a node is equal to another node.
 
         This method checks for the node identifier, variable name, and time lag, but ignores variable type,
-        inbound/outbound edges, and any other metadata.
+        inbound/outbound edges, and any other metadata, unless `deep` is set to `True`.
 
         :param other: The other node to compare with.
         :param deep: If True, then the variable type, inbound/outbound edges, and metadata are also checked.
@@ -359,34 +361,39 @@ class TimeSeriesNode(Node):
         :return: The time series node created from the dictionary.
         """
         assert 'identifier' in dictionary, 'The dictionary must contain the `identifier` key.'
+        if dictionary.get('node_class', 'TimeSeriesNode') != 'TimeSeriesNode':
+            logger.debug(
+                f'The node class in the dictionary is {dictionary.get("node_class")}, but the class is '
+                f'`cai_causal_graph.graph_components.TimeSeriesNode`. The node class will be overwritten to '
+                '`TimeSeriesNode`.'
+            )
 
         # check the meta for the time lag and variable name match the ones in the dictionary
         time_lag = dictionary.get(TIME_LAG, None)
         variable_name = dictionary.get(VARIABLE_NAME, None)
 
-        if 'meta' not in dictionary:
-            dictionary['meta'] = {}
+        meta = dictionary.get('meta', {})
 
         if time_lag is None:
-            time_lag = dictionary['meta'].get(TIME_LAG, None)
+            time_lag = meta.get(TIME_LAG, None)
         else:
             # check that the time lag in the meta matches the time lag in the dictionary
-            time_lag_meta = dictionary['meta'].get(TIME_LAG, None)
+            time_lag_meta = meta.get(TIME_LAG, None)
 
             if time_lag != time_lag_meta:
-                dictionary['meta'][TIME_LAG] = time_lag
+                meta[TIME_LAG] = time_lag
                 logger.warning(
                     f'The time lag in the meta ({time_lag_meta}) does not match the time lag in the dictionary ({time_lag}).'
                 )
 
         if variable_name is None:
-            variable_name = dictionary['meta'].get(VARIABLE_NAME, None)
+            variable_name = meta.get(VARIABLE_NAME, None)
         else:
             # check that the variable name in the meta matches the variable name in the dictionary
-            variable_name_meta = dictionary['meta'].get(VARIABLE_NAME, None)
+            variable_name_meta = meta.get(VARIABLE_NAME, None)
 
             if variable_name != variable_name_meta:
-                dictionary['meta'][VARIABLE_NAME] = variable_name
+                meta[VARIABLE_NAME] = variable_name
                 logger.warning(
                     f'The variable name in the meta ({variable_name_meta}) does not match the variable name in the '
                     f'dictionary ({variable_name}).'
@@ -394,26 +401,28 @@ class TimeSeriesNode(Node):
 
         variable_name_identifier, time_lag_identifier = get_variable_name_and_lag(dictionary['identifier'])
 
-        if time_lag is not None and variable_name is not None:
+        if time_lag is not None:
             # now if time lag and variable name are not None, check they match the identifier
             assert (
                 time_lag == time_lag_identifier
             ), f'The time lag in the identifier ({time_lag_identifier}) does not match the time lag in the dictionary '
-            'f({time_lag}).'
+            f'({time_lag}).'
+        else:
+            time_lag = time_lag_identifier
+
+        if variable_name is not None:
             assert variable_name == variable_name_identifier, (
                 f'The variable name in the identifier ({variable_name_identifier}) does not match the variable name in '
                 f'the dictionary ({variable_name}).'
             )
         else:
-            # reconstruct from identifier
-            time_lag = time_lag_identifier
             variable_name = variable_name_identifier
 
         return cls(
             identifier=dictionary['identifier'],
             time_lag=time_lag,
             variable_name=variable_name,
-            meta=dictionary.get('meta'),
+            meta=meta,
             variable_type=dictionary.get('variable_type', NodeVariableType.UNSPECIFIED),
         )
 
@@ -456,7 +465,7 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         """
         Check if the edge is equal to another edge.
 
-        This method checks for the edge source, destination, and type but ignores any metadata.
+        This method checks for the edge source, destination, and type but ignores any metadata, unless `deep` is True.
 
         :param other: The other edge to compare with.
         :param deep: If True, then the metadata and nodes are also checked.
@@ -467,6 +476,11 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         if deep:
             if not self.source.__eq__(other.source, deep) or not self.destination.__eq__(other.destination, deep):
                 return False
+
+            # check that the metadata is the same
+            if self.meta != other.meta:
+                return False
+
         # if the same source and destination, check that the edge type is the same
         if self.get_edge_pair() == other.get_edge_pair():
             return self.get_edge_type() == other.get_edge_type()
@@ -572,13 +586,12 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         destination_node_class = edge_dict['destination'].get('node_class', 'Node')
         assert (
             source_node_class in _NodeClassDict
-        ), f'Source node class is not a valid class. Got {source_node_class} and supported types are '
-        f'{list(_NodeClassDict)}.'
+        ), f'Source node class is not valid. Got {source_node_class} and supported types are {list(_NodeClassDict)}.'
 
         assert (
             destination_node_class in _NodeClassDict
-        ), f'Destination node class is not a valid class. Got {destination_node_class} and supported types are '
-        f'{list(_NodeClassDict)}.'
+        ), f'Destination node class is not valid. Got {destination_node_class} '
+        f'and supported types are {list(_NodeClassDict)}.'
 
         SourceNodeCls = _NodeClassDict[source_node_class]
         DestinationNodeCls = _NodeClassDict[destination_node_class]
