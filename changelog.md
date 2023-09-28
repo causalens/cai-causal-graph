@@ -9,6 +9,8 @@
   equal to `get_name_with_lag(time_lag, variable_name)`, that is, the correct name.
 - Added `cai_causal_graph.graph_components.Edge.edge_type` property to the `cai_causal_graph.graph_components.Edge`
   class.
+- Extended equality checks for the `cai_causal_graph.graph_components.Node`, `cai_causal_graph.graph_components.Edge`
+  and `cai_causal_graph.graph_components.TimeSeriesNode` classes.
 
 ## 0.2.2
 

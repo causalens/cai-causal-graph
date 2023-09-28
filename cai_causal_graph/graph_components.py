@@ -63,14 +63,23 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         """Return a hash value of the node identifier."""
         return hash(self.identifier)
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, deep: bool = False) -> bool:
         """
         Check if a node is equal to another node.
 
         This method checks for the node identifier, but ignores variable type, inbound/outbound edges, and any metadata.
+
+        :param other: The other node to compare to.
+        :param deep: If True, then the variable type, inbound/outbound edges, and metadata are also checked.
         """
         if not isinstance(other, Node):
             return False
+        if deep:
+            return (
+                self.identifier == other.identifier
+                and self.variable_type == other.variable_type
+                and self.meta == other.meta
+            )
         return self.identifier == other.identifier
 
     def __ne__(self, other: object) -> bool:
@@ -308,17 +317,20 @@ class TimeSeriesNode(Node):
             raise ValueError(f'The variable name for node {self.identifier} is not set.')
         return name
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, deep: bool = False) -> bool:
         """
         Check if a node is equal to another node.
 
         This method checks for the node identifier, variable name, and time lag, but ignores variable type,
         inbound/outbound edges, and any other metadata.
+
+        :param other: The other node to compare with.
+        :param deep: If True, then the variable type, inbound/outbound edges, and metadata are also checked.
         """
         if not isinstance(other, TimeSeriesNode):
             return False
         # As TimeSeriesNode is a subclass of Node, we can use the Node.__eq__ method and then check for the properties
-        if not super().__eq__(other):
+        if not super().__eq__(other, deep=deep):
             return False
         return self.variable_name == other.variable_name and self.time_lag == other.time_lag
 
@@ -348,7 +360,22 @@ class TimeSeriesNode(Node):
         """
         assert 'identifier' in dictionary, 'The dictionary must contain the `identifier` key.'
 
-        if TIME_LAG not in dictionary or VARIABLE_NAME not in dictionary:
+        # check the meta for the time lag and variable name match the ones in the dictionary
+        time_lag = dictionary.get(TIME_LAG, None)
+        variable_name = dictionary.get(VARIABLE_NAME, None)
+
+        time_lag_meta = dictionary.get('meta', {}).get(TIME_LAG, None)
+        variable_name_meta = dictionary.get('meta', {}).get(VARIABLE_NAME, None)
+
+        assert (
+            time_lag == time_lag_meta
+        ), f'The time lag in the meta ({time_lag_meta}) does not match the time lag in the dictionary ({time_lag}).'
+        assert variable_name == variable_name_meta, (
+            f'The variable name in the meta ({variable_name_meta}) does not match the variable name in the '
+            f'dictionary ({variable_name}).'
+        )
+
+        if time_lag is None or VARIABLE_NAME is None:
             dictionary = dictionary.copy()
             # reconstruct from identifier
             variable_name, time_lag = get_variable_name_and_lag(dictionary.get('identifier'))  # type: ignore
@@ -398,15 +425,21 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         """Return a hash value of the edge identifier."""
         return hash(self.identifier)
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, deep: bool = False) -> bool:
         """
         Check if the edge is equal to another edge.
 
         This method checks for the edge source, destination, and type but ignores any metadata.
+
+        :param other: The other edge to compare with.
+        :param deep: If True, then the metadata and nodes are also checked.
         """
         if not isinstance(other, Edge):
             return False
 
+        if deep:
+            if not self.source.__eq__(other.source, deep) or not self.destination.__eq__(other.destination, deep):
+                return False
         # if the same source and destination, check that the edge type is the same
         if self.get_edge_pair() == other.get_edge_pair():
             return self.get_edge_type() == other.get_edge_type()
@@ -504,20 +537,26 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         Deserialize a dictionary to a `cai_causal_graph.graph_components.Edge` instance.
 
         :param edge_dict: The dictionary representation of the `cai_causal_graph.graph_components.Edge` instance.
+            If the `node class` is not specified, it defaults to `cai_causal_graph.graph_components.Node`.
         :return: The `cai_causal_graph.graph_components.Edge` instance.
         """
+        # if node class is not specified, default to Node
         source_node_class = edge_dict['source'].get('node_class', 'Node')
         destination_node_class = edge_dict['destination'].get('node_class', 'Node')
-        assert source_node_class in NodeClassDict, f'Source node class not in NodeClassDict. Got {source_node_class}.'
+        assert (
+            source_node_class in NodeClassDict
+        ), f'Source node class is not a valid class. Got {source_node_class} and supported types are '
+        f'{list(NodeClassDict)}.'
+
         assert (
             destination_node_class in NodeClassDict
-        ), f'Destination node class not in NodeClassDict. Got {destination_node_class}.'
-        NodeCls = NodeClassDict[source_node_class]
+        ), f'Destination node class is not a valid class. Got {destination_node_class} and supported types are '
+        f'{list(NodeClassDict)}.'
 
-        assert issubclass(NodeCls, Node)   # for linting
+        assert issubclass(NodeClassDict[source_node_class], Node)   # for linting
 
-        source = NodeCls.from_dict(edge_dict['source'])
-        destination = NodeCls.from_dict(edge_dict['destination'])
+        source = NodeClassDict[source_node_class].from_dict(edge_dict['source'])
+        destination = NodeClassDict[destination_node_class].from_dict(edge_dict['destination'])
 
         edge_type = edge_dict['edge_type']
 
