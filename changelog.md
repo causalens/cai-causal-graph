@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.2.4
 
 - Fixed formatting in the documentation.
 
