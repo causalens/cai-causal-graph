@@ -10,7 +10,9 @@
 - Added `cai_causal_graph.graph_components.Edge.edge_type` property to the `cai_causal_graph.graph_components.Edge`
   class.
 - Extended equality checks for the `cai_causal_graph.graph_components.Node`, `cai_causal_graph.graph_components.Edge`
-  and `cai_causal_graph.graph_components.TimeSeriesNode` classes.
+  and `cai_causal_graph.graph_components.TimeSeriesNode` classes. They now have a `deep` parameter that forces checks 
+  on all class attributes. To call you must do `node_1.__eq__(node_2, deep=True)` as `node_1 == node_2` still matches 
+  current behavior.
 
 ## 0.2.2
 
