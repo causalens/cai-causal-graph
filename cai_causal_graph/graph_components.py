@@ -489,15 +489,15 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
 
         if deep:
             # Check nodes for deep equality.
-            are_sources_not_equal = not self.source.__eq__(other.source, deep=True)
-            are_destinations_not_equal = not self.destination.__eq__(other.destination, deep=True)
+            are_sources_not_equal = not self.source.__eq__(other.source, True)
+            are_destinations_not_equal = not self.destination.__eq__(other.destination, True)
 
             # Some edges inherently have no direction. So allow them to be defined with opposite source/destination
             if self.get_edge_type() in dont_care_direction and self.get_edge_type() == other.get_edge_type():
                 # allow source and destination to be flipped between each edge
-                if are_sources_not_equal and not self.source.__eq__(other.destination, deep=True):
+                if are_sources_not_equal and not self.source.__eq__(other.destination, True):
                     return False
-                if are_destinations_not_equal and not self.destination.__eq__(other.source, deep=True):
+                if are_destinations_not_equal and not self.destination.__eq__(other.source, True):
                     return False
             elif are_sources_not_equal or are_destinations_not_equal:
                 # source and destination must be the same between each edge
