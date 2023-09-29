@@ -117,19 +117,34 @@ class TestGraphComponents(unittest.TestCase):
             source=destination, destination=source, edge_type=EdgeType.UNDIRECTED_EDGE, meta={'color': 'red'}
         )
 
+        edge_different_direction = Edge(
+            source=source, destination=destination, edge_type=EdgeType.BIDIRECTED_EDGE, meta={'color': 'red'}
+        )
+
         self.assertEqual(edge, edge_recovered)
         self.assertEqual(edge, edge_reversed)
         self.assertEqual(edge_recovered, edge_reversed)
+        self.assertNotEqual(edge, edge_different_direction)
+        self.assertNotEqual(edge_recovered, edge_different_direction)
+        self.assertNotEqual(edge_reversed, edge_different_direction)
 
         self.assertTrue(edge.__eq__(edge_recovered, deep=True))
         self.assertTrue(edge.__eq__(edge_reversed, deep=True))
+        self.assertFalse(edge.__eq__(edge_different_direction, deep=True))
         self.assertTrue(edge_recovered.__eq__(edge, deep=True))
         self.assertTrue(edge_recovered.__eq__(edge_reversed, deep=True))
+        self.assertFalse(edge_recovered.__eq__(edge_different_direction, deep=True))
         self.assertTrue(edge_reversed.__eq__(edge, deep=True))
         self.assertTrue(edge_reversed.__eq__(edge_recovered, deep=True))
+        self.assertFalse(edge_reversed.__eq__(edge_different_direction, deep=True))
+        self.assertFalse(edge_different_direction.__eq__(edge, deep=True))
+        self.assertFalse(edge_different_direction.__eq__(edge_recovered, deep=True))
+        self.assertFalse(edge_different_direction.__eq__(edge_reversed, deep=True))
 
         edge_reversed.metadata['color'] = 'blue'
         self.assertFalse(edge.__eq__(edge_reversed, deep=True))
         self.assertFalse(edge_recovered.__eq__(edge_reversed, deep=True))
+        self.assertFalse(edge_different_direction.__eq__(edge_reversed, deep=True))
         self.assertFalse(edge_reversed.__eq__(edge, deep=True))
         self.assertFalse(edge_reversed.__eq__(edge_recovered, deep=True))
+        self.assertFalse(edge_reversed.__eq__(edge_different_direction, deep=True))
