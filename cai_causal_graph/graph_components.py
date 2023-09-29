@@ -584,14 +584,21 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         # if node class is not specified, default to Node
         source_node_class = edge_dict['source'].get('node_class', 'Node')
         destination_node_class = edge_dict['destination'].get('node_class', 'Node')
-        assert (
-            source_node_class in _NodeClassDict
-        ), f'Source node class is not valid. Got {source_node_class} and supported types are {list(_NodeClassDict)}.'
 
-        assert (
-            destination_node_class in _NodeClassDict
-        ), f'Destination node class is not valid. Got {destination_node_class} '
-        f'and supported types are {list(_NodeClassDict)}.'
+        # if not in the dict, then try with the generic node class and send a debug message
+        if source_node_class not in _NodeClassDict:
+            source_node_class = 'Node'
+            logger.debug(
+                f'The source node class was not specified in the edge dictionary. '
+                f'Using the generic node class {source_node_class}.'
+            )
+
+        if destination_node_class not in _NodeClassDict:
+            destination_node_class = 'Node'
+            logger.debug(
+                f'The destination node class was not specified in the edge dictionary. '
+                f'Using the generic node class {destination_node_class}.'
+            )
 
         SourceNodeCls = _NodeClassDict[source_node_class]
         DestinationNodeCls = _NodeClassDict[destination_node_class]
