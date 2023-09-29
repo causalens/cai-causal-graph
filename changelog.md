@@ -2,6 +2,21 @@
 
 ## NEXT
 
+- Added the deserialization method `from_dict` for all node and edges to the classes
+  `cai_causal_graph.graph_components.Node`: `cai_causal_graph.graph_components.Node.from_dict`,
+  `cai_causal_graph.graph_components.Edge`: `cai_causal_graph.graph_components.Edge.from_dict`, and
+  `cai_causal_graph.graph_components.TimeSeriesNode`: `cai_causal_graph.graph_components.TimeSeriesNode.from_dict`.
+- Added the serialization method `cai_causal_graph.graph_components.TimeSeriesNode.to_dict` to
+  `cai_causal_graph.graph_components.TimeSeriesNode`. `cai_causal_graph.graph_components.Node` and
+  `cai_causal_graph.graph_components.Edge` already had it.
+- Changed behavior of `cai_causal_graph.time_series.causal_graph.TimeSeriesCausalGraph.add_node` method in
+  `cai_causal_graph.time_series.causal_graph.TimeSeriesCausalGraph` such that when both `identifier` and (`time_lag`,
+  `variable_name`) are provided. Now, if all are provided, the method will raise an error only if `identifier` is not
+  equal to `get_name_with_lag(time_lag, variable_name)`, that is, the correct name.
+- Extended equality methods for the `cai_causal_graph.graph_components.Node`, `cai_causal_graph.graph_components.Edge`
+  and `cai_causal_graph.graph_components.TimeSeriesNode` classes. They now have a `deep` parameter that forces checks
+  on all class attributes. To call you must do `node_1.__eq__(node_2, deep=True)` as `node_1 == node_2` still matches
+  current behavior.
 - Added `cai_causal_graph.graph_components.Edge.edge_type` property to the `cai_causal_graph.graph_components.Edge`
   class.
 
@@ -15,19 +30,22 @@
 - Added `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.to_numpy_by_lag` method to convert the
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` to a dictionary of adjacency matrices where the
   keys are the time lags with the values being the adjacency matrices with respect to the variables.
-- Fixed edge type in the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_gragh` method.
-- Changed the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_gragh` method to work with
-  a non-negative `backward_steps` and `forward_steps` instead of strictly positive.
-- Added `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.add_time_edge` method to add a time edge
-  between two nodes. This method allows to specify the time lag for source and destination variables. This avoids
-  having to create the corresponding node name manually or using the utility function
-  `cai_causal_graph.utils.get_name_with_lag`.
+- Changed the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_graph` method in
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` to work with a non-negative `backward_steps` and
+  `forward_steps` instead of strictly positive.
+- Fixed edge type in the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_graph` method in
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`.
+- Added `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.add_time_edge` method in
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` to add a time edge between two nodes. This method
+  allows to specify the time lag for source and destination variables. This avoids having to create the corresponding
+  node name manually or using the utility function `cai_causal_graph.utils.get_name_with_lag`.
 - Added equality method for the `cai_causal_graph.graph_components.TimeSeriesNode` class.
 - Extended unit tests for the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` and
   `cai_causal_graph.graph_components.TimeSeriesNode` classes.
 - Documentation:
   - Added a documentation page for the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class.
-  - Changed quickstart to start from a `TimeSeriesCausalGraph` instead of a `CausalGraph`.
+  - Changed quickstart to start from a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` instead of a
+    `cai_causal_graph.causal_graph.CausalGraph`.
 
 ## 0.2.0
 
@@ -38,7 +56,7 @@
   - The minimal graph, which can be obtained via the
     `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph` method, defines the graph with
     the minimal number of nodes and edges that is required to capture all the information encoded in the original graph.
-    This is because a time series causal graph may contain a lot repetitive information. For example, if the original
+    This is because a time series causal graph may contain a lot of repetitive information. For example, if the original
     graph is `x(t-2) -> x(t-1) -> x(t)`, then the minimal graph would be `x(t-1) -> x(t)`. In other words, it is a
     graph that has no edges whose destination is not time 0.
   - The summary graph, which can be obtained via the

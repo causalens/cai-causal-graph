@@ -64,6 +64,9 @@ class TimeSeriesCausalGraph(CausalGraph):
     - `cai_causal_graph.type_definitions.VARIABLE_NAME`: the name of the variable (without the lag information)
     """
 
+    _NodeCls = TimeSeriesNode
+    _EdgeCls = Edge
+
     def __init__(
         self,
         input_list: Optional[List[NodeLike]] = None,
@@ -555,10 +558,8 @@ class TimeSeriesCausalGraph(CausalGraph):
             variable_type=variable_type,
             meta=meta,
         )
-        identifier = node.identifier
-        if identifier in self._nodes_by_identifier:
-            raise CausalGraphErrors.NodeDuplicatedError(f'Node already exists: {identifier}')
 
+        identifier = self._check_node_exists(node)
         self._nodes_by_identifier[identifier] = node
 
         return node
@@ -618,24 +619,16 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         super().delete_edge(source, destination, edge_type=edge_type)
 
-    @_reset_ts_graph_attributes
-    def add_edge(
+    def _check_nodes_and_edge(
         self,
         /,
         source: Optional[NodeLike] = None,
         destination: Optional[NodeLike] = None,
         *,
         edge_type: EdgeType = EdgeType.DIRECTED_EDGE,
-        meta: Optional[dict] = None,
         edge: Optional[Edge] = None,
-        **kwargs,
-    ) -> Edge:
-        """
-        Add an edge to the graph. See `cai_causal_graph.causal_graph.CausalGraph.add_edge` for more details.
-
-        In addition to the `cai_causal_graph.causal_graph.CausalGraph.add_edge` method, this method also populates the
-        metadata of the nodes with the variable name and the time lag.
-        """
+    ):
+        """Check that the source and destination nodes exist and that the edge is valid."""
         # if the source and destination time series nodes do not exist, create them
         if source is not None and not self.node_exists(source):
             source_meta = None
@@ -650,19 +643,21 @@ class TimeSeriesCausalGraph(CausalGraph):
             destination = self.add_node(destination, meta=destination_meta)
 
         # For directed edge, confirm time of destination is greater than or equal to time of source.
-        if edge is not None and edge.get_edge_type() == EdgeType.DIRECTED_EDGE:
+        if edge is not None:
             source_node = edge.source
             destination_node = edge.destination
             assert isinstance(source_node, TimeSeriesNode)  # for linting
             assert isinstance(destination_node, TimeSeriesNode)  # for linting
-            time_source = source_node.time_lag
-            time_destination = destination_node.time_lag
-            if time_destination < time_source:
-                raise ValueError(
-                    f'For a directed edge, the time at the destination must be greater than or equal to the time at '
-                    f'the source. The time lag for the source and destination are {time_source} and '
-                    f'{time_destination}, respectively.'
-                )
+
+            if edge.get_edge_type() == EdgeType.DIRECTED_EDGE:
+                time_source = source_node.time_lag
+                time_destination = destination_node.time_lag
+                if time_destination < time_source:
+                    raise ValueError(
+                        f'For a directed edge, the time at the destination must be greater than or equal to the time at '
+                        f'the source. The time lag for the source and destination are {time_source} and '
+                        f'{time_destination}, respectively.'
+                    )
         elif edge_type == EdgeType.DIRECTED_EDGE:
             # Check these are not None before trying to get node.
             assert source is not None
@@ -681,7 +676,62 @@ class TimeSeriesCausalGraph(CausalGraph):
                 )
         # No else needed as we don't need to check time direction for other edge types.
 
-        edge = super().add_edge(source, destination, edge_type=edge_type, meta=meta, edge=edge, **kwargs)
+    @_reset_ts_graph_attributes
+    def add_edge(
+        self,
+        /,
+        source: Optional[NodeLike] = None,
+        destination: Optional[NodeLike] = None,
+        *,
+        edge_type: EdgeType = EdgeType.DIRECTED_EDGE,
+        meta: Optional[dict] = None,
+        edge: Optional[Edge] = None,
+        **kwargs,
+    ) -> Edge:
+        """
+        Add an edge from a source to a destination node with a specific edge type.
+        In addition to the `cai_causal_graph.causal_graph.CausalGraph.add_edge` method, this method also populates the
+        metadata of the nodes with the variable name and the time lag.
+
+        If these two nodes are already connected in any way, then an error will be raised. An error will also be raised
+        if the new edge would create a cyclic connection of directed edges. In this case, the
+        `cai_causal_graph.causal_graph.TimeSeriesCausalGraph` instance will be restored to its original state and the
+        edge will not be added. It is possible to specify an edge type from source to destination as well,
+        with the default being a forward directed edge, i.e., source -> destination.
+
+        :param source: String identifying the node from which the edge will originate. Can be `None`, if an `edge`
+            parameter is specified.
+        :param destination: String identifying the node at which the edge will terminate. Can be `None`, if an `edge`
+            parameter is specified.
+        :param edge_type: The type of the edge to be added. Default is
+            `cai_causal_graph.type_definitions.EdgeType.DIRECTED_EDGE`. See `cai_causal_graph.type_definitions.EdgeType`
+            for the list of possible edge types.
+        :param meta: The meta values for the edge.
+        :param edge: A `cai_causal_graph.graph_components.Edge` edge to be used to construct a new edge. All the
+            properties of the provided edge will be deep copied to the constructed edge, including metadata. If
+            provided, then all other parameters to the method must not be specified. Default is `None`.
+        :return: The created edge object.
+        """
+        if edge is not None:
+            assert isinstance(edge, self._EdgeCls), f'Edge class must be of type {self._EdgeCls.__name__}.'
+            # Check source node type
+            source_node = edge.source
+            if isinstance(source_node, Node) and not isinstance(source_node, self._NodeCls):
+                source_node = self._NodeCls.from_dict(source_node.to_dict())
+            # Check destination node type
+            destination_node = edge.destination
+            if isinstance(destination_node, Node) and not isinstance(destination_node, self._NodeCls):
+                destination_node = self._NodeCls.from_dict(destination_node.to_dict())
+            # See if either node was recreated, if yes, then create new edge with appropriate nodes
+            if source_node != edge.source or destination_node != edge.destination:
+                edge = self._EdgeCls(
+                    source_node, destination_node, edge_type=edge.get_edge_type(), meta=edge.get_metadata()
+                )
+
+        self._check_nodes_and_edge(source=source, destination=destination, edge_type=edge_type, edge=edge)
+        edge = super().add_edge(
+            source=source, destination=destination, edge_type=edge_type, meta=meta, edge=edge, **kwargs
+        )
 
         return edge
 

@@ -338,6 +338,57 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
             TimeSeriesCausalGraph.from_dict(graph_as_dict_nometa).get_node('xm future(n=2)').variable_name, 'xm'
         )
 
+    def test_cg_to_tscg_serialization(self):
+
+        # create a non-DAG graph
+        cg = CausalGraph()
+        cg.add_edge('X1', 'X2', edge_type=EdgeType.UNDIRECTED_EDGE)
+        cg.add_edge('X2 lag(n=1)', 'X3', edge_type=EdgeType.BIDIRECTED_EDGE)
+
+        # test it does not fail
+        tscg1 = TimeSeriesCausalGraph.from_dict(cg.to_dict())
+
+        for tscg in [
+            self.tsdag,
+            self.tsdag_1,
+            self.tsdag_2,
+            self.tsdag_3,
+            self.ground_truth_minimal_graph_1,
+            self.ground_truth_minimal_graph_3,
+            tscg1,
+        ]:
+            cg = CausalGraph.from_dict(tscg.to_dict())
+            ts_cg_back = TimeSeriesCausalGraph.from_dict(cg.to_dict())
+
+            self.assertEqual(tscg, ts_cg_back)
+
+    def test_tscg_to_cg_serialization(self):
+        # create a non-DAG graph
+        cg = CausalGraph()
+        cg.add_edge('X1 lag(n=2)', 'X2', edge_type=EdgeType.UNDIRECTED_EDGE)
+        cg.add_edge('X2', 'X3', edge_type=EdgeType.BIDIRECTED_EDGE)
+        tscg1 = TimeSeriesCausalGraph.from_dict(cg.to_dict())
+
+        for tscg in [
+            self.tsdag,
+            self.tsdag_1,
+            self.tsdag_2,
+            self.tsdag_3,
+            self.ground_truth_minimal_graph_1,
+            self.ground_truth_minimal_graph_3,
+            tscg1,
+        ]:
+            cg = CausalGraph.from_dict(tscg.to_dict())
+
+            # check same node identifiers
+            self.assertListEqual([node.identifier for node in tscg.nodes], [node.identifier for node in cg.nodes])
+
+            # check same edges
+            for edge in tscg.edges:
+                self.assertTrue(cg.edge_exists(edge.source, edge.destination))
+                edge_cg = cg.get_edge(edge.source, edge.destination)
+                self.assertEqual(edge.get_edge_type(), edge_cg.get_edge_type())
+
     def test_from_causal_graph(self):
         # dag
         self.assertEqual(
@@ -865,7 +916,7 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
             cg.add_node('apple lag(n=2)', None, -2)
 
         with self.assertRaises(AssertionError):
-            cg.add_node('apple lag(n=2)', 'apple', -2)
+            cg.add_node('apple lag(n=3)', 'apple', -2)
 
         with self.assertRaises(CausalGraphErrors.NodeDuplicatedError):
             cg.add_node(node=node)

@@ -63,14 +63,25 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         """Return a hash value of the node identifier."""
         return hash(self.identifier)
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, deep: bool = False) -> bool:
         """
         Check if a node is equal to another node.
 
-        This method checks for the node identifier, but ignores variable type, inbound/outbound edges, and any metadata.
+        When `deep` is `False` (default), this method checks equality between the node identifiers. When `deep` is
+        `True`, variable type and metadata is also checked. Inbound and outbound edges are never checked.
+
+        :param other: The other node to compare to.
+        :param deep: If `True`, then the variable type and metadata are also checked, in addition to the identifier.
+            Default is `False`.
         """
         if not isinstance(other, Node):
             return False
+        if deep:
+            return (
+                self.identifier == other.identifier
+                and self.variable_type == other.variable_type
+                and self.meta == other.meta
+            )
         return self.identifier == other.identifier
 
     def __ne__(self, other: object) -> bool:
@@ -193,11 +204,22 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         node_dict = {
             'identifier': self.identifier,
             'variable_type': self.variable_type,
+            'node_class': self.__class__.__name__,
         }
         if include_meta:
             node_dict['meta'] = deepcopy(self.meta)   # type: ignore
 
         return node_dict
+
+    @classmethod
+    def from_dict(cls, node_dict: dict) -> Node:
+        """Return a `cai_causal_graph.graph_components.Node` instance from a dictionary."""
+        assert 'identifier' in node_dict, 'The provided dictionary does not contain an identifier.'
+        return cls(
+            identifier=node_dict['identifier'],
+            variable_type=node_dict.get('variable_type', NodeVariableType.UNSPECIFIED),
+            meta=node_dict.get('meta', None),
+        )
 
 
 class TimeSeriesNode(Node):
@@ -236,7 +258,13 @@ class TimeSeriesNode(Node):
             `cai_causal_graph.type_definitions.NodeVariableType` enum. Default is `NodeVariableType.UNSPECIFIED`.
         """
         if time_lag is not None and variable_name is not None:
-            assert identifier is None, 'If `time_lag` and `variable_name` are provided, `identifier` must be `None`.'
+            # if identifier is not None and both time_lag and variable_name are provided, check that the identifier is correct
+            rec_identifier = get_name_with_lag(variable_name, time_lag)
+            assert identifier is None or identifier == rec_identifier, (
+                'The provided identifier does not match the provided time lag and variable name. Either provide a '
+                'correct identifier or do not provide the time lag and variable name. Or provide the correct time lag '
+                'and variable name and do not provide the identifier.'
+            )
             identifier = get_name_with_lag(variable_name, time_lag)
         elif identifier is not None:
             assert (
@@ -292,23 +320,117 @@ class TimeSeriesNode(Node):
             raise ValueError(f'The variable name for node {self.identifier} is not set.')
         return name
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, deep: bool = False) -> bool:
         """
         Check if a node is equal to another node.
 
-        This method checks for the node identifier, variable name, and time lag, but ignores variable type,
-        inbound/outbound edges, and any other metadata.
+        When `deep` is `False` (default), this method checks equality between the node identifiers, variable names, and
+        time lags. When `deep` is `True`, variable type and metadata is also checked. Inbound and outbound edges are
+        never checked.
+
+        :param other: The other node to compare with.
+        :param deep: If `True`, then the variable type and metadata are also checked, in addition to the identifier,
+            variable name, and time lag. Default is `False`.
         """
         if not isinstance(other, TimeSeriesNode):
             return False
         # As TimeSeriesNode is a subclass of Node, we can use the Node.__eq__ method and then check for the properties
-        if not super().__eq__(other):
+        if not super().__eq__(other, deep):
             return False
         return self.variable_name == other.variable_name and self.time_lag == other.time_lag
 
     def __hash__(self) -> int:
         """Return a hash value of the node identifier."""
         return super().__hash__()
+
+    def to_dict(self, include_meta: bool = True) -> dict:
+        """
+        Serialize a `cai_causal_graph.graph_components.TimeSeriesNode` instance to a dictionary.
+
+        :param include_meta: Whether to include meta information about the node in the dictionary. Default is `True`.
+        :return: The dictionary representation of the `cai_causal_graph.graph_components.TimeSeriesNode` instance.
+        """
+        dictionary = super().to_dict(include_meta)
+        # add the time lag and variable name to the dictionary
+        dictionary.update({TIME_LAG: self.time_lag, VARIABLE_NAME: self.variable_name})
+        return dictionary
+
+    @classmethod
+    def from_dict(cls, dictionary: dict) -> TimeSeriesNode:
+        """
+        Return a `cai_causal_graph.graph_components.TimeSeriesNode` instance from a dictionary.
+
+        :param dictionary: The dictionary from which to create the time series node.
+        :return: The time series node created from the dictionary.
+        """
+        assert 'identifier' in dictionary, 'The dictionary must contain the `identifier` key.'
+        if dictionary.get('node_class', 'TimeSeriesNode') != 'TimeSeriesNode':
+            logger.debug(
+                f'The node class in the dictionary is {dictionary.get("node_class")}, but the class is '
+                f'`cai_causal_graph.graph_components.TimeSeriesNode`. The node class will be overwritten to '
+                '`TimeSeriesNode`.'
+            )
+
+        # check the meta for the time lag and variable name match the ones in the dictionary
+        time_lag = dictionary.get(TIME_LAG, None)
+        variable_name = dictionary.get(VARIABLE_NAME, None)
+
+        meta = dictionary.get('meta', {})
+
+        if time_lag is None:
+            time_lag = meta.get(TIME_LAG, None)
+        else:
+            # check that the time lag in the meta matches the time lag in the dictionary
+            time_lag_meta = meta.get(TIME_LAG, None)
+
+            if time_lag != time_lag_meta:
+                meta[TIME_LAG] = time_lag
+                logger.warning(
+                    f'The time lag in the meta ({time_lag_meta}) does not match the time lag in the dictionary ({time_lag}).'
+                )
+
+        if variable_name is None:
+            variable_name = meta.get(VARIABLE_NAME, None)
+        else:
+            # check that the variable name in the meta matches the variable name in the dictionary
+            variable_name_meta = meta.get(VARIABLE_NAME, None)
+
+            if variable_name != variable_name_meta:
+                meta[VARIABLE_NAME] = variable_name
+                logger.warning(
+                    f'The variable name in the meta ({variable_name_meta}) does not match the variable name in the '
+                    f'dictionary ({variable_name}).'
+                )
+
+        variable_name_identifier, time_lag_identifier = get_variable_name_and_lag(dictionary['identifier'])
+
+        if time_lag is not None:
+            # now if time lag and variable name are not None, check they match the identifier
+            assert (
+                time_lag == time_lag_identifier
+            ), f'The time lag in the identifier ({time_lag_identifier}) does not match the time lag in the dictionary '
+            f'({time_lag}).'
+        else:
+            time_lag = time_lag_identifier
+
+        if variable_name is not None:
+            assert variable_name == variable_name_identifier, (
+                f'The variable name in the identifier ({variable_name_identifier}) does not match the variable name in '
+                f'the dictionary ({variable_name}).'
+            )
+        else:
+            variable_name = variable_name_identifier
+
+        return cls(
+            identifier=dictionary['identifier'],
+            time_lag=time_lag,
+            variable_name=variable_name,
+            meta=meta,
+            variable_type=dictionary.get('variable_type', NodeVariableType.UNSPECIFIED),
+        )
+
+
+_NodeClassDict = {'Node': Node, 'TimeSeriesNode': TimeSeriesNode}
 
 
 class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
@@ -342,24 +464,56 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         """Return a hash value of the edge identifier."""
         return hash(self.identifier)
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, deep: bool = False) -> bool:
         """
         Check if the edge is equal to another edge.
 
-        This method checks for the edge source, destination, and type but ignores any metadata.
+        When `deep` is `False` (default), this method checks equality between the source node identifiers, destination
+        node identifiers, and edge types. When `deep` is `True`, the metadata is also checked as well as a deep
+        equality check on the nodes.
+
+        For some edge types, particularly
+        `cai_causal_graph.type_definitions.EdgeType.UNDIRECTED_EDGE`,
+        `cai_causal_graph.type_definitions.EdgeType.BIDIRECTED_EDGE`, and
+        `cai_causal_graph.type_definitions.EdgeType.UNKNOWN_EDGE`, there is inherently no direction. Therefore, edges
+        of those types with the source and destination nodes switched are considered equal.
+
+        :param other: The other edge to compare with.
+        :param deep: If `True`, then a deep equality check is done on the nodes and the metadata is also checked, in
+            addition to the edge types. Default is `False`.
         """
         if not isinstance(other, Edge):
             return False
+
+        dont_care_direction = [EdgeType.UNDIRECTED_EDGE, EdgeType.BIDIRECTED_EDGE, EdgeType.UNKNOWN_EDGE]
+
+        if deep:
+            # Check nodes for deep equality.
+            are_sources_not_equal = not self.source.__eq__(other.source, True)
+            are_destinations_not_equal = not self.destination.__eq__(other.destination, True)
+
+            # Some edges inherently have no direction. So allow them to be defined with opposite source/destination
+            if self.get_edge_type() in dont_care_direction and self.get_edge_type() == other.get_edge_type():
+                # allow source and destination to be flipped between each edge
+                if are_sources_not_equal and not self.source.__eq__(other.destination, True):
+                    return False
+                if are_destinations_not_equal and not self.destination.__eq__(other.source, True):
+                    return False
+            elif are_sources_not_equal or are_destinations_not_equal:
+                # source and destination must be the same between each edge
+                return False
+            # No else needed as source nodes and destination nodes are deeply equal.
+
+            # check that the metadata is the same
+            if self.meta != other.meta:
+                return False
 
         # if the same source and destination, check that the edge type is the same
         if self.get_edge_pair() == other.get_edge_pair():
             return self.get_edge_type() == other.get_edge_type()
         elif self.get_edge_pair() == other.get_edge_pair()[::-1]:
             # Some edges inherently have no direction. So allow them to be defined with opposite source/destination
-            return (
-                self.get_edge_type() in [EdgeType.UNDIRECTED_EDGE, EdgeType.BIDIRECTED_EDGE, EdgeType.UNKNOWN_EDGE]
-                and self.get_edge_type() == other.get_edge_type()
-            )
+            return self.get_edge_type() in dont_care_direction and self.get_edge_type() == other.get_edge_type()
 
         return False
 
@@ -441,6 +595,48 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
     def details(self) -> str:
         """Return a detailed string description of the object."""
         return self.__repr__()
+
+    @classmethod
+    def from_dict(cls, edge_dict: dict) -> Edge:
+        """
+        Deserialize a dictionary to a `cai_causal_graph.graph_components.Edge` instance.
+
+        :param edge_dict: The dictionary representation of the `cai_causal_graph.graph_components.Edge` instance.
+            If the `node class` is not specified, it defaults to `cai_causal_graph.graph_components.Node`.
+        :return: The `cai_causal_graph.graph_components.Edge` instance.
+        """
+        # if node class is not specified, default to Node
+        source_node_class = edge_dict['source'].get('node_class', 'Node')
+        destination_node_class = edge_dict['destination'].get('node_class', 'Node')
+
+        # if not in the dict, then try with the generic node class and send a debug message
+        if source_node_class not in _NodeClassDict:
+            source_node_class = 'Node'
+            logger.debug(
+                f'The source node class was not specified in the edge dictionary. '
+                f'Using the generic node class {source_node_class}.'
+            )
+
+        if destination_node_class not in _NodeClassDict:
+            destination_node_class = 'Node'
+            logger.debug(
+                f'The destination node class was not specified in the edge dictionary. '
+                f'Using the generic node class {destination_node_class}.'
+            )
+
+        SourceNodeCls = _NodeClassDict[source_node_class]
+        DestinationNodeCls = _NodeClassDict[destination_node_class]
+        assert issubclass(SourceNodeCls, Node)   # for linting
+        assert issubclass(DestinationNodeCls, Node)   # for linting
+
+        source = SourceNodeCls.from_dict(edge_dict['source'])
+        destination = DestinationNodeCls.from_dict(edge_dict['destination'])
+
+        edge_type = edge_dict['edge_type']
+
+        meta = edge_dict.get('meta', None)
+
+        return cls(source=source, destination=destination, edge_type=edge_type, meta=meta)
 
     def to_dict(self, include_meta: bool = True) -> dict:
         """
