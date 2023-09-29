@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.2.3
 
 - Added the deserialization method `from_dict` for all node and edges to the classes
   `cai_causal_graph.graph_components.Node`: `cai_causal_graph.graph_components.Node.from_dict`,
