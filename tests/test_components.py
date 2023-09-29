@@ -101,3 +101,35 @@ class TestGraphComponents(unittest.TestCase):
         self.assertEqual(node.identifier, node1.identifier)
         self.assertEqual(node.variable_type, node1.variable_type)
         self.assertEqual(node.meta, node1.meta)
+
+    def test_equality(self):
+        # Most of the equality is exercised above but want to check the edge logic here.
+        source = Node(identifier='a', meta={'color': 'blue'}, variable_type=NodeVariableType.BINARY)
+        destination = Node(identifier='b', meta={'color': 'green'}, variable_type=NodeVariableType.CONTINUOUS)
+        edge = Edge(
+            source=source, destination=destination, edge_type=EdgeType.UNDIRECTED_EDGE, meta={'color': 'red'}
+        )
+
+        edge_dict = edge.to_dict()
+        edge_recovered = Edge.from_dict(edge_dict)
+
+        edge_reversed = Edge(
+            source=destination, destination=source, edge_type=EdgeType.UNDIRECTED_EDGE, meta={'color': 'red'}
+        )
+
+        self.assertEqual(edge, edge_recovered)
+        self.assertEqual(edge, edge_reversed)
+        self.assertEqual(edge_recovered, edge_reversed)
+
+        self.assertTrue(edge.__eq__(edge_recovered, deep=True))
+        self.assertTrue(edge.__eq__(edge_reversed, deep=True))
+        self.assertTrue(edge_recovered.__eq__(edge, deep=True))
+        self.assertTrue(edge_recovered.__eq__(edge_reversed, deep=True))
+        self.assertTrue(edge_reversed.__eq__(edge, deep=True))
+        self.assertTrue(edge_reversed.__eq__(edge_recovered, deep=True))
+
+        edge_reversed.metadata['color'] = 'blue'
+        self.assertFalse(edge.__eq__(edge_reversed, deep=True))
+        self.assertFalse(edge_recovered.__eq__(edge_reversed, deep=True))
+        self.assertFalse(edge_reversed.__eq__(edge, deep=True))
+        self.assertFalse(edge_reversed.__eq__(edge_recovered, deep=True))

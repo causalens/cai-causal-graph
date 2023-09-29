@@ -67,11 +67,12 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         """
         Check if a node is equal to another node.
 
-        This method checks for the node identifier, but ignores variable type, inbound/outbound edges, and any metadata,
-        unless deep is True.
+        When `deep` is `False` (default), this method checks equality between the node identifiers. When `deep` is
+        `True`, variable type and metadata is also checked. Inbound and outbound edges are never checked.
 
         :param other: The other node to compare to.
-        :param deep: If True, then the variable type, inbound/outbound edges, and metadata are also checked.
+        :param deep: If `True`, then the variable type and metadata are also checked, in addition to the identifier.
+            Default is `False`.
         """
         if not isinstance(other, Node):
             return False
@@ -323,11 +324,13 @@ class TimeSeriesNode(Node):
         """
         Check if a node is equal to another node.
 
-        This method checks for the node identifier, variable name, and time lag, but ignores variable type,
-        inbound/outbound edges, and any other metadata, unless `deep` is set to `True`.
+        When `deep` is `False` (default), this method checks equality between the node identifiers, variable names, and
+        time lags. When `deep` is `True`, variable type and metadata is also checked. Inbound and outbound edges are
+        never checked.
 
         :param other: The other node to compare with.
-        :param deep: If True, then the variable type, inbound/outbound edges, and metadata are also checked.
+        :param deep: If `True`, then the variable type and metadata are also checked, in addition to the identifier,
+            variable name, and time lag. Default is `False`.
         """
         if not isinstance(other, TimeSeriesNode):
             return False
@@ -465,17 +468,41 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         """
         Check if the edge is equal to another edge.
 
-        This method checks for the edge source, destination, and type but ignores any metadata, unless `deep` is True.
+        When `deep` is `False` (default), this method checks equality between the source node identifiers, destination
+        node identifiers, and edge types. When `deep` is `True`, the metadata is also checked as well as a deep
+        equality check on the nodes.
+
+        For some edge types, particularly
+        `cai_causal_graph.type_definitions.EdgeType.UNDIRECTED_EDGE`,
+        `cai_causal_graph.type_definitions.EdgeType.BIDIRECTED_EDGE`, and
+        `cai_causal_graph.type_definitions.EdgeType.UNKNOWN_EDGE`, there is inherently no direction. Therefore, edges
+        of those types with the source and destination nodes switched are considered equal.
 
         :param other: The other edge to compare with.
-        :param deep: If True, then the metadata and nodes are also checked.
+        :param deep: If `True`, then a deep equality check is done on the nodes and the metadata is also checked, in
+            addition to the edge types. Default is `False`.
         """
         if not isinstance(other, Edge):
             return False
 
+        dont_care_direction = [EdgeType.UNDIRECTED_EDGE, EdgeType.BIDIRECTED_EDGE, EdgeType.UNKNOWN_EDGE]
+
         if deep:
-            if not self.source.__eq__(other.source, deep) or not self.destination.__eq__(other.destination, deep):
+            # Check nodes for deep equality.
+            are_sources_not_equal = not self.source.__eq__(other.source, deep=True)
+            are_destinations_not_equal = not self.destination.__eq__(other.destination, deep=True)
+
+            # Some edges inherently have no direction. So allow them to be defined with opposite source/destination
+            if self.get_edge_type() in dont_care_direction and self.get_edge_type() == other.get_edge_type():
+                # allow source and destination to be flipped between each edge
+                if are_sources_not_equal and not self.source.__eq__(other.destination, deep=True):
+                    return False
+                if are_destinations_not_equal and not self.destination.__eq__(other.source, deep=True):
+                    return False
+            elif are_sources_not_equal or are_destinations_not_equal:
+                # source and destination must be the same between each edge
                 return False
+            # No else needed as source nodes and destination nodes are deeply equal.
 
             # check that the metadata is the same
             if self.meta != other.meta:
@@ -487,7 +514,7 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         elif self.get_edge_pair() == other.get_edge_pair()[::-1]:
             # Some edges inherently have no direction. So allow them to be defined with opposite source/destination
             return (
-                self.get_edge_type() in [EdgeType.UNDIRECTED_EDGE, EdgeType.BIDIRECTED_EDGE, EdgeType.UNKNOWN_EDGE]
+                self.get_edge_type() in dont_care_direction
                 and self.get_edge_type() == other.get_edge_type()
             )
 
