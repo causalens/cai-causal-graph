@@ -513,10 +513,7 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
             return self.get_edge_type() == other.get_edge_type()
         elif self.get_edge_pair() == other.get_edge_pair()[::-1]:
             # Some edges inherently have no direction. So allow them to be defined with opposite source/destination
-            return (
-                self.get_edge_type() in dont_care_direction
-                and self.get_edge_type() == other.get_edge_type()
-            )
+            return self.get_edge_type() in dont_care_direction and self.get_edge_type() == other.get_edge_type()
 
         return False
 

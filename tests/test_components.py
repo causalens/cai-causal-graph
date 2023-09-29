@@ -106,9 +106,7 @@ class TestGraphComponents(unittest.TestCase):
         # Most of the equality is exercised above but want to check the edge logic here.
         source = Node(identifier='a', meta={'color': 'blue'}, variable_type=NodeVariableType.BINARY)
         destination = Node(identifier='b', meta={'color': 'green'}, variable_type=NodeVariableType.CONTINUOUS)
-        edge = Edge(
-            source=source, destination=destination, edge_type=EdgeType.UNDIRECTED_EDGE, meta={'color': 'red'}
-        )
+        edge = Edge(source=source, destination=destination, edge_type=EdgeType.UNDIRECTED_EDGE, meta={'color': 'red'})
 
         edge_dict = edge.to_dict()
         edge_recovered = Edge.from_dict(edge_dict)
