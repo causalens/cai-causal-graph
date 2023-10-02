@@ -46,20 +46,20 @@ class TestIdentifyConfounders(unittest.TestCase):
 
     def test_graph_1(self):
         # compute confounders between treatment and outcome
-        confounders = identify_confounders(self.graph_1, treatment='x', outcome='y')
+        confounders = identify_confounders(self.graph_1, source='x', destination='y')
         self.assertSetEqual(set(confounders), {'z'})
 
     def test_graph_2(self):
         # compute confounders between treatment and outcome
-        confounders = identify_confounders(self.graph_2, treatment='x', outcome='y')
+        confounders = identify_confounders(self.graph_2, source='x', destination='y')
         self.assertSetEqual(set(confounders), {'u'})
 
     def test_graph_3(self):
         # compute confounders between treatment and outcome
-        confounders = identify_confounders(self.graph_3, treatment='x', outcome='y')
+        confounders = identify_confounders(self.graph_3, source='x', destination='y')
         self.assertSetEqual(set(confounders), {'u'})
 
     def test_graph_4(self):
         # compute confounders between treatment and outcome
-        confounders = identify_confounders(self.graph_4, treatment='x', outcome='y')
+        confounders = identify_confounders(self.graph_4, source='x', destination='y')
         self.assertSetEqual(set(confounders), {'u', 'z'})
