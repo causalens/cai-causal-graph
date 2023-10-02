@@ -59,22 +59,22 @@ class TestIdentifyConfounders(unittest.TestCase):
 
     def test_graph_1(self):
         # compute confounders between source and destination
-        confounders = identify_confounders(self.graph_1, source='x', destination='y')
+        confounders = identify_confounders(self.graph_1, node_1='x', node_2='y')
         self.assertSetEqual(set(confounders), {'z'})
 
     def test_graph_2(self):
         # compute confounders between source and destination
-        confounders = identify_confounders(self.graph_2, source='x', destination='y')
+        confounders = identify_confounders(self.graph_2, node_1='x', node_2='y')
         self.assertSetEqual(set(confounders), {'u'})
 
     def test_graph_3(self):
         # compute confounders between source and destination
-        confounders = identify_confounders(self.graph_3, source='x', destination='y')
+        confounders = identify_confounders(self.graph_3, node_1='x', node_2='y')
         self.assertSetEqual(set(confounders), {'u'})
 
     def test_graph_4(self):
         # compute confounders between source and destination
-        confounders = identify_confounders(self.graph_4, source='x', destination='y')
+        confounders = identify_confounders(self.graph_4, node_1='x', node_2='y')
         self.assertSetEqual(set(confounders), {'u', 'z'})
 
     def test_non_dag(self):
@@ -86,12 +86,12 @@ class TestIdentifyConfounders(unittest.TestCase):
         graph.add_edge('x', 'y')
 
         with self.assertRaises(TypeError):
-            identify_confounders(graph, source='x', destination='y')
+            identify_confounders(graph, node_1='x', node_2='y')
 
     def test_reverse_edge(self):
         # identify confounders but swap source and destination
-        confounders = identify_confounders(self.graph_1, source='x', destination='y')
-        confounders_rev = identify_confounders(self.graph_1, source='y', destination='x')
+        confounders = identify_confounders(self.graph_1, node_1='x', node_2='y')
+        confounders_rev = identify_confounders(self.graph_1, node_1='y', node_2='x')
         self.assertSetEqual(set(confounders), set(confounders_rev))
 
     def test_time_series_graph(self):
@@ -105,5 +105,5 @@ class TestIdentifyConfounders(unittest.TestCase):
         ts_cg.add_edge('y lag(n=1)', 'y')
 
         # compute confounders between source and destination
-        confounders = identify_confounders(ts_cg, source='x', destination='y')
+        confounders = identify_confounders(ts_cg, node_1='x', node_2='y')
         self.assertSetEqual(set(confounders), {'z'})

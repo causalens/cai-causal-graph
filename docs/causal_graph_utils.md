@@ -29,5 +29,5 @@ cg.add_edge('u', 'y')
 cg.add_edge('x', 'y')
 
 # compute confounders between source and destination; output: ['u']
-confounders_list: List[str] = identify_confounders(cg, source='x', destination='y')
+confounders_list: List[str] = identify_confounders(cg, node_1='x', node_2='y')
 ```

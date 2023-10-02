@@ -19,13 +19,13 @@ from cai_causal_graph import CausalGraph
 from cai_causal_graph.exceptions import CausalGraphErrors
 
 
-def identify_confounders(graph: CausalGraph, source: str, destination: str) -> List[str]:
+def identify_confounders(graph: CausalGraph, node_1: str, node_2: str) -> List[str]:
     """
-    Identify all confounders between the `source` and `destination` in the provided `graph`.
+    Identify all confounders between the `node_1` and `node_2` in the provided `graph`.
 
-    A confounder between the `source` and `destination` node is a node that is a (minimal) ancestor of both the
-    `source` and the `destination` node. Being a _minimal_ ancestor here means that the node is not an ancestor of
-    other confounder nodes, unless it has another directed path to the `destination` node that does not go through other
+    A confounder between the `node_1` and `node_2` node is a node that is a (minimal) ancestor of both the
+    `node_1` and the `node_2` node. Being a _minimal_ ancestor here means that the node is not an ancestor of
+    other confounder nodes, unless it has another directed path to the `node_2` node that does not go through other
     confounder nodes.
 
     Example:
@@ -40,33 +40,33 @@ def identify_confounders(graph: CausalGraph, source: str, destination: str) -> L
         >>> cg.add_edge('u', 'y')
         >>> cg.add_edge('x', 'y')
         >>>
-        >>> # compute confounders between source and destination; output: ['u']
-        >>> confounders_list: List[str] = identify_confounders(cg, source='x', destination='y')
+        >>> # compute confounders between node_1 and node_2; output: ['u']
+        >>> confounders_list: List[str] = identify_confounders(cg, node_1='x', node_2='y')
 
     :param graph: The causal graph given by a `cai_causal_graph.causal_graph.CausalGraph` instance. This must be a DAG,
         i.e. it must only contain directed edges, otherwise an error is raised.
-    :param source: The source variable.
-    :param destination: The destination variable.
-    :return: A list of all confounders between the `source` and `destination`.
+    :param node_1: The first variable.
+    :param node_2: The second variable.
+    :return: A list of all confounders between `node_1` and `node_2`.
     """
     if not graph.is_dag():
         raise TypeError(f'Expected a DAG, but got a mixed causal graph.')
 
-    # create a copy of the provided graph and prune the edge between source and destination
+    # create a copy of the provided graph and prune the edge between node_1 and node_2
     pruned_graph = graph.copy()
-    if pruned_graph.edge_exists(source=source, destination=destination):
-        pruned_graph.remove_edge(source=source, destination=destination)
-    elif pruned_graph.edge_exists(source=destination, destination=source):
-        pruned_graph.remove_edge(source=destination, destination=source)
+    if pruned_graph.edge_exists(source=node_1, destination=node_2):
+        pruned_graph.remove_edge(source=node_1, destination=node_2)
+    elif pruned_graph.edge_exists(source=node_2, destination=node_1):
+        pruned_graph.remove_edge(source=node_2, destination=node_1)
 
-    # go through each of the parents of the source node
+    # go through each of the parents of the node_1 node
     confounders = set()
-    for parent in pruned_graph.get_parents(source):
+    for parent in pruned_graph.get_parents(node_1):
         # add the parent to the confounding set if a directed path exists
-        if parent in pruned_graph.get_ancestors(destination):
+        if parent in pruned_graph.get_ancestors(node_2):
             confounders.add(parent)
         # otherwise, recursively call this function to identify confounders of the parent
         else:
-            confounders = confounders.union(set(identify_confounders(pruned_graph, parent, destination)))
+            confounders = confounders.union(set(identify_confounders(pruned_graph, parent, node_2)))
 
     return list(confounders)
