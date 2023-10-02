@@ -21,12 +21,11 @@ from cai_causal_graph.exceptions import CausalGraphErrors
 
 def identify_confounders(graph: CausalGraph, node_1: str, node_2: str) -> List[str]:
     """
-    Identify all confounders between the `node_1` and `node_2` in the provided `graph`.
+    Identify all confounders between `node_1` and `node_2` in the provided `graph`.
 
-    A confounder between the `node_1` and `node_2` node is a node that is a (minimal) ancestor of both the
-    `node_1` and the `node_2` node. Being a _minimal_ ancestor here means that the node is not an ancestor of
-    other confounder nodes, unless it has another directed path to the `node_2` node that does not go through other
-    confounder nodes.
+    A confounder between `node_1` and `node_2` is a node that is a (minimal) ancestor of both the `node_1` and
+    `node_2`. Being a _minimal_ ancestor here means that the node is not an ancestor of other confounder nodes, unless
+    it has another directed path to `node_2` that does not go through other confounder nodes.
 
     Example:
         >>> from typing import List
@@ -44,7 +43,7 @@ def identify_confounders(graph: CausalGraph, node_1: str, node_2: str) -> List[s
         >>> confounders_list: List[str] = identify_confounders(cg, node_1='x', node_2='y')
 
     :param graph: The causal graph given by a `cai_causal_graph.causal_graph.CausalGraph` instance. This must be a DAG,
-        i.e. it must only contain directed edges, otherwise an error is raised.
+        i.e. it must only contain directed edges and be acyclic, otherwise a `TypeError` is raised.
     :param node_1: The first variable.
     :param node_2: The second variable.
     :return: A list of all confounders between `node_1` and `node_2`.
@@ -58,6 +57,7 @@ def identify_confounders(graph: CausalGraph, node_1: str, node_2: str) -> List[s
         pruned_graph.remove_edge(source=node_1, destination=node_2)
     elif pruned_graph.edge_exists(source=node_2, destination=node_1):
         pruned_graph.remove_edge(source=node_2, destination=node_1)
+    # No else needed as no edge to remove.
 
     # go through each of the parents of the node_1 node
     confounders = set()

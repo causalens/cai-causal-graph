@@ -9,7 +9,7 @@ example of such a subset is the set of confounders between two variables.
 ### Identifying Confounders
 
 The `cai-causal-graph` package implements the `cai_causal_graph.identify_utils.identify_confounders` utility function,
-which allows you to identify the set of confounders between two variables.
+which allows you to identify the set of confounders between two variables in a directed acyclic graph (DAG).
 
 Confounders are defined to be nodes in the causal graph that are (minimal) ancestors of both the source and destination
 nodes. Note that, in this package, any parents of confounders (that do not have other direct causal paths to the
@@ -21,7 +21,7 @@ from typing import List
 from cai_causal_graph import CausalGraph
 from cai_causal_graph.identify_utils import identify_confounders
 
-# define a causal graph
+# define a causal graph that is a DAG
 cg = CausalGraph()
 cg.add_edge('z', 'u')
 cg.add_edge('u', 'x')

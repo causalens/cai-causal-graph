@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import unittest
+from itertools import combinations
 
 from cai_causal_graph import CausalGraph, TimeSeriesCausalGraph
 from cai_causal_graph.identify_utils import identify_confounders
@@ -88,11 +89,24 @@ class TestIdentifyConfounders(unittest.TestCase):
         with self.assertRaises(TypeError):
             identify_confounders(graph, node_1='x', node_2='y')
 
-    def test_reverse_edge(self):
-        # identify confounders but swap source and destination
-        confounders = identify_confounders(self.graph_1, node_1='x', node_2='y')
-        confounders_rev = identify_confounders(self.graph_1, node_1='y', node_2='x')
-        self.assertSetEqual(set(confounders), set(confounders_rev))
+    def test_symmetric(self):
+        # Identify confounders but swap source and destination. Test function is symmetric.
+        for cg in [self.graph_1, self.graph_2, self.graph_3, self.graph_4]:
+            cg_rev = cg.copy()
+            cg_rev.remove_edge('x', 'y')
+            cg_rev.add_edge('y', 'x')
+
+            # Let's check all pairs.
+            for u, v in combinations(['u', 'z', 'x', 'y'], 2):
+                confounders_1a = identify_confounders(cg, node_1=u, node_2=v)
+                confounders_1b = identify_confounders(cg, node_1=v, node_2=u)
+                confounders_2a = identify_confounders(cg_rev, node_1=u, node_2=v)
+                confounders_2b = identify_confounders(cg_rev, node_1=v, node_2=u)
+                self.assertSetEqual(set(confounders_1a), set(confounders_1b))
+                self.assertSetEqual(set(confounders_2a), set(confounders_2b))
+                if (u == 'x' and v == 'y') or (u == 'y' and v == 'x'):
+                    # If x, y then the answers should match for the graphs with swapped x - y edge.
+                    self.assertSetEqual(set(confounders_1a), set(confounders_2a))
 
     def test_time_series_graph(self):
         # create a time-series causal graph
