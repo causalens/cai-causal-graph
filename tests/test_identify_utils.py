@@ -15,7 +15,7 @@ limitations under the License.
 """
 import unittest
 
-from cai_causal_graph import CausalGraph
+from cai_causal_graph import CausalGraph, TimeSeriesCausalGraph
 from cai_causal_graph.identify_utils import identify_confounders
 from cai_causal_graph.type_definitions import EDGE_T
 
@@ -58,22 +58,22 @@ class TestIdentifyConfounders(unittest.TestCase):
         cls.graph_4 = graph_4
 
     def test_graph_1(self):
-        # compute confounders between treatment and outcome
+        # compute confounders between source and destination
         confounders = identify_confounders(self.graph_1, source='x', destination='y')
         self.assertSetEqual(set(confounders), {'z'})
 
     def test_graph_2(self):
-        # compute confounders between treatment and outcome
+        # compute confounders between source and destination
         confounders = identify_confounders(self.graph_2, source='x', destination='y')
         self.assertSetEqual(set(confounders), {'u'})
 
     def test_graph_3(self):
-        # compute confounders between treatment and outcome
+        # compute confounders between source and destination
         confounders = identify_confounders(self.graph_3, source='x', destination='y')
         self.assertSetEqual(set(confounders), {'u'})
 
     def test_graph_4(self):
-        # compute confounders between treatment and outcome
+        # compute confounders between source and destination
         confounders = identify_confounders(self.graph_4, source='x', destination='y')
         self.assertSetEqual(set(confounders), {'u', 'z'})
 
@@ -87,3 +87,23 @@ class TestIdentifyConfounders(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             identify_confounders(graph, source='x', destination='y')
+
+    def test_reverse_edge(self):
+        # identify confounders but swap source and destination
+        confounders = identify_confounders(self.graph_1, source='x', destination='y')
+        confounders_rev = identify_confounders(self.graph_1, source='y', destination='x')
+        self.assertSetEqual(set(confounders), set(confounders_rev))
+
+    def test_time_series_graph(self):
+        # create a time-series causal graph
+        ts_cg = TimeSeriesCausalGraph()
+        ts_cg.add_edge('z', 'x')
+        ts_cg.add_edge('z', 'y')
+        ts_cg.add_edge('x', 'y')
+        ts_cg.add_edge('z lag(n=1)', 'z')
+        ts_cg.add_edge('x lag(n=1)', 'x')
+        ts_cg.add_edge('y lag(n=1)', 'y')
+
+        # compute confounders between source and destination
+        confounders = identify_confounders(ts_cg, source='x', destination='y')
+        self.assertSetEqual(set(confounders), {'z'})

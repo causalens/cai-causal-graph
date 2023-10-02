@@ -54,10 +54,10 @@ def identify_confounders(graph: CausalGraph, source: str, destination: str) -> L
 
     # create a copy of the provided graph and prune the edge between source and destination
     pruned_graph = graph.copy()
-    try:
+    if pruned_graph.edge_exists(source=source, destination=destination):
         pruned_graph.remove_edge(source=source, destination=destination)
-    except CausalGraphErrors.EdgeDoesNotExistError:
-        pass
+    elif pruned_graph.edge_exists(source=destination, destination=source):
+        pruned_graph.remove_edge(source=destination, destination=source)
 
     # go through each of the parents of the source node
     confounders = set()
