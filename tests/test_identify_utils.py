@@ -17,7 +17,7 @@ import unittest
 from itertools import combinations
 
 from cai_causal_graph import CausalGraph, TimeSeriesCausalGraph
-from cai_causal_graph.identify_utils import identify_confounders, identify_instruments
+from cai_causal_graph.identify_utils import identify_confounders, identify_instruments, identify_mediators
 from cai_causal_graph.type_definitions import EDGE_T
 
 
@@ -242,3 +242,125 @@ class TestIdentifyInstruments(unittest.TestCase):
         # identify instrumental variables
         instruments = identify_instruments(ts_cg, source='x', destination='y')
         self.assertSetEqual(set(instruments), {'z', 'z lag(n=1)', 'x lag(n=1)'})
+
+
+class TestIdentifyMediators(unittest.TestCase):
+    def test_simple(self):
+        # define a simple graph (standard mediator example)
+        cg = CausalGraph()
+        cg.add_edge('x', 'm')
+        cg.add_edge('m', 'y')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        cg.add_edge('x', 'y')
+
+        # identify mediators
+        mediators = identify_mediators(cg, source='x', destination='y')
+        self.assertSetEqual(set(mediators), {'m'})
+
+    def test_multiple_mediators(self):
+        # define a simple graph with mediators in a chain
+        cg = CausalGraph()
+        cg.add_edge('x', 'm1')
+        cg.add_edge('m1', 'm2')
+        cg.add_edge('m2', 'y')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        cg.add_edge('x', 'y')
+
+        # identify mediators
+        mediators = identify_mediators(cg, source='x', destination='y')
+        self.assertSetEqual(set(mediators), {'m1', 'm2'})
+
+    def test_multiple_mediators_diamond(self):
+        # define a simple graph with mediators in a diamond shape
+        cg = CausalGraph()
+        cg.add_edge('x', 'm1')
+        cg.add_edge('m1', 'm2')
+        cg.add_edge('m1', 'm3')
+        cg.add_edge('m2', 'm4')
+        cg.add_edge('m3', 'm4')
+        cg.add_edge('m4', 'y')
+        cg.add_edge('u1', 'x')
+        cg.add_edge('u1', 'y')
+        cg.add_edge('u2', 'x')
+        cg.add_edge('u2', 'y')
+        cg.add_edge('x', 'y')
+
+        # identify mediators
+        mediators = identify_mediators(cg, source='x', destination='y')
+        self.assertSetEqual(set(mediators), {'m1', 'm4'})
+
+    def test_chain(self):
+        # define a chain graph
+        cg = CausalGraph()
+        cg.add_edge('x', 'm')
+        cg.add_edge('m', 'y')
+
+        # identify mediators
+        mediators = identify_mediators(cg, source='x', destination='y')
+        self.assertSetEqual(set(mediators), {'m'})
+
+    def test_no_mediators(self):
+        # graph 1: mediator is a collider node
+        cg = CausalGraph()
+        cg.add_edge('x', 'm')
+        cg.add_edge('y', 'm')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+
+        # identify mediators
+        mediators = identify_mediators(cg, source='x', destination='y')
+        self.assertEqual(len(mediators), 0)
+
+        # graph 2: mediator is an ancestor of confounders
+        cg = CausalGraph()
+        cg.add_edge('x', 'm')
+        cg.add_edge('m', 'y')
+        cg.add_edge('u', 'm')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+
+        # identify mediators
+        mediators = identify_mediators(cg, source='x', destination='y')
+        self.assertEqual(len(mediators), 0)
+
+        # graph 3: multiple causal paths with no intersection between them
+        cg = CausalGraph()
+        cg.add_edge('x', 'm1')
+        cg.add_edge('m1', 'y')
+        cg.add_edge('x', 'm2')
+        cg.add_edge('m2', 'y')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+
+        # identify mediators
+        mediators = identify_mediators(cg, source='x', destination='y')
+        self.assertEqual(len(mediators), 0)
+
+    def test_non_dag(self):
+        # create a mixed graph
+        cg = CausalGraph()
+        cg.add_edge('x', 'm', edge_type=EDGE_T.UNDIRECTED_EDGE)
+        cg.add_edge('m', 'y')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+
+        with self.assertRaises(TypeError):
+            identify_mediators(cg, source='x', destination='y')
+
+    def test_time_series_graph(self):
+        # create a time-series causal graph
+        ts_cg = TimeSeriesCausalGraph()
+        ts_cg.add_edge('x', 'm')
+        ts_cg.add_edge('m', 'y')
+        ts_cg.add_edge('u', 'x')
+        ts_cg.add_edge('u', 'y')
+        ts_cg.add_edge('m lag(n=1)', 'm')
+        ts_cg.add_edge('u lag(n=1)', 'u')
+        ts_cg.add_edge('x lag(n=1)', 'x')
+        ts_cg.add_edge('y lag(n=1)', 'y')
+
+        # identify mediators
+        mediators = identify_mediators(ts_cg, source='x', destination='y')
+        self.assertSetEqual(set(mediators), {'m'})

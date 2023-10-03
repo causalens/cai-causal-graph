@@ -145,3 +145,64 @@ def identify_instruments(graph: CausalGraph, source: str, destination: str) -> L
             candidate_nodes.remove(candidate)
 
     return list(candidate_nodes)
+
+
+def identify_mediators(graph: CausalGraph, source: str, destination: str) -> List[str]:
+    """
+    Identify all mediators for the causal effect of `source` and `destination` in the provided `graph`.
+
+    A mediator variable for the causal effect of `source` on `destination` satisfies the following criteria:
+        1. There is a causal effect between the `source` and the `mediator`.
+        2. There is a causal effect between the `mediator` and the `destination`.
+        3. The `mediator` blocks all directed causal paths between the `source` and the `destination`.
+        4. There is no directed causal path from any confounder between `source` and `destination` to the `mediator`.
+
+    Example:
+        >>> from typing import List
+        >>> from cai_causal_graph import CausalGraph
+        >>> from cai_causal_graph.identify_utils import identify_mediators
+        >>>
+        >>> # define a causal graph
+        >>> cg = CausalGraph()
+        >>> cg.add_edge('x', 'm')
+        >>> cg.add_edge('m', 'y')
+        >>> cg.add_edge('u', 'x')
+        >>> cg.add_edge('u', 'y')
+        >>> cg.add_edge('x', 'y')
+        >>>
+        >>> # find the mediators between 'x' and 'y'; output: ['m']
+        >>> mediator_variables: List[str] = identify_mediators(cg, source='x', destination='y')
+
+    :param graph: The causal graph given by a `cai_causal_graph.causal_graph.CausalGraph` instance. This must be a DAG,
+        i.e. it must only contain directed edges and be acyclic, otherwise a `TypeError` is raised.
+    :param source: The source variable.
+    :param destination: The destination variable.
+    :return: A list of mediator variables for the causal effect of `source` on `destination`.
+    """
+    if not graph.is_dag():
+        raise TypeError(f'Expected a DAG, but got a mixed causal graph.')
+
+    # get all the confounders between the source and destination
+    confounders = identify_confounders(graph, source, destination)
+
+    # query all causal paths between the source and destination (also remove trivial paths)
+    causal_paths = [set(path) for path in graph.get_all_causal_paths(source, destination) if len(path) > 2]
+    if len(causal_paths) == 0:
+        return []
+
+    # find the intersection of nodes in all causal paths (since mediators must block _all_ causal paths)
+    candidate_nodes = set.intersection(*[path.difference(source, destination) for path in causal_paths])
+
+    # create a copy of the provided graph and prune edges to the children of the source
+    pruned_graph = graph.copy()
+    for child in pruned_graph.get_children(source):
+        pruned_graph.remove_edge(source=source, destination=child)
+
+    # reject all candidate nodes that are descendants of any confounders in the pruned graph
+    for confounder in confounders:
+        for candidate in candidate_nodes.copy():
+            if candidate in pruned_graph.get_descendants(confounder):
+                candidate_nodes.remove(candidate)
+                break
+
+    return list(candidate_nodes)
