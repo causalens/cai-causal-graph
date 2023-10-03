@@ -308,6 +308,44 @@ class TestIdentifyInstruments(unittest.TestCase):
         instruments = identify_instruments(ts_cg, source='x', destination='y')
         self.assertSetEqual(set(instruments), {'z', 'z lag(n=1)', 'x lag(n=1)'})
 
+    def test_nodelike(self):
+        # define a simple graph (standard instrumental variable example)
+        cg = CausalGraph()
+        cg.add_edge('z', 'x')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        cg.add_edge('x', 'y')
+
+        # identify instrumental variables
+        instruments = identify_instruments(cg, source=cg.get_node('x'), destination=cg.get_node('y'))
+        self.assertSetEqual(set(instruments), {'z'})
+
+    def test_error_cases(self):
+        # define a simple graph (standard instrumental variable example)
+        cg = CausalGraph()
+        cg.add_edge('z', 'x')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        cg.add_edge('x', 'y')
+
+        # node_1 not in graph
+        with self.assertRaises(CausalGraphErrors.NodeDoesNotExistError):
+            identify_instruments(cg, source='w', destination='y')
+
+        # node_2 not in graph
+        with self.assertRaises(CausalGraphErrors.NodeDoesNotExistError):
+            identify_instruments(cg, source='x', destination='w')
+
+        # node_1 == node_2
+        with self.assertRaises(ValueError):
+            identify_instruments(cg, source='x', destination='x')
+        with self.assertRaises(ValueError):
+            identify_instruments(cg, source='x', destination=cg.get_node('x'))
+        with self.assertRaises(ValueError):
+            identify_instruments(cg, source=cg.get_node('x'), destination='x')
+        with self.assertRaises(ValueError):
+            identify_instruments(cg, source=cg.get_node('x'), destination=cg.get_node('x'))
+
 
 class TestIdentifyMediators(unittest.TestCase):
     def test_simple(self):
@@ -429,3 +467,43 @@ class TestIdentifyMediators(unittest.TestCase):
         # identify mediators
         mediators = identify_mediators(ts_cg, source='x', destination='y')
         self.assertSetEqual(set(mediators), {'m'})
+
+    def test_nodelike(self):
+        # define a simple graph (standard mediator example)
+        cg = CausalGraph()
+        cg.add_edge('x', 'm')
+        cg.add_edge('m', 'y')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        cg.add_edge('x', 'y')
+
+        # identify mediators
+        mediators = identify_mediators(cg, source=cg.get_node('x'), destination=cg.get_node('y'))
+        self.assertSetEqual(set(mediators), {'m'})
+
+    def test_error_cases(self):
+        # define a simple graph (standard mediator example)
+        cg = CausalGraph()
+        cg.add_edge('x', 'm')
+        cg.add_edge('m', 'y')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        cg.add_edge('x', 'y')
+
+        # node_1 not in graph
+        with self.assertRaises(CausalGraphErrors.NodeDoesNotExistError):
+            identify_mediators(cg, source='w', destination='y')
+
+        # node_2 not in graph
+        with self.assertRaises(CausalGraphErrors.NodeDoesNotExistError):
+            identify_mediators(cg, source='x', destination='w')
+
+        # node_1 == node_2
+        with self.assertRaises(ValueError):
+            identify_mediators(cg, source='x', destination='x')
+        with self.assertRaises(ValueError):
+            identify_mediators(cg, source='x', destination=cg.get_node('x'))
+        with self.assertRaises(ValueError):
+            identify_mediators(cg, source=cg.get_node('x'), destination='x')
+        with self.assertRaises(ValueError):
+            identify_mediators(cg, source=cg.get_node('x'), destination=cg.get_node('x'))
