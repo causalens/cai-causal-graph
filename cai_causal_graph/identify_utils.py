@@ -16,7 +16,6 @@ limitations under the License.
 from typing import List
 
 from cai_causal_graph import CausalGraph
-from cai_causal_graph.exceptions import CausalGraphErrors
 
 
 def identify_confounders(graph: CausalGraph, node_1: str, node_2: str) -> List[str]:
@@ -51,15 +50,14 @@ def identify_confounders(graph: CausalGraph, node_1: str, node_2: str) -> List[s
     if not graph.is_dag():
         raise TypeError(f'Expected a DAG, but got a mixed causal graph.')
 
-    # create a copy of the provided graph and prune the edge between node_1 and node_2
+    # create a copy of the provided graph and prune the children of node_1 and node_2
     pruned_graph = graph.copy()
-    if pruned_graph.edge_exists(source=node_1, destination=node_2):
-        pruned_graph.remove_edge(source=node_1, destination=node_2)
-    elif pruned_graph.edge_exists(source=node_2, destination=node_1):
-        pruned_graph.remove_edge(source=node_2, destination=node_1)
-    # No else needed as no edge to remove.
+    for child in pruned_graph.get_children(node_1):
+        pruned_graph.remove_edge(source=node_1, destination=child)
+    for child in pruned_graph.get_children(node_2):
+        pruned_graph.remove_edge(source=node_2, destination=child)
 
-    # go through each of the parents of the node_1 node
+    # search the parents of node_1 and check whether any of them is an ancestor to node_2
     confounders = set()
     for parent in pruned_graph.get_parents(node_1):
         # add the parent to the confounding set if a directed path exists
@@ -69,4 +67,17 @@ def identify_confounders(graph: CausalGraph, node_1: str, node_2: str) -> List[s
         else:
             confounders = confounders.union(set(identify_confounders(pruned_graph, parent, node_2)))
 
-    return list(confounders)
+    # do the reverse of the above by searching through the parents of node_2
+    confounders_reverse = set()
+    for parent in pruned_graph.get_parents(node_2):
+        # add the parent to the confounding set if a directed path exists
+        if parent in pruned_graph.get_ancestors(node_1):
+            confounders_reverse.add(parent)
+        # otherwise, recursively call this function to identify confounders of the parent
+        else:
+            confounders_reverse = confounders_reverse.union(set(identify_confounders(pruned_graph, parent, node_1)))
+
+    # take the intersection of both sets to get the minimal confounders
+    minimal_confounders = confounders.intersection(confounders_reverse)
+
+    return list(minimal_confounders)

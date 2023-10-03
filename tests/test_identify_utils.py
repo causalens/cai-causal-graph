@@ -90,13 +90,13 @@ class TestIdentifyConfounders(unittest.TestCase):
             identify_confounders(graph, node_1='x', node_2='y')
 
     def test_symmetric(self):
-        # Identify confounders but swap source and destination. Test function is symmetric.
+        # Identify confounders but swap source and destination; test function is symmetric
         for cg in [self.graph_1, self.graph_2, self.graph_3, self.graph_4]:
             cg_rev = cg.copy()
             cg_rev.remove_edge('x', 'y')
             cg_rev.add_edge('y', 'x')
 
-            # Let's check all pairs.
+            # Let us check all pairs
             for u, v in combinations(['u', 'z', 'x', 'y'], 2):
                 confounders_1a = identify_confounders(cg, node_1=u, node_2=v)
                 confounders_1b = identify_confounders(cg, node_1=v, node_2=u)
@@ -105,7 +105,7 @@ class TestIdentifyConfounders(unittest.TestCase):
                 self.assertSetEqual(set(confounders_1a), set(confounders_1b))
                 self.assertSetEqual(set(confounders_2a), set(confounders_2b))
                 if (u == 'x' and v == 'y') or (u == 'y' and v == 'x'):
-                    # If x, y then the answers should match for the graphs with swapped x - y edge.
+                    # If x, y then the answers should match for the graphs with swapped x - y edge
                     self.assertSetEqual(set(confounders_1a), set(confounders_2a))
 
     def test_time_series_graph(self):
