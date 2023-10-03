@@ -1,4 +1,4 @@
-# Causal Graph Utilities
+# Utilities
 
 ## Identify Useful Subsets of a Causal Graph
 
