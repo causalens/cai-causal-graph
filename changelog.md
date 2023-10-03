@@ -1,5 +1,10 @@
 # Changelog
 
+## NEXT
+
+- Added the `cai_causal_graph.identify_utils.identify_confounders` utility function, which allows you to identify
+  a list of confounders between two nodes in a `cai_causal_graph.causal_graph.CausalGraph`.
+
 ## 0.2.4
 
 - Fixed formatting in the documentation.
