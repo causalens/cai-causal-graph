@@ -24,7 +24,7 @@ def identify_confounders(graph: CausalGraph, node_1: str, node_2: str) -> List[s
 
     A confounder between `node_1` and `node_2` is a node that is a (minimal) ancestor of both the `node_1` and
     `node_2`. Being a _minimal_ ancestor here means that the node is not an ancestor of other confounder nodes, unless
-    it has another directed path to `node_2` that does not go through other confounder nodes.
+    it has another directed path to either `node_1` or `node_2` that does not go through other confounder nodes.
 
     Example:
         >>> from typing import List
@@ -77,7 +77,9 @@ def identify_confounders(graph: CausalGraph, node_1: str, node_2: str) -> List[s
         else:
             confounders_reverse = confounders_reverse.union(set(identify_confounders(pruned_graph, parent, node_1)))
 
-    # take the intersection of both sets to get the minimal confounders
+    # take the intersection of both sets to get the minimal confounder set
+    # parents of confounders may be identified as confounders if they have a directed path to the second node
+    # only occurs in one configuration, i.e. either forward or reverse direction
     minimal_confounders = confounders.intersection(confounders_reverse)
 
     return list(minimal_confounders)
