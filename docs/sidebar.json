@@ -30,7 +30,7 @@
         {
             "type": "doc",
             "id": "docs/causal_graph_utils",
-            "label": "Causal Graph Utilities"
+            "label": "Identification Utilities"
         }
     ]
 }
