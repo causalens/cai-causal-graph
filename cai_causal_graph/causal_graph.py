@@ -687,7 +687,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             provided identifiers. Otherwise, they are sorted alphabetically by identifier.
         """
         if identifier is not None:
-            if isinstance(identifier, str):
+            if isinstance(identifier, (str, HasIdentifier)):
                 identifier = self._NodeCls.identifier_from(identifier)
                 node_list = (
                     [self._nodes_by_identifier[identifier]] if identifier in self._nodes_by_identifier else list()
@@ -820,7 +820,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         self._nodes_by_identifier.pop(identifier)
         node.invalidate()
 
-    def remove_node(self, identifier: str):
+    def remove_node(self, identifier: NodeLike):
         """
         Remove a node from the causal graph. This also deletes all edges connecting to this node.
 

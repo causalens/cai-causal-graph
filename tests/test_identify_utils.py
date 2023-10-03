@@ -17,6 +17,7 @@ import unittest
 from itertools import combinations
 
 from cai_causal_graph import CausalGraph, TimeSeriesCausalGraph
+from cai_causal_graph.exceptions import CausalGraphErrors
 from cai_causal_graph.identify_utils import identify_confounders, identify_instruments, identify_mediators
 from cai_causal_graph.type_definitions import EDGE_T
 
@@ -62,15 +63,26 @@ class TestIdentifyConfounders(unittest.TestCase):
         # compute confounders between source and destination
         confounders = identify_confounders(self.graph_1, node_1='x', node_2='y')
         self.assertSetEqual(set(confounders), {'z'})
+        # Confirm you can also pass Nodes
+        confounders = identify_confounders(
+            self.graph_1, node_1=self.graph_1.get_node('x'), node_2=self.graph_1.get_node('y')
+        )
+        self.assertSetEqual(set(confounders), {'z'})
 
     def test_graph_2(self):
         # compute confounders between source and destination
         confounders = identify_confounders(self.graph_2, node_1='x', node_2='y')
         self.assertSetEqual(set(confounders), {'u'})
+        # Confirm you can pass mix of Node and identifier
+        confounders = identify_confounders(self.graph_2, node_1='x', node_2=self.graph_2.get_node('y'))
+        self.assertSetEqual(set(confounders), {'u'})
 
     def test_graph_3(self):
         # compute confounders between source and destination
         confounders = identify_confounders(self.graph_3, node_1='x', node_2='y')
+        self.assertSetEqual(set(confounders), {'u'})
+        # Confirm you can pass mix of Node and identifier
+        confounders = identify_confounders(self.graph_3, node_1=self.graph_3.get_node('x'), node_2='y')
         self.assertSetEqual(set(confounders), {'u'})
 
     def test_graph_4(self):
@@ -88,6 +100,25 @@ class TestIdentifyConfounders(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             identify_confounders(graph, node_1='x', node_2='y')
+
+    def test_error_cases(self):
+        # node_1 not in graph
+        with self.assertRaises(CausalGraphErrors.NodeDoesNotExistError):
+            identify_confounders(self.graph_1, node_1='w', node_2='y')
+
+        # node_2 not in graph
+        with self.assertRaises(CausalGraphErrors.NodeDoesNotExistError):
+            identify_confounders(self.graph_1, node_1='x', node_2='w')
+
+        # node_1 == node_2
+        with self.assertRaises(ValueError):
+            identify_confounders(self.graph_1, node_1='x', node_2='x')
+        with self.assertRaises(ValueError):
+            identify_confounders(self.graph_1, node_1='x', node_2=self.graph_1.get_node('x'))
+        with self.assertRaises(ValueError):
+            identify_confounders(self.graph_1, node_1=self.graph_1.get_node('x'), node_2='x')
+        with self.assertRaises(ValueError):
+            identify_confounders(self.graph_1, node_1=self.graph_1.get_node('x'), node_2=self.graph_1.get_node('x'))
 
     def test_symmetric(self):
         # Identify confounders but swap source and destination; test function is symmetric
@@ -107,6 +138,40 @@ class TestIdentifyConfounders(unittest.TestCase):
                 if (u == 'x' and v == 'y') or (u == 'y' and v == 'x'):
                     # If x, y then the answers should match for the graphs with swapped x - y edge
                     self.assertSetEqual(set(confounders_1a), set(confounders_2a))
+
+    def test_bigger_graph(self):
+        cg = CausalGraph()
+        cg.add_edge('z', 'u')
+        cg.add_edge('z', 'y')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        # mediators between x and y
+        cg.add_edge('x', 'm1')
+        cg.add_edge('m1', 'm2')
+        cg.add_edge('m2', 'm3')
+        cg.add_edge('m3', 'y')
+
+        # bunch of kids on u, z, x, y, and mediators that we don't care about
+        cg.add_edge('u', 'uc0')
+        cg.add_edge('z', 'zc0')
+        cg.add_edge('x', 'xc0')
+        cg.add_edge('m1', 'm1c0')
+        cg.add_edge('m2', 'm2c0')
+        cg.add_edge('m3', 'm3c0')
+        cg.add_edge('y', 'yc0')
+        for i in range(1, 50):
+            cg.add_edge(f'uc{i - 1}', f'uc{i}')
+            cg.add_edge(f'zc{i - 1}', f'zc{i}')
+            cg.add_edge(f'xc{i-1}', f'xc{i}')
+            cg.add_edge(f'm1c{i - 1}', f'm1c{i}')
+            cg.add_edge(f'm2c{i - 1}', f'm2c{i}')
+            cg.add_edge(f'm3c{i - 1}', f'm3c{i}')
+            cg.add_edge(f'yc{i - 1}', f'yc{i}')
+
+        confounders = identify_confounders(cg, 'x', 'y')
+        self.assertSetEqual(set(confounders), {'u'})
+        confounders = identify_confounders(cg, 'y', 'x')
+        self.assertSetEqual(set(confounders), {'u'})
 
     def test_time_series_graph(self):
         # create a time-series causal graph

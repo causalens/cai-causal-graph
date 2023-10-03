@@ -13,12 +13,45 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from typing import List
+from typing import List, Tuple
 
 from cai_causal_graph import CausalGraph
+from cai_causal_graph.exceptions import CausalGraphErrors
+from cai_causal_graph.graph_components import Node
+from cai_causal_graph.type_definitions import NodeLike
 
 
-def identify_confounders(graph: CausalGraph, node_1: str, node_2: str) -> List[str]:
+def _verify_identify_inputs(graph: CausalGraph, node_1: NodeLike, node_2: NodeLike) -> Tuple[str, str]:
+    """
+    Verify the inputs to the identify utilities.
+
+    :param graph: The causal graph given by a `cai_causal_graph.causal_graph.CausalGraph` instance. This must be a DAG,
+        i.e. it must only contain directed edges and be acyclic, otherwise a `TypeError` is raised.
+    :param node_1: The first node or its identifier.
+    :param node_2: The second node or its identifier.
+    :return: A tuple of the node identifiers.
+    """
+    if not graph.is_dag():
+        raise TypeError(f'Expected a DAG, but got a mixed causal graph.')
+
+    # Confirm node_1 and node_2 are in the graph.
+    if not graph.node_exists(node_1):
+        raise CausalGraphErrors.NodeDoesNotExistError(f'Node not found: {node_1}')
+    if not graph.node_exists(node_2):
+        raise CausalGraphErrors.NodeDoesNotExistError(f'Node not found: {node_2}')
+
+    # Coerce NodeLike to identifier. We already know they are NodeLike as node_exists does this.
+    node_1_id = Node.identifier_from(node_1)
+    node_2_id = Node.identifier_from(node_2)
+
+    # Ensure node_1 != node_2
+    if node_1_id == node_2_id or node_1 == node_2:
+        raise ValueError('node_1 and node_2 cannot be equal. Please provide different nodes / node identifiers.')
+
+    return node_1_id, node_2_id
+
+
+def identify_confounders(graph: CausalGraph, node_1: NodeLike, node_2: NodeLike) -> List[str]:
     """
     Identify all confounders between `node_1` and `node_2` in the provided `graph`.
 
@@ -43,49 +76,67 @@ def identify_confounders(graph: CausalGraph, node_1: str, node_2: str) -> List[s
 
     :param graph: The causal graph given by a `cai_causal_graph.causal_graph.CausalGraph` instance. This must be a DAG,
         i.e. it must only contain directed edges and be acyclic, otherwise a `TypeError` is raised.
-    :param node_1: The first variable.
-    :param node_2: The second variable.
+    :param node_1: The first node or its identifier.
+    :param node_2: The second node or its identifier.
     :return: A list of all confounders between `node_1` and `node_2`.
     """
-    if not graph.is_dag():
-        raise TypeError(f'Expected a DAG, but got a mixed causal graph.')
 
-    # create a copy of the provided graph and prune the children of node_1 and node_2
+    def _identify_confounders_no_checks_no_descendant_pruning(clean_graph: CausalGraph, n1: str, n2: str) -> List[str]:
+        """Private function that does not check if DAG or do descendant pruning."""
+
+        # create a copy of the provided graph and prune the children of node 1 and node 2
+        final_graph = clean_graph.copy()
+        for child in final_graph.get_children(n1):
+            final_graph.remove_edge(source=n1, destination=child)
+        for child in final_graph.get_children(n2):
+            final_graph.remove_edge(source=n2, destination=child)
+
+        # search the parents of node 1 and check whether any of them is an ancestor to node 2
+        confounders = set()
+        for parent in final_graph.get_parents(n1):
+            # add the parent to the confounding set if a directed path exists
+            if parent in final_graph.get_ancestors(n2):
+                confounders.add(parent)
+            # otherwise, recursively call this function to identify confounders of the parent
+            else:
+                confounders = confounders.union(
+                    set(_identify_confounders_no_checks_no_descendant_pruning(final_graph, parent, n2))
+                )
+
+        # do the reverse of the above by searching through the parents of node 2
+        confounders_reverse = set()
+        for parent in final_graph.get_parents(n2):
+            # add the parent to the confounding set if a directed path exists
+            if parent in final_graph.get_ancestors(n1):
+                confounders_reverse.add(parent)
+            # otherwise, recursively call this function to identify confounders of the parent
+            else:
+                confounders_reverse = confounders_reverse.union(
+                    set(_identify_confounders_no_checks_no_descendant_pruning(final_graph, parent, n1))
+                )
+
+        # take the intersection of both sets to get the minimal confounder set
+        # parents of confounders may be identified as confounders if they have a directed path to the second node
+        # only occurs in one configuration, i.e. either forward or reverse direction
+        minimal_confounders = confounders.intersection(confounders_reverse)
+
+        return list(minimal_confounders)
+
+    # verify inputs and obtain node identifiers
+    node_1_id, node_2_id = _verify_identify_inputs(graph, node_1, node_2)
+
+    # Remove all descendants of node 1 and node 2 as they will not be necessary in the search for confounders
+    # This is to reduce memory overhead as we pass the graph throughout recursive calls
     pruned_graph = graph.copy()
-    for child in pruned_graph.get_children(node_1):
-        pruned_graph.remove_edge(source=node_1, destination=child)
-    for child in pruned_graph.get_children(node_2):
-        pruned_graph.remove_edge(source=node_2, destination=child)
+    all_descendants = pruned_graph.get_descendants(node_1_id).union(pruned_graph.get_descendants(node_2_id))
+    all_descendants -= {node_1_id, node_2_id}  # do not want to remove the nodes themselves
+    for descendant in all_descendants:
+        pruned_graph.remove_node(descendant)
 
-    # search the parents of node_1 and check whether any of them is an ancestor to node_2
-    confounders = set()
-    for parent in pruned_graph.get_parents(node_1):
-        # add the parent to the confounding set if a directed path exists
-        if parent in pruned_graph.get_ancestors(node_2):
-            confounders.add(parent)
-        # otherwise, recursively call this function to identify confounders of the parent
-        else:
-            confounders = confounders.union(set(identify_confounders(pruned_graph, parent, node_2)))
-
-    # do the reverse of the above by searching through the parents of node_2
-    confounders_reverse = set()
-    for parent in pruned_graph.get_parents(node_2):
-        # add the parent to the confounding set if a directed path exists
-        if parent in pruned_graph.get_ancestors(node_1):
-            confounders_reverse.add(parent)
-        # otherwise, recursively call this function to identify confounders of the parent
-        else:
-            confounders_reverse = confounders_reverse.union(set(identify_confounders(pruned_graph, parent, node_1)))
-
-    # take the intersection of both sets to get the minimal confounder set
-    # parents of confounders may be identified as confounders if they have a directed path to the second node
-    # only occurs in one configuration, i.e. either forward or reverse direction
-    minimal_confounders = confounders.intersection(confounders_reverse)
-
-    return list(minimal_confounders)
+    return _identify_confounders_no_checks_no_descendant_pruning(pruned_graph, node_1_id, node_2_id)
 
 
-def identify_instruments(graph: CausalGraph, source: str, destination: str) -> List[str]:
+def identify_instruments(graph: CausalGraph, source: NodeLike, destination: NodeLike) -> List[str]:
     """
     Identify all instrumental variables for the causal effect of `source` and `destination` in the provided `graph`.
 
@@ -111,18 +162,18 @@ def identify_instruments(graph: CausalGraph, source: str, destination: str) -> L
 
     :param graph: The causal graph given by a `cai_causal_graph.causal_graph.CausalGraph` instance. This must be a DAG,
         i.e. it must only contain directed edges and be acyclic, otherwise a `TypeError` is raised.
-    :param source: The source variable.
-    :param destination: The destination variable.
+    :param source: The source variable or its identifier.
+    :param destination: The destination variable or its identifier.
     :return: A list of instrumental variables for the causal effect of `source` on `destination`.
     """
-    if not graph.is_dag():
-        raise TypeError(f'Expected a DAG, but got a mixed causal graph.')
+    # verify inputs and obtain node identifiers
+    source_id, destination_id = _verify_identify_inputs(graph, source, destination)
 
     # get all the confounders between the source and destination
-    confounders = identify_confounders(graph, source, destination)
+    confounders = identify_confounders(graph, source_id, destination_id)
 
     # get all the ancestors of the source that are not in the above confounding set
-    candidate_nodes = set(graph.get_ancestors(source)).difference(confounders)
+    candidate_nodes = set(graph.get_ancestors(source_id)).difference(confounders)
 
     # reject all candidate nodes that have a directed path to any confounders, and vice versa
     for confounder in confounders:
@@ -134,20 +185,20 @@ def identify_instruments(graph: CausalGraph, source: str, destination: str) -> L
 
     # reject all candidate nodes that have a directed path to the destination that does not go through the source
     for candidate in candidate_nodes.copy():
-        for causal_path in graph.get_all_causal_paths(candidate, destination):
-            if source not in causal_path:
+        for causal_path in graph.get_all_causal_paths(candidate, destination_id):
+            if source_id not in causal_path:
                 candidate_nodes.remove(candidate)
                 break
 
     # reject all candidate nodes that have a non-empty confounding set between itself and the destination
     for candidate in candidate_nodes.copy():
-        if len(identify_confounders(graph, candidate, destination)) > 0:
+        if len(identify_confounders(graph, candidate, destination_id)) > 0:
             candidate_nodes.remove(candidate)
 
     return list(candidate_nodes)
 
 
-def identify_mediators(graph: CausalGraph, source: str, destination: str) -> List[str]:
+def identify_mediators(graph: CausalGraph, source: NodeLike, destination: NodeLike) -> List[str]:
     """
     Identify all mediators for the causal effect of `source` and `destination` in the provided `graph`.
 
@@ -175,28 +226,28 @@ def identify_mediators(graph: CausalGraph, source: str, destination: str) -> Lis
 
     :param graph: The causal graph given by a `cai_causal_graph.causal_graph.CausalGraph` instance. This must be a DAG,
         i.e. it must only contain directed edges and be acyclic, otherwise a `TypeError` is raised.
-    :param source: The source variable.
-    :param destination: The destination variable.
+    :param source: The source variable or its identifier.
+    :param destination: The destination variable or its identifier.
     :return: A list of mediator variables for the causal effect of `source` on `destination`.
     """
-    if not graph.is_dag():
-        raise TypeError(f'Expected a DAG, but got a mixed causal graph.')
+    # verify inputs and obtain node identifiers
+    source_id, destination_id = _verify_identify_inputs(graph, source, destination)
 
     # get all the confounders between the source and destination
-    confounders = identify_confounders(graph, source, destination)
+    confounders = identify_confounders(graph, source_id, destination_id)
 
     # query all causal paths between the source and destination (also remove trivial paths)
-    causal_paths = [set(path) for path in graph.get_all_causal_paths(source, destination) if len(path) > 2]
+    causal_paths = [set(path) for path in graph.get_all_causal_paths(source_id, destination_id) if len(path) > 2]
     if len(causal_paths) == 0:
         return []
 
     # find the intersection of nodes in all causal paths (since mediators must block _all_ causal paths)
-    candidate_nodes = set.intersection(*[path.difference(source, destination) for path in causal_paths])
+    candidate_nodes = set.intersection(*[path.difference(source_id, destination_id) for path in causal_paths])
 
     # create a copy of the provided graph and prune edges to the children of the source
     pruned_graph = graph.copy()
-    for child in pruned_graph.get_children(source):
-        pruned_graph.remove_edge(source=source, destination=child)
+    for child in pruned_graph.get_children(source_id):
+        pruned_graph.remove_edge(source=source_id, destination=child)
 
     # reject all candidate nodes that are descendants of any confounders in the pruned graph
     for confounder in confounders:
