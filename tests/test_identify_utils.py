@@ -159,7 +159,7 @@ class TestIdentifyConfounders(unittest.TestCase):
         cg.add_edge('m2', 'm2c0')
         cg.add_edge('m3', 'm3c0')
         cg.add_edge('y', 'yc0')
-        for i in range(1, 10):
+        for i in range(1, 50):
             cg.add_edge(f'uc{i - 1}', f'uc{i}')
             cg.add_edge(f'zc{i - 1}', f'zc{i}')
             cg.add_edge(f'xc{i-1}', f'xc{i}')
