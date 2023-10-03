@@ -17,7 +17,7 @@ import unittest
 from itertools import combinations
 
 from cai_causal_graph import CausalGraph, TimeSeriesCausalGraph
-from cai_causal_graph.identify_utils import identify_confounders
+from cai_causal_graph.identify_utils import identify_confounders, identify_instruments
 from cai_causal_graph.type_definitions import EDGE_T
 
 
@@ -121,3 +121,124 @@ class TestIdentifyConfounders(unittest.TestCase):
         # compute confounders between source and destination
         confounders = identify_confounders(ts_cg, node_1='x', node_2='y')
         self.assertSetEqual(set(confounders), {'z'})
+
+
+class TestIdentifyInstruments(unittest.TestCase):
+    def test_simple(self):
+        # define a simple graph (standard instrumental variable example)
+        cg = CausalGraph()
+        cg.add_edge('z', 'x')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        cg.add_edge('x', 'y')
+
+        # identify instrumental variables
+        instruments = identify_instruments(cg, source='x', destination='y')
+        self.assertSetEqual(set(instruments), {'z'})
+
+    def test_multiple_instruments(self):
+        # define a simple graph with multiple instruments (in a chain)
+        cg = CausalGraph()
+        cg.add_edge('z_3', 'z_2')
+        cg.add_edge('z_2', 'z_1')
+        cg.add_edge('z_1', 'x')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        cg.add_edge('x', 'y')
+
+        # identify instrumental variables
+        instruments = identify_instruments(cg, source='x', destination='y')
+        self.assertSetEqual(set(instruments), {'z_3', 'z_2', 'z_1'})
+
+    def test_diamond_and_multiple_confounders(self):
+        # define a graph with potential instruments in a diamond shape and multiple confounders
+        cg = CausalGraph()
+        cg.add_edge('z_3', 'z_2')
+        cg.add_edge('z_3', 'z_1')
+        cg.add_edge('z_2', 'x')
+        cg.add_edge('z_1', 'x')
+        cg.add_edge('u_2', 'x')
+        cg.add_edge('u_2', 'y')
+        cg.add_edge('u_1', 'x')
+        cg.add_edge('u_1', 'y')
+        cg.add_edge('x', 'y')
+
+        # identify instrumental variables
+        instruments = identify_instruments(cg, source='x', destination='y')
+        self.assertSetEqual(set(instruments), {'z_3'})
+
+    def test_no_instruments(self):
+        # graph 1: directed edge between instrument and destination
+        cg = CausalGraph()
+        cg.add_edge('z', 'x')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        cg.add_edge('x', 'y')
+        cg.add_edge('z', 'y')
+
+        # identify instrumental variables
+        instruments = identify_instruments(cg, source='x', destination='y')
+        self.assertEqual(len(instruments), 0)
+
+        # graph 2: confounder between instrument and destination
+        cg = CausalGraph()
+        cg.add_edge('z', 'x')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        cg.add_edge('x', 'y')
+        cg.add_edge('w', 'z')
+        cg.add_edge('w', 'y')
+
+        # identify instrumental variables
+        instruments = identify_instruments(cg, source='x', destination='y')
+        self.assertEqual(len(instruments), 0)
+
+        # graph 3: directed edge between instrument and confounder
+        cg = CausalGraph()
+        cg.add_edge('z', 'x')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        cg.add_edge('x', 'y')
+        cg.add_edge('z', 'u')
+
+        # identify instrumental variables
+        instruments = identify_instruments(cg, source='x', destination='y')
+        self.assertEqual(len(instruments), 0)
+
+        # graph 3: no instrument at all but confounder has a parent
+        cg = CausalGraph()
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        cg.add_edge('x', 'y')
+        cg.add_edge('z', 'u')
+
+        # identify instrumental variables
+        instruments = identify_instruments(cg, source='x', destination='y')
+        self.assertEqual(len(instruments), 0)
+
+    def test_non_dag(self):
+        # create a mixed graph
+        cg = CausalGraph()
+        cg.add_edge('z', 'x', edge_type=EDGE_T.UNDIRECTED_EDGE)
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        cg.add_edge('x', 'y')
+
+        with self.assertRaises(TypeError):
+            identify_instruments(cg, source='x', destination='y')
+
+    def test_time_series_graph(self):
+        # create a time-series causal graph
+        ts_cg = TimeSeriesCausalGraph()
+        ts_cg.add_edge('z', 'x')
+        ts_cg.add_edge('u', 'x')
+        ts_cg.add_edge('u', 'y')
+        ts_cg.add_edge('x', 'y')
+        ts_cg.add_edge('z lag(n=1)', 'z')
+        ts_cg.add_edge('u lag(n=1)', 'u')
+        ts_cg.add_edge('x lag(n=1)', 'x')
+        ts_cg.add_edge('y lag(n=1)', 'y')
+
+        # identify instrumental variables
+        instruments = identify_instruments(ts_cg, source='x', destination='y')
+        self.assertSetEqual(set(instruments), {'z', 'z lag(n=1)', 'x lag(n=1)'})
