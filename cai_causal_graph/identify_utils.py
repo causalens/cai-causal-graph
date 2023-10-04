@@ -72,7 +72,7 @@ def identify_confounders(graph: CausalGraph, node_1: NodeLike, node_2: NodeLike)
         >>> cg.add_edge('x', 'y')
         >>>
         >>> # compute confounders between node_1 and node_2; output: ['u']
-        >>> confounders_list: List[str] = identify_confounders(cg, node_1='x', node_2='y')
+        >>> confounder_variables: List[str] = identify_confounders(cg, node_1='x', node_2='y')
 
     :param graph: The causal graph given by a `cai_causal_graph.causal_graph.CausalGraph` instance. This must be a DAG,
         i.e. it must only contain directed edges and be acyclic, otherwise a `TypeError` is raised.
@@ -138,12 +138,16 @@ def identify_confounders(graph: CausalGraph, node_1: NodeLike, node_2: NodeLike)
 
 def identify_instruments(graph: CausalGraph, source: NodeLike, destination: NodeLike) -> List[str]:
     """
-    Identify all instrumental variables for the causal effect of `source` and `destination` in the provided `graph`.
+    Identify all instrumental variables for the causal effect of `source` on `destination` in the provided `graph`.
 
     An instrumental variable for the causal effect of `source` on `destination` satisfies the following criteria:
         1. There is a causal effect between the `instrument` and the `source`.
         2. The `instrument` has a causal effect on the `destination` _only_ through the `source`.
         3. There is no confounding between the `instrument` and the `destination`.
+
+    Note that this method returns a full list of all possible instrumental variables. It may not be necessary to use
+    all identified instruments in instrumental variable regression, e.g. for causal effect estimation, and it is up to
+    the user to decide which instruments to use (if not all).
 
     Example:
         >>> from typing import List
@@ -200,13 +204,16 @@ def identify_instruments(graph: CausalGraph, source: NodeLike, destination: Node
 
 def identify_mediators(graph: CausalGraph, source: NodeLike, destination: NodeLike) -> List[str]:
     """
-    Identify all mediators for the causal effect of `source` and `destination` in the provided `graph`.
+    Identify all mediators for the causal effect of `source` on `destination` in the provided `graph`.
 
     A mediator variable for the causal effect of `source` on `destination` satisfies the following criteria:
         1. There is a causal effect between the `source` and the `mediator`.
         2. There is a causal effect between the `mediator` and the `destination`.
         3. The `mediator` blocks all directed causal paths between the `source` and the `destination`.
         4. There is no directed causal path from any confounder between `source` and `destination` to the `mediator`.
+
+    Note that this method returns a full list of all possible mediator variables. It will be up to the user to decide
+    which mediators to use for downstream tasks, e.g. causal effect estimation.
 
     Example:
         >>> from typing import List
