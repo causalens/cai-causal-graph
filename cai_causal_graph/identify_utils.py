@@ -59,6 +59,11 @@ def identify_confounders(graph: CausalGraph, node_1: NodeLike, node_2: NodeLike)
     `node_2`. Being a _minimal_ ancestor here means that the node is not an ancestor of other confounder nodes, unless
     it has another directed path to either `node_1` or `node_2` that does not go through other confounder nodes.
 
+    Note that this method returns a full list of all possible confounders. It is up to the user to decide which
+    confounder(s) to use for downstream tasks, e.g. causal effect estimation. Note, however, that the list of
+    (minimal) confounders returned by this method is a sufficient adjustment set for causal effect estimation, and
+    therefore it is advised to use all returned variables when adjusting for confounding.
+
     Example:
         >>> from typing import List
         >>> from cai_causal_graph import CausalGraph
@@ -136,7 +141,9 @@ def identify_confounders(graph: CausalGraph, node_1: NodeLike, node_2: NodeLike)
     return _identify_confounders_no_checks_no_descendant_pruning(pruned_graph, node_1_id, node_2_id)
 
 
-def identify_instruments(graph: CausalGraph, source: NodeLike, destination: NodeLike) -> List[str]:
+def identify_instruments(
+    graph: CausalGraph, source: NodeLike, destination: NodeLike, max_num_paths: int = 25
+) -> List[str]:
     """
     Identify all instrumental variables for the causal effect of `source` on `destination` in the provided `graph`.
 
@@ -166,8 +173,9 @@ def identify_instruments(graph: CausalGraph, source: NodeLike, destination: Node
 
     :param graph: The causal graph given by a `cai_causal_graph.causal_graph.CausalGraph` instance. This must be a DAG,
         i.e. it must only contain directed edges and be acyclic, otherwise a `TypeError` is raised.
-    :param source: The source variable or its identifier.
-    :param destination: The destination variable or its identifier.
+    :param source: The source node or its identifier.
+    :param destination: The destination node or its identifier.
+    :param max_num_paths: The maximum number of paths to consider between the source and destination. Default is `25`.
     :return: A list of instrumental variables for the causal effect of `source` on `destination`.
     """
     # verify inputs and obtain node identifiers
@@ -189,7 +197,12 @@ def identify_instruments(graph: CausalGraph, source: NodeLike, destination: Node
 
     # reject all candidate nodes that have a directed path to the destination that does not go through the source
     for candidate in candidate_nodes.copy():
-        for causal_path in graph.get_all_causal_paths(candidate, destination_id):
+        for i, causal_path in enumerate(graph.get_all_causal_paths(candidate, destination_id)):
+            if i > max_num_paths:
+                raise ValueError(
+                    f'The number of paths between the instrument candidate {candidate} and destination {destination} '
+                    f'exceeds the maximum number of paths {max_num_paths}.'
+                )
             if source_id not in causal_path:
                 candidate_nodes.remove(candidate)
                 break
@@ -202,7 +215,9 @@ def identify_instruments(graph: CausalGraph, source: NodeLike, destination: Node
     return list(candidate_nodes)
 
 
-def identify_mediators(graph: CausalGraph, source: NodeLike, destination: NodeLike) -> List[str]:
+def identify_mediators(
+    graph: CausalGraph, source: NodeLike, destination: NodeLike, max_num_paths: int = 25
+) -> List[str]:
     """
     Identify all mediators for the causal effect of `source` on `destination` in the provided `graph`.
 
@@ -233,8 +248,9 @@ def identify_mediators(graph: CausalGraph, source: NodeLike, destination: NodeLi
 
     :param graph: The causal graph given by a `cai_causal_graph.causal_graph.CausalGraph` instance. This must be a DAG,
         i.e. it must only contain directed edges and be acyclic, otherwise a `TypeError` is raised.
-    :param source: The source variable or its identifier.
-    :param destination: The destination variable or its identifier.
+    :param source: The source node or its identifier.
+    :param destination: The destination node or its identifier.
+    :param max_num_paths: The maximum number of paths to consider between the source and destination. Default is `25`.
     :return: A list of mediator variables for the causal effect of `source` on `destination`.
     """
     # verify inputs and obtain node identifiers
@@ -244,7 +260,16 @@ def identify_mediators(graph: CausalGraph, source: NodeLike, destination: NodeLi
     confounders = identify_confounders(graph, source_id, destination_id)
 
     # query all causal paths between the source and destination (also remove trivial paths)
-    causal_paths = [set(path) for path in graph.get_all_causal_paths(source_id, destination_id) if len(path) > 2]
+    causal_paths = []
+    for i, path in enumerate(graph.get_all_causal_paths(source_id, destination_id)):
+        if i > max_num_paths:
+            raise ValueError(
+                f'The number of paths between the source {source} and destination {destination} exceeds '
+                f'the maximum number of paths {max_num_paths}.'
+            )
+        elif len(path) > 2:
+            causal_paths.append(set(path))
+        # No else needed as path is just source -> destination
     if len(causal_paths) == 0:
         return []
 
