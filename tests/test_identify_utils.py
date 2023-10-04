@@ -230,7 +230,7 @@ class TestIdentifyInstruments(unittest.TestCase):
 
         # identify instrumental variables
         instruments = identify_instruments(cg, source='x', destination='y')
-        self.assertSetEqual(set(instruments), {'z_3'})
+        self.assertSetEqual(set(instruments), {'z_1', 'z_2', 'z_3'})
 
     def test_no_instruments(self):
         # graph 1: directed edge between instrument and destination
