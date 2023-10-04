@@ -18,7 +18,7 @@ from itertools import combinations
 
 from cai_causal_graph import CausalGraph, TimeSeriesCausalGraph
 from cai_causal_graph.exceptions import CausalGraphErrors
-from cai_causal_graph.identify_utils import identify_confounders
+from cai_causal_graph.identify_utils import identify_confounders, identify_instruments, identify_mediators
 from cai_causal_graph.type_definitions import EDGE_T
 
 
@@ -186,3 +186,324 @@ class TestIdentifyConfounders(unittest.TestCase):
         # compute confounders between source and destination
         confounders = identify_confounders(ts_cg, node_1='x', node_2='y')
         self.assertSetEqual(set(confounders), {'z'})
+
+
+class TestIdentifyInstruments(unittest.TestCase):
+    def test_simple(self):
+        # define a simple graph (standard instrumental variable example)
+        cg = CausalGraph()
+        cg.add_edge('z', 'x')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        cg.add_edge('x', 'y')
+
+        # identify instrumental variables
+        instruments = identify_instruments(cg, source='x', destination='y')
+        self.assertSetEqual(set(instruments), {'z'})
+
+    def test_multiple_instruments(self):
+        # define a simple graph with multiple instruments (in a chain)
+        cg = CausalGraph()
+        cg.add_edge('z_3', 'z_2')
+        cg.add_edge('z_2', 'z_1')
+        cg.add_edge('z_1', 'x')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        cg.add_edge('x', 'y')
+
+        # identify instrumental variables
+        instruments = identify_instruments(cg, source='x', destination='y')
+        self.assertSetEqual(set(instruments), {'z_3', 'z_2', 'z_1'})
+
+    def test_diamond_and_multiple_confounders(self):
+        # define a graph with potential instruments in a diamond shape and multiple confounders
+        cg = CausalGraph()
+        cg.add_edge('z_3', 'z_2')
+        cg.add_edge('z_3', 'z_1')
+        cg.add_edge('z_2', 'x')
+        cg.add_edge('z_1', 'x')
+        cg.add_edge('u_2', 'x')
+        cg.add_edge('u_2', 'y')
+        cg.add_edge('u_1', 'x')
+        cg.add_edge('u_1', 'y')
+        cg.add_edge('x', 'y')
+
+        # identify instrumental variables
+        instruments = identify_instruments(cg, source='x', destination='y')
+        self.assertSetEqual(set(instruments), {'z_1', 'z_2', 'z_3'})
+
+    def test_no_instruments(self):
+        # graph 1: directed edge between instrument and destination
+        cg = CausalGraph()
+        cg.add_edge('z', 'x')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        cg.add_edge('x', 'y')
+        cg.add_edge('z', 'y')
+
+        # identify instrumental variables
+        instruments = identify_instruments(cg, source='x', destination='y')
+        self.assertEqual(len(instruments), 0)
+
+        # graph 2: confounder between instrument and destination
+        cg = CausalGraph()
+        cg.add_edge('z', 'x')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        cg.add_edge('x', 'y')
+        cg.add_edge('w', 'z')
+        cg.add_edge('w', 'y')
+
+        # identify instrumental variables
+        instruments = identify_instruments(cg, source='x', destination='y')
+        self.assertEqual(len(instruments), 0)
+
+        # graph 3: directed edge between instrument and confounder
+        cg = CausalGraph()
+        cg.add_edge('z', 'x')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        cg.add_edge('x', 'y')
+        cg.add_edge('z', 'u')
+
+        # identify instrumental variables
+        instruments = identify_instruments(cg, source='x', destination='y')
+        self.assertEqual(len(instruments), 0)
+
+        # graph 3: no instrument at all but confounder has a parent
+        cg = CausalGraph()
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        cg.add_edge('x', 'y')
+        cg.add_edge('z', 'u')
+
+        # identify instrumental variables
+        instruments = identify_instruments(cg, source='x', destination='y')
+        self.assertEqual(len(instruments), 0)
+
+    def test_non_dag(self):
+        # create a mixed graph
+        cg = CausalGraph()
+        cg.add_edge('z', 'x', edge_type=EDGE_T.UNDIRECTED_EDGE)
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        cg.add_edge('x', 'y')
+
+        with self.assertRaises(TypeError):
+            identify_instruments(cg, source='x', destination='y')
+
+    def test_time_series_graph(self):
+        # create a time-series causal graph
+        ts_cg = TimeSeriesCausalGraph()
+        ts_cg.add_edge('z', 'x')
+        ts_cg.add_edge('u', 'x')
+        ts_cg.add_edge('u', 'y')
+        ts_cg.add_edge('x', 'y')
+        ts_cg.add_edge('z lag(n=1)', 'z')
+        ts_cg.add_edge('u lag(n=1)', 'u')
+        ts_cg.add_edge('x lag(n=1)', 'x')
+        ts_cg.add_edge('y lag(n=1)', 'y')
+
+        # identify instrumental variables
+        instruments = identify_instruments(ts_cg, source='x', destination='y')
+        self.assertSetEqual(set(instruments), {'z', 'z lag(n=1)', 'x lag(n=1)'})
+
+    def test_nodelike(self):
+        # define a simple graph (standard instrumental variable example)
+        cg = CausalGraph()
+        cg.add_edge('z', 'x')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        cg.add_edge('x', 'y')
+
+        # identify instrumental variables
+        instruments = identify_instruments(cg, source=cg.get_node('x'), destination=cg.get_node('y'))
+        self.assertSetEqual(set(instruments), {'z'})
+
+    def test_error_cases(self):
+        # define a simple graph (standard instrumental variable example)
+        cg = CausalGraph()
+        cg.add_edge('z', 'x')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        cg.add_edge('x', 'y')
+
+        # node_1 not in graph
+        with self.assertRaises(CausalGraphErrors.NodeDoesNotExistError):
+            identify_instruments(cg, source='w', destination='y')
+
+        # node_2 not in graph
+        with self.assertRaises(CausalGraphErrors.NodeDoesNotExistError):
+            identify_instruments(cg, source='x', destination='w')
+
+        # node_1 == node_2
+        with self.assertRaises(ValueError):
+            identify_instruments(cg, source='x', destination='x')
+        with self.assertRaises(ValueError):
+            identify_instruments(cg, source='x', destination=cg.get_node('x'))
+        with self.assertRaises(ValueError):
+            identify_instruments(cg, source=cg.get_node('x'), destination='x')
+        with self.assertRaises(ValueError):
+            identify_instruments(cg, source=cg.get_node('x'), destination=cg.get_node('x'))
+
+
+class TestIdentifyMediators(unittest.TestCase):
+    def test_simple(self):
+        # define a simple graph (standard mediator example)
+        cg = CausalGraph()
+        cg.add_edge('x', 'm')
+        cg.add_edge('m', 'y')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        cg.add_edge('x', 'y')
+
+        # identify mediators
+        mediators = identify_mediators(cg, source='x', destination='y')
+        self.assertSetEqual(set(mediators), {'m'})
+
+    def test_multiple_mediators(self):
+        # define a simple graph with mediators in a chain
+        cg = CausalGraph()
+        cg.add_edge('x', 'm1')
+        cg.add_edge('m1', 'm2')
+        cg.add_edge('m2', 'y')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        cg.add_edge('x', 'y')
+
+        # identify mediators
+        mediators = identify_mediators(cg, source='x', destination='y')
+        self.assertSetEqual(set(mediators), {'m1', 'm2'})
+
+    def test_multiple_mediators_diamond(self):
+        # define a simple graph with mediators in a diamond shape
+        cg = CausalGraph()
+        cg.add_edge('x', 'm1')
+        cg.add_edge('m1', 'm2')
+        cg.add_edge('m1', 'm3')
+        cg.add_edge('m2', 'm4')
+        cg.add_edge('m3', 'm4')
+        cg.add_edge('m4', 'y')
+        cg.add_edge('u1', 'x')
+        cg.add_edge('u1', 'y')
+        cg.add_edge('u2', 'x')
+        cg.add_edge('u2', 'y')
+        cg.add_edge('x', 'y')
+
+        # identify mediators
+        mediators = identify_mediators(cg, source='x', destination='y')
+        self.assertSetEqual(set(mediators), {'m1', 'm4'})
+
+    def test_chain(self):
+        # define a chain graph
+        cg = CausalGraph()
+        cg.add_edge('x', 'm')
+        cg.add_edge('m', 'y')
+
+        # identify mediators
+        mediators = identify_mediators(cg, source='x', destination='y')
+        self.assertSetEqual(set(mediators), {'m'})
+
+    def test_no_mediators(self):
+        # graph 1: mediator is a collider node
+        cg = CausalGraph()
+        cg.add_edge('x', 'm')
+        cg.add_edge('y', 'm')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+
+        # identify mediators
+        mediators = identify_mediators(cg, source='x', destination='y')
+        self.assertEqual(len(mediators), 0)
+
+        # graph 2: mediator is an ancestor of confounders
+        cg = CausalGraph()
+        cg.add_edge('x', 'm')
+        cg.add_edge('m', 'y')
+        cg.add_edge('u', 'm')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+
+        # identify mediators
+        mediators = identify_mediators(cg, source='x', destination='y')
+        self.assertEqual(len(mediators), 0)
+
+        # graph 3: multiple causal paths with no intersection between them
+        cg = CausalGraph()
+        cg.add_edge('x', 'm1')
+        cg.add_edge('m1', 'y')
+        cg.add_edge('x', 'm2')
+        cg.add_edge('m2', 'y')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+
+        # identify mediators
+        mediators = identify_mediators(cg, source='x', destination='y')
+        self.assertEqual(len(mediators), 0)
+
+    def test_non_dag(self):
+        # create a mixed graph
+        cg = CausalGraph()
+        cg.add_edge('x', 'm', edge_type=EDGE_T.UNDIRECTED_EDGE)
+        cg.add_edge('m', 'y')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+
+        with self.assertRaises(TypeError):
+            identify_mediators(cg, source='x', destination='y')
+
+    def test_time_series_graph(self):
+        # create a time-series causal graph
+        ts_cg = TimeSeriesCausalGraph()
+        ts_cg.add_edge('x', 'm')
+        ts_cg.add_edge('m', 'y')
+        ts_cg.add_edge('u', 'x')
+        ts_cg.add_edge('u', 'y')
+        ts_cg.add_edge('m lag(n=1)', 'm')
+        ts_cg.add_edge('u lag(n=1)', 'u')
+        ts_cg.add_edge('x lag(n=1)', 'x')
+        ts_cg.add_edge('y lag(n=1)', 'y')
+
+        # identify mediators
+        mediators = identify_mediators(ts_cg, source='x', destination='y')
+        self.assertSetEqual(set(mediators), {'m'})
+
+    def test_nodelike(self):
+        # define a simple graph (standard mediator example)
+        cg = CausalGraph()
+        cg.add_edge('x', 'm')
+        cg.add_edge('m', 'y')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        cg.add_edge('x', 'y')
+
+        # identify mediators
+        mediators = identify_mediators(cg, source=cg.get_node('x'), destination=cg.get_node('y'))
+        self.assertSetEqual(set(mediators), {'m'})
+
+    def test_error_cases(self):
+        # define a simple graph (standard mediator example)
+        cg = CausalGraph()
+        cg.add_edge('x', 'm')
+        cg.add_edge('m', 'y')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'y')
+        cg.add_edge('x', 'y')
+
+        # node_1 not in graph
+        with self.assertRaises(CausalGraphErrors.NodeDoesNotExistError):
+            identify_mediators(cg, source='w', destination='y')
+
+        # node_2 not in graph
+        with self.assertRaises(CausalGraphErrors.NodeDoesNotExistError):
+            identify_mediators(cg, source='x', destination='w')
+
+        # node_1 == node_2
+        with self.assertRaises(ValueError):
+            identify_mediators(cg, source='x', destination='x')
+        with self.assertRaises(ValueError):
+            identify_mediators(cg, source='x', destination=cg.get_node('x'))
+        with self.assertRaises(ValueError):
+            identify_mediators(cg, source=cg.get_node('x'), destination='x')
+        with self.assertRaises(ValueError):
+            identify_mediators(cg, source=cg.get_node('x'), destination=cg.get_node('x'))
