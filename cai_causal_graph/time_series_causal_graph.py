@@ -122,7 +122,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         Return True if the graphs are equal.
 
-        Two graphs are equal if they have the same nodes and edges and the same time-specific metadata.
+        Two graphs are equal if they have the same nodes and edges with the same time-specific metadata.
 
         :param other: The other graph to compare to.
         :param deep: If `True`, also does deep equality checks on all the nodes and edges. Default is `False`.
