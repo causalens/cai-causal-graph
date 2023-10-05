@@ -3,7 +3,7 @@
 ## NEXT
 
 - Made `cai_causal_graph.causal_graph.CausalGraph.copy` more general to preserve the class type. Removed `.copy` from
-  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class.
+  the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class.
 
 ## 0.2.5
 

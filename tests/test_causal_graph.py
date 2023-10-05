@@ -542,9 +542,11 @@ class TestCausalGraphSerialization(unittest.TestCase):
         # test copy preserves the correct class
         ts_cg = TimeSeriesCausalGraph()
         ts_cg.add_edge('a', 'b')
+        ts_cg.add_edge('a lag(n=1)', 'b')
+        ts_cg.add_edge('b lag(n=1)', 'b')
 
         ts_cg_copy = ts_cg.copy()
-        self.assertEqual(type(ts_cg_copy), type(ts_cg))
+        self.assertTrue(ts_cg_copy.__eq__(ts_cg, deep=True))
 
     def test_adjacency(self):
         adj_1 = numpy.array([[0, 1, 0], [0, 0, 1], [0, 0, 0]])

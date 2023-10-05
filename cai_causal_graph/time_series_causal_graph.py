@@ -119,18 +119,22 @@ class TimeSeriesCausalGraph(CausalGraph):
         self._stationary_graph: Optional[TimeSeriesCausalGraph] = None
         self._minimal_graph: Optional[TimeSeriesCausalGraph] = None
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, deep: bool = False) -> bool:
         """
         Return True if the graphs are equal.
 
         Two graphs are equal if they have the same nodes and edges and the same metadata.
+
+        :param other: The other graph to compare to.
+        :param deep: If `True`, also compare all the attributes of nodes and edges.
+        :return: True if the graphs are equal, False otherwise.
         """
         if not isinstance(other, TimeSeriesCausalGraph):
             return False
 
         # now check if the graphs are equal. Since TimeSeriesCausalGraph is a subclass of CausalGraph,
         # we can use the CausalGraph.__eq__ method and then check for the metadata
-        if not super().__eq__(other):
+        if not super().__eq__(other, deep):
             return False
 
         # now check the metadata timedelta in the nodes
@@ -334,7 +338,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         # create a new graph by copying the minimal graph
         extended_graph = minimal_graph.copy()
-        assert isinstance(extended_graph, TimeSeriesCausalGraph)
+        assert isinstance(extended_graph, TimeSeriesCausalGraph)   # for linting
 
         if backward_steps is not None:
             # Start from 1 as 0 is already defined.
