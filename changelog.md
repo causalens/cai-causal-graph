@@ -4,6 +4,9 @@
 
 - Made `cai_causal_graph.causal_graph.CausalGraph.copy` more general to preserve the class type. Removed `.copy` from
   the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class.
+- Extended equality method for the `cai_causal_graph.causal_graph.CausalGraph`. Now it has a `deep` parameter that
+  forces checks on all class attributes for nodes and edges. To call you must do `graph_1.__eq__(graph_2, deep=True)`
+  as `graph_1 == graph_2` still matches previous behavior.
 
 ## 0.2.5
 
