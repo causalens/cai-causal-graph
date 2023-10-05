@@ -411,7 +411,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
         Checks if all nodes and edges are equal.
         :param other: The other `cai_causal_graph.causal_graph.CausalGraph` to compare to.
-        :param deep: If `True`, also check if all the attributes of nodes and edges are equal. Default is `False`.
+        :param deep: If `True`, also does deep equality checks on all the nodes and edges. Default is `False`.
+        :return: `True` if equal, `False` otherwise.
         """
         if not isinstance(other, CausalGraph):
             return False

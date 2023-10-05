@@ -126,8 +126,8 @@ class TimeSeriesCausalGraph(CausalGraph):
         Two graphs are equal if they have the same nodes and edges and the same metadata.
 
         :param other: The other graph to compare to.
-        :param deep: If `True`, also compare all the attributes of nodes and edges.
-        :return: True if the graphs are equal, False otherwise.
+        :param deep: If `True`, also does deep equality checks on all the nodes and edges.
+        :return: `True` if the graphs are equal, `False` otherwise.
         """
         if not isinstance(other, TimeSeriesCausalGraph):
             return False
