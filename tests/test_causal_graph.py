@@ -21,7 +21,7 @@ import networkx
 import numpy
 import pandas
 
-from cai_causal_graph import CausalGraph, EdgeType, NodeVariableType
+from cai_causal_graph import CausalGraph, EdgeType, NodeVariableType, TimeSeriesCausalGraph
 from cai_causal_graph import __version__ as VERSION
 from cai_causal_graph.exceptions import CausalGraphErrors
 
@@ -537,6 +537,14 @@ class TestCausalGraphSerialization(unittest.TestCase):
         cg.add_edge('b', 'c')
 
         self.assertEqual(CausalGraph.from_adjacency_matrix(*cg.to_numpy()), cg)
+
+    def test_copy(self):
+        # test copy preserves the correct class
+        ts_cg = TimeSeriesCausalGraph()
+        ts_cg.add_edge('a', 'b')
+
+        ts_cg_copy = ts_cg.copy()
+        self.assertEqual(type(ts_cg_copy), type(ts_cg))
 
     def test_adjacency(self):
         adj_1 = numpy.array([[0, 1, 0], [0, 0, 1], [0, 0, 0]])

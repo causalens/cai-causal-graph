@@ -1838,7 +1838,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         :return: A copy of the `cai_causal_graph.causal_graph.CausalGraph` instance.
         """
         graph_dict = self.to_dict(include_meta=include_meta)
-        return CausalGraph.from_dict(graph_dict)
+        return self.__class__.from_dict(graph_dict)
 
     def __repr__(self) -> str:
         """Return a string description of the `cai_causal_graph.causal_graph.CausalGraph` instance."""

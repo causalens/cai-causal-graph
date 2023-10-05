@@ -152,17 +152,6 @@ class TimeSeriesCausalGraph(CausalGraph):
         """Check if the graph is not equal to another graph."""
         return not (self == other)
 
-    def copy(self, include_meta: bool = True) -> TimeSeriesCausalGraph:
-        """
-        Return a copy of the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` instance.
-
-        :param include_meta: if `True` (default), the metadata will be copied as well.
-        :return: A copy of the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` instance.
-        """
-        graph = super().copy(include_meta=include_meta)
-        # cast the graph to TimeSeriesCausalGraph to have the correct metadata
-        return TimeSeriesCausalGraph.from_causal_graph(graph)
-
     def is_stationary_graph(self) -> bool:
         """
         Check if the graph is stationary. That is, if the graph is time invariant.
@@ -345,6 +334,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         # create a new graph by copying the minimal graph
         extended_graph = minimal_graph.copy()
+        assert isinstance(extended_graph, TimeSeriesCausalGraph)
 
         if backward_steps is not None:
             # Start from 1 as 0 is already defined.
