@@ -45,8 +45,16 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
         """
         self._graph = graph
 
-    def __eq__(self, other: object) -> bool:
-        """Return `True` if two skeletons are equal."""
+    def __eq__(self, other: object, deep: bool = False) -> bool:
+        """
+        Check if equal to another `cai_causal_graph.causal_graph.Skeleton`.
+
+        Checks if all nodes and edges are equal.
+
+        :param other: The other `cai_causal_graph.causal_graph.Skeleton` to compare to.
+        :param deep: If `True`, also does deep equality checks on all the nodes and edges. Default is `False`.
+        :return: `True` if equal, `False` otherwise.
+        """
         if not isinstance(other, Skeleton):
             return False
 
@@ -66,7 +74,7 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
 
         # Check that edges and nodes are equivalent (ignores meta data)
         for node in self.nodes:
-            if node != other.get_node(node.identifier):
+            if not node.__eq__(other.get_node(node.identifier), deep):
                 return False
 
         for edge in self.edges:
@@ -77,7 +85,7 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
                 other_edge = other.get_edge(edge.destination.identifier, edge.source.identifier)
 
             # Check if equal
-            if edge != other_edge:
+            if not edge.__eq__(other_edge, deep):
                 return False
 
         return True
@@ -410,6 +418,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         Check if equal to another `cai_causal_graph.causal_graph.CausalGraph`.
 
         Checks if all nodes and edges are equal.
+
         :param other: The other `cai_causal_graph.causal_graph.CausalGraph` to compare to.
         :param deep: If `True`, also does deep equality checks on all the nodes and edges. Default is `False`.
         :return: `True` if equal, `False` otherwise.

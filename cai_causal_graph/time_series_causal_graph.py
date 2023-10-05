@@ -24,7 +24,6 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import numpy
 
 from cai_causal_graph import CausalGraph
-from cai_causal_graph.exceptions import CausalGraphErrors
 from cai_causal_graph.graph_components import Edge, Node, TimeSeriesNode
 from cai_causal_graph.interfaces import HasIdentifier, HasMetadata
 from cai_causal_graph.type_definitions import TIME_LAG, VARIABLE_NAME, EdgeType, NodeLike, NodeVariableType
@@ -123,10 +122,10 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         Return True if the graphs are equal.
 
-        Two graphs are equal if they have the same nodes and edges and the same metadata.
+        Two graphs are equal if they have the same nodes and edges and the same time-specific metadata.
 
         :param other: The other graph to compare to.
-        :param deep: If `True`, also does deep equality checks on all the nodes and edges.
+        :param deep: If `True`, also does deep equality checks on all the nodes and edges. Default is `False`.
         :return: `True` if the graphs are equal, `False` otherwise.
         """
         if not isinstance(other, TimeSeriesCausalGraph):
