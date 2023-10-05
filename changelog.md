@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.2.6
 
 - Improved the `cai_causal_graph.causal_graph.CausalGraph.copy` method in `cai_causal_graph.causal_graph.CausalGraph`
   such that it is more general and preserves the subclass type. As such, the `.copy` method was removed from the
