@@ -64,6 +64,12 @@ class TestCausalGraphSerialization(unittest.TestCase):
 
         # Also confirm that equality method works.
         self.assertEqual(graph, reconstruction)
+        self.assertTrue(graph.__eq__(reconstruction, True))
+
+        # No metadata
+        self.assertDictEqual(graph.to_dict(include_meta=False), reconstruction.to_dict(include_meta=False))
+        self.assertEqual(graph, reconstruction)
+        self.assertTrue(graph.__eq__(reconstruction, True))
 
     def assert_graph_networkx_conversion_is_correct(self, graph: CausalGraph, include_dict: bool = True):
         reconstruction = CausalGraph.from_networkx(graph.to_networkx())
@@ -85,6 +91,7 @@ class TestCausalGraphSerialization(unittest.TestCase):
 
         # Also confirm that equality method works.
         self.assertEqual(graph, reconstruction)
+        self.assertTrue(graph.__eq__(reconstruction, True))
 
     def assert_graph_skeleton_conversion_is_correct(self, graph: CausalGraph):
         reconstruction = CausalGraph.from_skeleton(graph.skeleton)
@@ -101,6 +108,7 @@ class TestCausalGraphSerialization(unittest.TestCase):
 
         # Also confirm that equality method works. Again reconstruction won't have directions so just check skeletons.
         self.assertEqual(graph.skeleton, reconstruction.skeleton)
+        self.assertTrue(graph.skeleton.__eq__(reconstruction.skeleton, True))
 
         # We cannot check that their dict representations are the same as undirected edges can flip order in dictionary
         # without any issue around the actual graph representation. Therefore, keep this commented out.
@@ -119,6 +127,7 @@ class TestCausalGraphSerialization(unittest.TestCase):
 
         # Also confirm that equality method works.
         self.assertEqual(graph, reconstruction)
+        self.assertTrue(graph.__eq__(reconstruction, True))
 
     def test_graph_serializes(self):
         """This test ensures different serialization types and JSON serialization as well."""
@@ -537,6 +546,25 @@ class TestCausalGraphSerialization(unittest.TestCase):
         cg.add_edge('b', 'c')
 
         self.assertEqual(CausalGraph.from_adjacency_matrix(*cg.to_numpy()), cg)
+
+    def test_copy(self):
+        cg = CausalGraph()
+        cg.add_node('a', meta={'some': 'thing'})
+        cg.add_edge('a', 'b', meta={'foo': 'bar'})
+        cg.add_edge('a', 'c', edge_type=EdgeType.BIDIRECTED_EDGE)
+
+        cg_copy = cg.copy()
+        self.assertIsInstance(cg_copy, CausalGraph)
+        self.assertEqual(cg_copy, cg)
+        self.assertTrue(cg_copy.__eq__(cg, deep=True))
+
+        # No metadata
+        cg_copy_no_meta = cg.copy(include_meta=False)
+        self.assertIsInstance(cg_copy_no_meta, CausalGraph)
+
+        self.assertEqual(cg_copy_no_meta, cg_copy)
+        self.assertEqual(cg_copy_no_meta, cg_copy)
+        self.assertFalse(cg_copy_no_meta.__eq__(cg_copy, deep=True))
 
     def test_adjacency(self):
         adj_1 = numpy.array([[0, 1, 0], [0, 0, 1], [0, 0, 0]])

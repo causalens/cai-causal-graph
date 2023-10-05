@@ -1,5 +1,16 @@
 # Changelog
 
+## NEXT
+
+- Improved the `cai_causal_graph.causal_graph.CausalGraph.copy` method in `cai_causal_graph.causal_graph.CausalGraph`
+  such that it is more general and preserves the subclass type. As such, the `.copy` method was removed from the
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class.
+- Extended equality methods for the `cai_causal_graph.causal_graph.Skeleton`,
+  `cai_causal_graph.causal_graph.CausalGraph`, and
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` classes. A new keyword parameter `deep` has been
+  added. If `deep=True`, deep equality checks are also done on all nodes and edges in the graphs. To call you must do
+  `graph_1.__eq__(graph_2, deep=True)` as `graph_1 == graph_2` still matches previous behavior.
+
 ## 0.2.5
 
 - Added the `cai_causal_graph.identify_utils.identify_confounders` utility function, which allows you to identify
@@ -26,9 +37,9 @@
   `variable_name`) are provided. Now, if all are provided, the method will raise an error only if `identifier` is not
   equal to `get_name_with_lag(time_lag, variable_name)`, that is, the correct name.
 - Extended equality methods for the `cai_causal_graph.graph_components.Node`, `cai_causal_graph.graph_components.Edge`
-  and `cai_causal_graph.graph_components.TimeSeriesNode` classes. They now have a `deep` parameter that forces checks
-  on all class attributes. To call you must do `node_1.__eq__(node_2, deep=True)` as `node_1 == node_2` still matches
-  previous behavior.
+  and `cai_causal_graph.graph_components.TimeSeriesNode` classes. A new keyword parameter `deep` has been added.
+  If `deep=True`, additional class attributes are also checked; see the docstrings for additional information. To call
+  you must do `node_1.__eq__(node_2, deep=True)` as `node_1 == node_2` still matches previous behavior.
 - Added `cai_causal_graph.graph_components.Edge.edge_type` property to the `cai_causal_graph.graph_components.Edge`
   class.
 

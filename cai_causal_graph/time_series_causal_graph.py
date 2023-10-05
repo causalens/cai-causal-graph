@@ -24,7 +24,6 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import numpy
 
 from cai_causal_graph import CausalGraph
-from cai_causal_graph.exceptions import CausalGraphErrors
 from cai_causal_graph.graph_components import Edge, Node, TimeSeriesNode
 from cai_causal_graph.interfaces import HasIdentifier, HasMetadata
 from cai_causal_graph.type_definitions import TIME_LAG, VARIABLE_NAME, EdgeType, NodeLike, NodeVariableType
@@ -119,18 +118,22 @@ class TimeSeriesCausalGraph(CausalGraph):
         self._stationary_graph: Optional[TimeSeriesCausalGraph] = None
         self._minimal_graph: Optional[TimeSeriesCausalGraph] = None
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object, deep: bool = False) -> bool:
         """
         Return True if the graphs are equal.
 
-        Two graphs are equal if they have the same nodes and edges and the same metadata.
+        Two graphs are equal if they have the same nodes and edges with the same time-specific metadata.
+
+        :param other: The other graph to compare to.
+        :param deep: If `True`, also does deep equality checks on all the nodes and edges. Default is `False`.
+        :return: `True` if the graphs are equal, `False` otherwise.
         """
         if not isinstance(other, TimeSeriesCausalGraph):
             return False
 
         # now check if the graphs are equal. Since TimeSeriesCausalGraph is a subclass of CausalGraph,
         # we can use the CausalGraph.__eq__ method and then check for the metadata
-        if not super().__eq__(other):
+        if not super().__eq__(other, deep):
             return False
 
         # now check the metadata timedelta in the nodes
@@ -151,17 +154,6 @@ class TimeSeriesCausalGraph(CausalGraph):
     def __ne__(self, other: object) -> bool:
         """Check if the graph is not equal to another graph."""
         return not (self == other)
-
-    def copy(self, include_meta: bool = True) -> TimeSeriesCausalGraph:
-        """
-        Return a copy of the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` instance.
-
-        :param include_meta: if `True` (default), the metadata will be copied as well.
-        :return: A copy of the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` instance.
-        """
-        graph = super().copy(include_meta=include_meta)
-        # cast the graph to TimeSeriesCausalGraph to have the correct metadata
-        return TimeSeriesCausalGraph.from_causal_graph(graph)
 
     def is_stationary_graph(self) -> bool:
         """
@@ -345,6 +337,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         # create a new graph by copying the minimal graph
         extended_graph = minimal_graph.copy()
+        assert isinstance(extended_graph, TimeSeriesCausalGraph)   # for linting
 
         if backward_steps is not None:
             # Start from 1 as 0 is already defined.

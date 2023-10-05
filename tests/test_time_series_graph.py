@@ -389,6 +389,28 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
                 edge_cg = cg.get_edge(edge.source, edge.destination)
                 self.assertEqual(edge.get_edge_type(), edge_cg.get_edge_type())
 
+    def test_copy(self):
+        # test copy preserves the correct class
+        ts_cg = TimeSeriesCausalGraph()
+        ts_cg.add_node('a', meta={'some': 'thing'})
+        ts_cg.add_edge('a', 'b', meta={'foo': 'bar'})
+        ts_cg.add_edge('a lag(n=1)', 'b', meta={'test': 'test'})
+        ts_cg.add_edge('b lag(n=1)', 'b')
+        ts_cg.add_edge('a', 'c', edge_type=EdgeType.BIDIRECTED_EDGE)
+
+        ts_cg_copy = ts_cg.copy()
+        self.assertIsInstance(ts_cg_copy, TimeSeriesCausalGraph)
+        self.assertEqual(ts_cg_copy, ts_cg)
+        self.assertTrue(ts_cg_copy.__eq__(ts_cg, deep=True))
+
+        # No metadata
+        ts_cg_copy_no_meta = ts_cg.copy(include_meta=False)
+        self.assertIsInstance(ts_cg_copy_no_meta, TimeSeriesCausalGraph)
+
+        self.assertEqual(ts_cg_copy_no_meta, ts_cg_copy)
+        self.assertEqual(ts_cg_copy_no_meta, ts_cg)
+        self.assertFalse(ts_cg_copy_no_meta.__eq__(ts_cg, deep=True))
+
     def test_from_causal_graph(self):
         # dag
         self.assertEqual(
