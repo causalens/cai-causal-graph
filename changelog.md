@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.2.7
 
 - Improved internal logic for how a `cai_causal_graph.graph_components.Edge` is instantiated from a dictionary.
 
