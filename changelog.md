@@ -1,5 +1,9 @@
 # Changelog
 
+## NEXT
+
+- Improved internal logic for how a `cai_causal_graph.graph_components.Edge` is instantiated from a dictionary.
+
 ## 0.2.6
 
 - Improved the `cai_causal_graph.causal_graph.CausalGraph.copy` method in `cai_causal_graph.causal_graph.CausalGraph`
