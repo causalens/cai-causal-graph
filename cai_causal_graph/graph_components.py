@@ -430,11 +430,10 @@ class TimeSeriesNode(Node):
         )
 
 
-_NodeClassDict = {'Node': Node, 'TimeSeriesNode': TimeSeriesNode}
-
-
 class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
     """A utility class that manages the state of an edge."""
+
+    _NodeClassDict = {'Node': Node, 'TimeSeriesNode': TimeSeriesNode}
 
     def __init__(
         self,
@@ -610,22 +609,22 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         destination_node_class = edge_dict['destination'].get('node_class', 'Node')
 
         # if not in the dict, then try with the generic node class and send a debug message
-        if source_node_class not in _NodeClassDict:
+        if source_node_class not in cls._NodeClassDict:
             source_node_class = 'Node'
             logger.debug(
                 f'The source node class was not specified in the edge dictionary. '
                 f'Using the generic node class {source_node_class}.'
             )
 
-        if destination_node_class not in _NodeClassDict:
+        if destination_node_class not in cls._NodeClassDict:
             destination_node_class = 'Node'
             logger.debug(
                 f'The destination node class was not specified in the edge dictionary. '
                 f'Using the generic node class {destination_node_class}.'
             )
 
-        SourceNodeCls = _NodeClassDict[source_node_class]
-        DestinationNodeCls = _NodeClassDict[destination_node_class]
+        SourceNodeCls = cls._NodeClassDict[source_node_class]
+        DestinationNodeCls = cls._NodeClassDict[destination_node_class]
         assert issubclass(SourceNodeCls, Node)   # for linting
         assert issubclass(DestinationNodeCls, Node)   # for linting
 
