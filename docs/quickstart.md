@@ -1,5 +1,7 @@
 # Quickstart
 
+## Causal Graphs
+
 The causal graph fundamentally consists of _nodes_, i.e. variables, and _edges_, i.e. their relationships. For instance,
 a causal graph containing a directed edge `->` between node `A` and node `B` would imply that variable `A` is a causal
 driver of variable `B`, but not the other way around.

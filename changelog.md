@@ -1,5 +1,9 @@
 # Changelog
 
+## NEXT
+
+- Changed the order of the documentation in the sidebar to ensure Quickstart is at the top.
+
 ## 0.2.7
 
 - Improved internal logic for how an `cai_causal_graph.graph_components.Edge` is instantiated from a dictionary.
