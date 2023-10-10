@@ -9,13 +9,13 @@
     "items": [
         {
             "type": "doc",
-            "id": "docs/introduction",
-            "label": "Introduction"
+            "id": "docs/quickstart",
+            "label": "Quickstart"
         },
         {
             "type": "doc",
-            "id": "docs/quickstart",
-            "label": "Quickstart"
+            "id": "docs/introduction",
+            "label": "Introduction"
         },
         {
             "type": "doc",
