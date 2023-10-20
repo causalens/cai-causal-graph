@@ -2,7 +2,7 @@
 
 ## 0.2.9
 
-- Added support for `python` 3.12.
+- Added support for `python` version `3.12`.
 
 ## 0.2.8
 
