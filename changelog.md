@@ -1,5 +1,9 @@
 # Changelog
 
+## NEXT
+
+- Added support for `python` 3.12.
+
 ## 0.2.8
 
 - Changed the order of the documentation in the sidebar to ensure Quickstart is at the top.

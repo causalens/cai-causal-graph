@@ -19,7 +19,7 @@ jobs:
         # For reproducibility, we define ubuntu-20.04 rather than ubuntu-latest. There is no need for macos tests.
         os: [ ubuntu-20.04 ]
         # MAIN-CHECKS do not have to check for all supported python distributions, as DEPENDENCIES-CHECK should.
-        python-version: [ '3.8', '3.11' ]   # This should be the default supported python distribution.
+        python-version: [ '3.11' ]   # This should be the default supported python distribution.
     steps:
       - name: Checkout current branch
         uses: actions/checkout@v3
@@ -32,6 +32,7 @@ jobs:
           python-version: ${{ matrix.python-version }}  # This is defined by the strategy above
       - name: Load cached venv
         # Cache local .venv, the packages downloaded by poetry into custom cache .pypoetry and ~/.local (poetry itself)
+        if: contains(matrix.python-version, '3.11')  # only load cache when doing 3.11
         uses: actions/cache@v3
         with:
           path: |
