@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.2.9
 
 - Added support for `python` 3.12.
 
