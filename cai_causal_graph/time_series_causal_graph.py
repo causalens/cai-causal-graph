@@ -1014,25 +1014,25 @@ class TimeSeriesCausalGraph(CausalGraph):
     def get_contemporaneous_nodes(self, node: NodeLike) -> List[TimeSeriesNode]:
         """Return all nodes that are contemporaneous to the provided node."""
         assert node is not None, 'The `node` cannot be None.'
-        if isinstance(node, HasIdentifier):
-            assert isinstance(node, TimeSeriesNode), 'The node must be a `TimeSeriesNode`.'
-        else:
+        if isinstance(node, str):
             node = self.get_node(node)
 
         contemporaneous_nodes = []
+        assert isinstance(node, TimeSeriesNode), 'The node must be a `TimeSeriesNode`.'
 
         for other_node in self.get_nodes():
+            assert isinstance(other_node, TimeSeriesNode)
             if other_node.identifier != node.identifier and other_node.time_lag == node.time_lag:
                 contemporaneous_nodes.append(node)
         return contemporaneous_nodes
 
-    def get_contemporaneous_adj_nodes(self, node: NodeLike) -> List[Edge]:
+    def get_contemporaneous_adj_nodes(self, node: NodeLike) -> List[TimeSeriesNode]:
         """Return the adjacent that are contemporanous to the provided node."""
         assert node is not None, 'The `node` cannot be None.'
-        if isinstance(node, HasIdentifier):
-            assert isinstance(node, TimeSeriesNode), 'The node must be a `TimeSeriesNode`.'
-        else:
+        if isinstance(node, str):
             node = self.get_node(node)
+
+        assert isinstance(node, TimeSeriesNode), 'The node must be a `TimeSeriesNode`.'
 
         contemporaneous_adj_nodes = []
 
