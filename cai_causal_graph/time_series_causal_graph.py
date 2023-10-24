@@ -1007,6 +1007,24 @@ class TimeSeriesCausalGraph(CausalGraph):
         assert self.variables is not None
         return adjacency_matrices, self.variables
 
+    def get_nodes_at_lag(self, time_lag: int = 0) -> List[TimeSeriesNode]:
+        """Return all nodes at time delta `time_lag`."""
+        return [node for node in self.get_nodes() if node.time_lag == time_lag]
+
+    def get_contemporaneous_edges(self, node: NodeLike) -> List[Edge]:
+        """Return edges that are contemporanous to the provided node."""
+        assert node is not None, 'The `node` cannot be None.'
+        if isinstance(HasIdentifier):
+            assert isinstance(node, TimeSeriesNode), 'The node must be a `TimeSeriesNode`.'
+
+        contemporaneous_edges = []
+        for edge in self.get_edges():
+            assert isinstance(edge.source, TimeSeriesNode)
+            if edge.source.time_lag == node.time_lag:
+                contemporaneous_edges.append(edge)
+
+        return contemporaneous_edges
+
     def __hash__(self) -> int:
         """
         Return a hash representation of the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` instance.

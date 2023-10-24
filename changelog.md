@@ -1,5 +1,12 @@
 # Changelog
 
+## NEXT
+
+- Added the `cai_causal_graph.time_series_graph.TimeSeriesGraph.get_nodes_at_lag` and
+  `cai_causal_graph.time_series_graph.TimeSeriesGraph.get_contemporaneous_edges` methods to the
+  `cai_causal_graph.time_series_graph.TimeSeriesGraph` class to get the nodes at a given lag and the contemporaneous
+  edges of a node, respectively.
+
 ## 0.2.9
 
 - Added support for `python` version `3.12`.
