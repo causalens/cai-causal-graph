@@ -1011,19 +1011,45 @@ class TimeSeriesCausalGraph(CausalGraph):
         """Return all nodes at time delta `time_lag`."""
         return [node for node in self.get_nodes() if node.time_lag == time_lag]
 
-    def get_contemporaneous_edges(self, node: NodeLike) -> List[Edge]:
-        """Return edges that are contemporanous to the provided node."""
+    def get_contemporaneous_nodes(self, node: NodeLike) -> List[TimeSeriesNode]:
+        """Return all nodes that are contemporaneous to the provided node."""
         assert node is not None, 'The `node` cannot be None.'
-        if isinstance(HasIdentifier):
+        if isinstance(node, HasIdentifier):
             assert isinstance(node, TimeSeriesNode), 'The node must be a `TimeSeriesNode`.'
+        else:
+            node = self.get_node(node)
 
-        contemporaneous_edges = []
-        for edge in self.get_edges():
+        contemporaneous_nodes = []
+
+        for other_node in self.get_nodes():
+            if other_node.identifier != node.identifier and other_node.time_lag == node.time_lag:
+                contemporaneous_nodes.append(node)
+        return contemporaneous_nodes
+
+    def get_contemporaneous_adj_nodes(self, node: NodeLike) -> List[Edge]:
+        """Return the adjacent that are contemporanous to the provided node."""
+        assert node is not None, 'The `node` cannot be None.'
+        if isinstance(node, HasIdentifier):
+            assert isinstance(node, TimeSeriesNode), 'The node must be a `TimeSeriesNode`.'
+        else:
+            node = self.get_node(node)
+
+        contemporaneous_adj_nodes = []
+
+        # go through the inbounds edges
+        for edge in self.get_edges(destination=node):
             assert isinstance(edge.source, TimeSeriesNode)
             if edge.source.time_lag == node.time_lag:
-                contemporaneous_edges.append(edge)
+                contemporaneous_adj_nodes.append(edge.source)
 
-        return contemporaneous_edges
+        # go through the outbounds edges
+        for edge in self.get_edges(source=node):
+            if edge.edge_type == EdgeType.UNDIRECTED_EDGE:
+                assert isinstance(edge.destination, TimeSeriesNode)
+                if edge.destination.time_lag == node.time_lag:
+                    contemporaneous_adj_nodes.append(edge.destination)
+
+        return contemporaneous_adj_nodes
 
     def __hash__(self) -> int:
         """

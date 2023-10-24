@@ -811,6 +811,36 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         self.assertEqual(adj_matrices[-1].shape, (3, 3))
         self.assertEqual(adj_matrices[-2].shape, (3, 3))
 
+    def test_get_nodes_at_lag(self):
+        self.assertEqual(['X1', 'X2', 'X3'], [node.identifier for node in self.tsdag.get_nodes_at_lag(0)])
+        self.assertEqual(
+            ['X1 lag(n=1)', 'X2 lag(n=1)', 'X3 lag(n=1)'], [node.identifier for node in self.tsdag.get_nodes_at_lag(-1)]
+        )
+
+        # same with tsdag_1
+        self.assertEqual(['X1', 'X2', 'X3'], [node.identifier for node in self.tsdag_1.get_nodes_at_lag(0)])
+        self.assertEqual(
+            ['X1 lag(n=1)', 'X2 lag(n=1)', 'X3 lag(n=1)'],
+            [node.identifier for node in self.tsdag_1.get_nodes_at_lag(-1)],
+        )
+        self.assertEqual(
+            ['X1 lag(n=2)', 'X2 lag(n=2)', 'X3 lag(n=2)'],
+            [node.identifier for node in self.tsdag_1.get_nodes_at_lag(-2)],
+        )
+
+    def test_get_contemporaneous_adj_nodes(self):
+
+        # test with a mixed graph
+        ts_dag = TimeSeriesCausalGraph()
+        ts_dag.add_edge('X1', 'X2', edge_type=EdgeType.DIRECTED_EDGE)
+        ts_dag.add_edge('X1', 'X3', edge_type=EdgeType.UNDIRECTED_EDGE)
+        ts_dag.add_edge('X2', 'X3', edge_type=EdgeType.DIRECTED_EDGE)
+        ts_dag.add_edge('X3', 'X4', edge_type=EdgeType.UNDIRECTED_EDGE)
+
+        self.assertEqual(['X3'], [node.identifier for node in ts_dag.get_contemporaneous_adj_nodes('X1')])
+        self.assertEqual(['X1'], [node.identifier for node in ts_dag.get_contemporaneous_adj_nodes('X2')])
+        self.assertEqual(['X1', 'X2', 'X4'], [node.identifier for node in ts_dag.get_contemporaneous_adj_nodes('X3')])
+
 
 class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
     def test_default_nodes_and_edges(self):
