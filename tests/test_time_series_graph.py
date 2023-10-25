@@ -828,6 +828,11 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
             [node.identifier for node in self.tsdag_1.get_nodes_at_lag(-2)],
         )
 
+    def test_contemporaneous_nodes(self):
+        self.assertEqual([n.identifier for n in self.tsdag.get_contemporaneous_nodes('X1')], ['X2', 'X3'])
+        self.assertEqual([n.identifier for n in self.tsdag.get_contemporaneous_nodes('X2')], ['X1', 'X3'])
+        self.assertEqual([n.identifier for n in self.tsdag.get_contemporaneous_nodes('X3')], ['X1', 'X2'])
+
     def test_get_contemporaneous_adj_nodes(self):
 
         # test with a mixed graph
