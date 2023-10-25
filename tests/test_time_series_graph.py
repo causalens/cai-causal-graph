@@ -13,10 +13,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
 import json
 import unittest
 
+import networkx
 import numpy
 
 from cai_causal_graph import CausalGraph, EdgeType, NodeVariableType, TimeSeriesCausalGraph
@@ -847,6 +847,31 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         self.assertEqual(
             ['X1', 'X2', 'X4'], [node.identifier for node in ts_dag.get_potential_contemporanous_parents('X3')]
         )
+
+    def test_from_gml(self):
+        reconstruction = TimeSeriesCausalGraph.from_gml_string(self.tsdag.to_gml_string())
+        self.assertEqual(self.tsdag, reconstruction)
+
+    def test_from_networkx(self):
+        reconstruction = TimeSeriesCausalGraph.from_networkx(self.tsdag.to_networkx())
+        self.assertEqual(self.tsdag, reconstruction)
+
+    def test_from_skeleton(self):
+        reconstruction = CausalGraph.from_skeleton(self.tsdag.skeleton)
+
+        # The reconstruction won't have directions so should just match skeleton.
+
+        # Check that their networkx representations are the same.
+        self.assertTrue(networkx.utils.graphs_equal(self.tsdag.skeleton.to_networkx(), reconstruction.to_networkx()))
+        # Can check networkx as the reconstruction has no directions so networkx.Graph of CausalGraph and
+        # Skeleton will be the same.
+        self.assertTrue(
+            networkx.utils.graphs_equal(reconstruction.to_networkx(), reconstruction.skeleton.to_networkx())
+        )
+
+        # Also confirm that equality method works. Again reconstruction won't have directions so just check skeletons.
+        self.assertEqual(self.tsdag.skeleton, reconstruction.skeleton)
+        self.assertTrue(self.tsdag.skeleton.__eq__(reconstruction.skeleton, False))
 
 
 class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):

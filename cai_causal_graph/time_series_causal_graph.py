@@ -912,7 +912,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         Construct a `cai_causal_graph.causal_graph.TimeSeriesCausalGraph` instance from a
         `cai_causal_graph.causal_graph.Skeleton` instance.
         """
-        return TimeSeriesCausalGraph.from_causal_graph(super().from_skeleton(skeleton))
+        return TimeSeriesCausalGraph.from_causal_graph(CausalGraph.from_skeleton(skeleton))
 
     @staticmethod
     def from_networkx(g: networkx.Graph) -> TimeSeriesCausalGraph:
@@ -920,7 +920,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         Construct a `cai_causal_graph.causal_graph.TimeSeriesCausalGraph` instance from a
         `networkx.Graph` instance.
         """
-        return TimeSeriesCausalGraph.from_causal_graph(super().from_networkx(g))
+        return TimeSeriesCausalGraph.from_causal_graph(CausalGraph.from_networkx(g))
 
     @staticmethod
     def from_gml_string(gml: str) -> TimeSeriesCausalGraph:
