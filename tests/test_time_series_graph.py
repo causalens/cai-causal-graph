@@ -833,7 +833,7 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         self.assertEqual([n.identifier for n in self.tsdag.get_contemporaneous_nodes('X2')], ['X1', 'X3'])
         self.assertEqual([n.identifier for n in self.tsdag.get_contemporaneous_nodes('X3')], ['X1', 'X2'])
 
-    def test_get_contemporaneous_adj_nodes(self):
+    def test_get_potential_contemporanous_parents(self):
 
         # test with a mixed graph
         ts_dag = TimeSeriesCausalGraph()
@@ -842,9 +842,11 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         ts_dag.add_edge('X2', 'X3', edge_type=EdgeType.DIRECTED_EDGE)
         ts_dag.add_edge('X3', 'X4', edge_type=EdgeType.UNDIRECTED_EDGE)
 
-        self.assertEqual(['X3'], [node.identifier for node in ts_dag.get_contemporaneous_adj_nodes('X1')])
-        self.assertEqual(['X1'], [node.identifier for node in ts_dag.get_contemporaneous_adj_nodes('X2')])
-        self.assertEqual(['X1', 'X2', 'X4'], [node.identifier for node in ts_dag.get_contemporaneous_adj_nodes('X3')])
+        self.assertEqual(['X3'], [node.identifier for node in ts_dag.get_potential_contemporanous_parents('X1')])
+        self.assertEqual(['X1'], [node.identifier for node in ts_dag.get_potential_contemporanous_parents('X2')])
+        self.assertEqual(
+            ['X1', 'X2', 'X4'], [node.identifier for node in ts_dag.get_potential_contemporanous_parents('X3')]
+        )
 
 
 class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
