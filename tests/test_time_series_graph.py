@@ -862,7 +862,7 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
         # Also confirm that equality method works. Again reconstruction won't have directions so just check skeletons.
         self.assertEqual(self.tsdag.skeleton, reconstruction.skeleton)
-        self.assertTrue(self.tsdag.skeleton.__eq__(reconstruction.skeleton, False))
+        self.assertFalse(self.tsdag.skeleton.__eq__(reconstruction.skeleton, True))
 
 
 class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
