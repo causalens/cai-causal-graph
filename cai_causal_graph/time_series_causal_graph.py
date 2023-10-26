@@ -21,9 +21,10 @@ from copy import deepcopy
 from functools import wraps
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
+import networkx
 import numpy
 
-from cai_causal_graph import CausalGraph
+from cai_causal_graph import CausalGraph, Skeleton
 from cai_causal_graph.graph_components import Edge, Node, TimeSeriesNode
 from cai_causal_graph.interfaces import HasIdentifier, HasMetadata
 from cai_causal_graph.type_definitions import TIME_LAG, VARIABLE_NAME, EdgeType, NodeLike, NodeVariableType
@@ -905,6 +906,31 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         return tsgraph
 
+    @staticmethod
+    def from_skeleton(skeleton: Skeleton) -> TimeSeriesCausalGraph:
+        """
+        Construct a `cai_causal_graph.causal_graph.TimeSeriesCausalGraph` instance from a
+        `cai_causal_graph.causal_graph.Skeleton` instance.
+        """
+        return TimeSeriesCausalGraph.from_causal_graph(CausalGraph.from_skeleton(skeleton))
+
+    @staticmethod
+    def from_networkx(g: networkx.Graph) -> TimeSeriesCausalGraph:
+        """
+        Construct a `cai_causal_graph.causal_graph.TimeSeriesCausalGraph` instance from a
+        `networkx.Graph` instance.
+        """
+        return TimeSeriesCausalGraph.from_causal_graph(CausalGraph.from_networkx(g))
+
+    @staticmethod
+    def from_gml_string(gml: str) -> TimeSeriesCausalGraph:
+        """
+        Return an instance of `cai_causal_graph.causal_graph.TimeSeriesCausalGraph` constructed from the provided Graph Modelling
+        Language (GML) string.
+        """
+        g = networkx.parse_gml(gml)
+        return TimeSeriesCausalGraph.from_networkx(g)
+
     @property
     def adjacency_matrices(self) -> Dict[int, numpy.ndarray]:
         """
@@ -1006,6 +1032,20 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         assert self.variables is not None
         return adjacency_matrices, self.variables
+
+    def get_nodes_at_lag(self, time_lag: int = 0) -> List[TimeSeriesNode]:
+        """Return all nodes at time delta `time_lag`."""
+        return [node for node in self.get_nodes() if node.time_lag == time_lag]
+
+    def get_contemporaneous_nodes(self, node: NodeLike) -> List[TimeSeriesNode]:
+        """Return all nodes that are contemporaneous (i.e. have the same time_lag) to the provided node."""
+        assert node is not None, 'The `node` cannot be None.'
+        if isinstance(node, str):
+            node = self.get_node(node)
+
+        assert isinstance(node, TimeSeriesNode), 'The node must be a `TimeSeriesNode`.'
+        cont_nodes = self.get_nodes_at_lag(node.time_lag)
+        return [n for n in cont_nodes if n != node]
 
     def __hash__(self) -> int:
         """
