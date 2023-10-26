@@ -837,9 +837,15 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         reconstruction = TimeSeriesCausalGraph.from_gml_string(self.tsdag.to_gml_string())
         self.assertEqual(self.tsdag, reconstruction)
 
+        # same with deep equality
+        self.assertTrue(self.tsdag.__eq__(reconstruction, True))
+
     def test_from_networkx(self):
         reconstruction = TimeSeriesCausalGraph.from_networkx(self.tsdag.to_networkx())
         self.assertEqual(self.tsdag, reconstruction)
+
+        # same with deep equality
+        self.assertTrue(self.tsdag.__eq__(reconstruction, True))
 
     def test_from_skeleton(self):
         reconstruction = CausalGraph.from_skeleton(self.tsdag.skeleton)
