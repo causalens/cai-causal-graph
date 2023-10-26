@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.2.10
 
 - Added the `cai_causal_graph.time_series_graph.TimeSeriesGraph.get_nodes_at_lag` and
   `cai_causal_graph.time_series_graph.TimeSeriesGraph.get_contemporaneous_nodes` methods to the
