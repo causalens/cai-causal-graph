@@ -864,6 +864,9 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         self.assertEqual(self.tsdag.skeleton, reconstruction.skeleton)
         self.assertFalse(self.tsdag.skeleton.__eq__(reconstruction.skeleton, True))
 
+        # deep equality should fail as time awareness is lost and loses meta data for nodes.
+        self.assertFalse(self.tsdag.skeleton.__eq__(reconstruction.skeleton, True))
+
 
 class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
     def test_default_nodes_and_edges(self):
