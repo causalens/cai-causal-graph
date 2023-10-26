@@ -1047,31 +1047,6 @@ class TimeSeriesCausalGraph(CausalGraph):
         cont_nodes = self.get_nodes_at_lag(node.time_lag)
         return [n for n in cont_nodes if n != node]
 
-    def get_potential_contemporanous_parents(self, node: NodeLike) -> List[TimeSeriesNode]:
-        """Return the true and potential parents that are contemporanous to the provided node."""
-        assert node is not None, 'The `node` cannot be None.'
-        if isinstance(node, str):
-            node = self.get_node(node)
-
-        assert isinstance(node, TimeSeriesNode), 'The node must be a `TimeSeriesNode`.'
-
-        contemporaneous_adj_nodes = []
-
-        # go through the inbounds edges
-        for edge in self.get_edges(destination=node):
-            assert isinstance(edge.source, TimeSeriesNode)   # for linting
-            if edge.source.time_lag == node.time_lag:
-                contemporaneous_adj_nodes.append(edge.source)
-
-        # go through the outbounds edges
-        for edge in self.get_edges(source=node):
-            if edge.edge_type == EdgeType.UNDIRECTED_EDGE:
-                assert isinstance(edge.destination, TimeSeriesNode)   # for linting
-                if edge.destination.time_lag == node.time_lag:
-                    contemporaneous_adj_nodes.append(edge.destination)
-
-        return contemporaneous_adj_nodes
-
     def __hash__(self) -> int:
         """
         Return a hash representation of the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` instance.

@@ -2,12 +2,9 @@
 
 ## NEXT
 
-- Added the `cai_causal_graph.time_series_graph.TimeSeriesGraph.get_nodes_at_lag`,
-  `cai_causal_graph.time_series_graph.TimeSeriesGraph.get_contemporaneous_nodes`, and
-  `cai_causal_graph.time_series_graph.TimeSeriesGraph.get_potential_contemporanous_parents` methods to the
-  `cai_causal_graph.time_series_graph.TimeSeriesGraph` class to get the nodes at a given lag, the contemporaneous nodes
-  of a node, and the potential contemporaneous parents of a node (inbound directed or unidirected and outbound
-  undirected edges) , respectively.
+- Added the `cai_causal_graph.time_series_graph.TimeSeriesGraph.get_nodes_at_lag` and
+  `cai_causal_graph.time_series_graph.TimeSeriesGraph.get_contemporaneous_nodes` methods to the
+  `cai_causal_graph.time_series_graph.TimeSeriesGraph` class to get the nodes at a given lag, respectively.
 - General improvements to several `from_*` methods in the `cai_causal_graph.time_series_graph.TimeSeriesGraph` class.
 
 ## 0.2.9
