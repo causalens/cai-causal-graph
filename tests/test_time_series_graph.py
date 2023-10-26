@@ -862,7 +862,6 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
         # Also confirm that equality method works. Again reconstruction won't have directions so just check skeletons.
         self.assertEqual(self.tsdag.skeleton, reconstruction.skeleton)
-        self.assertFalse(self.tsdag.skeleton.__eq__(reconstruction.skeleton, True))
 
         # deep equality should fail as time awareness is lost and loses meta data for nodes.
         self.assertFalse(self.tsdag.skeleton.__eq__(reconstruction.skeleton, True))
