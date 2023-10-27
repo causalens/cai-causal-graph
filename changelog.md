@@ -1,5 +1,9 @@
 # Changelog
 
+## NEXT
+
+- Improved documentation.
+
 ## 0.2.12
 
 - Added `cai_causal_graph.graph_components.Node.node_name` property to `cai_causal_graph.graph_components.Node` as an
@@ -12,8 +16,8 @@
 
 ## 0.2.11
 
-- Improved the `cai_causal_graph.time_series_causal_graph.TimeSeriesGraph.get_topological_order` method for a
-  `cai_causal_graph.time_series_causal_graph.TimeSeriesGraph` to better account for time.
+- Improved the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_topological_order` method for a
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` to better account for time.
 - Fixed a bug in `cai_causal_graph.causal_graph.CausalGraph` and
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` that prevented
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph`,
@@ -23,12 +27,12 @@
 
 ## 0.2.10
 
-- Added the `cai_causal_graph.time_series_causal_graph.TimeSeriesGraph.get_nodes_at_lag` and
-  `cai_causal_graph.time_series_causal_graph.TimeSeriesGraph.get_contemporaneous_nodes` methods to the
-  `cai_causal_graph.time_series_causal_graph.TimeSeriesGraph` class to get the nodes at a given lag and the
+- Added the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_nodes_at_lag` and
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_contemporaneous_nodes` methods to the
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class to get the nodes at a given lag and the
   contemporaneous nodes of the provided node, respectively.
-- General improvements to several `from_*` methods in the `cai_causal_graph.time_series_causal_graph.TimeSeriesGraph`
-  class.
+- General improvements to several `from_*` methods in the
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class.
 
 ## 0.2.9
 
