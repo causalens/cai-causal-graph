@@ -561,7 +561,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """
         Prepare the source and destination nodes for adding an edge and return the source and destination nodes.
 
-        It will add the nodes to the graph if they do not exist yet. Additionally, it will check that if the an edge
+        It will add the nodes to the graph if they do not exist yet. Additionally, it will check that, if the edge
         already exists, it is of the same type as the edge to be added.
 
         :param source: The source node.
