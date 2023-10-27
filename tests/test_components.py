@@ -51,12 +51,16 @@ class TestGraphComponents(unittest.TestCase):
         node1 = Node.from_dict(node.to_dict())
 
         self.assertTrue(node.__eq__(node1, deep=True))
+        self.assertEqual(node.identifier, node.node_name)
+        self.assertEqual(node1.identifier, node1.node_name)
 
         # test time series node serialization-deserialization
         node = TimeSeriesNode(identifier='a lag(n=2)', meta={'color': 'blue'}, variable_type=NodeVariableType.BINARY)
         node1 = TimeSeriesNode.from_dict(node.to_dict())
 
         self.assertTrue(node.__eq__(node1, deep=True))
+        self.assertEqual(node.identifier, node.node_name)
+        self.assertEqual(node1.identifier, node1.node_name)
 
         # test when dict and meta disagree
         node = TimeSeriesNode(
@@ -82,6 +86,8 @@ class TestGraphComponents(unittest.TestCase):
 
         self.assertFalse(node.__eq__(node1, deep=True))
         self.assertEqual(node.identifier, node1.identifier)
+        self.assertEqual(node.identifier, node.node_name)
+        self.assertEqual(node1.identifier, node1.node_name)
         self.assertEqual(node.variable_type, node1.variable_type)
 
         # check meta is equal in the part in common
@@ -99,6 +105,8 @@ class TestGraphComponents(unittest.TestCase):
 
         self.assertNotEqual(node, node1)
         self.assertEqual(node.identifier, node1.identifier)
+        self.assertEqual(node.identifier, node.node_name)
+        self.assertEqual(node1.identifier, node1.node_name)
         self.assertEqual(node.variable_type, node1.variable_type)
         self.assertEqual(node.meta, node1.meta)
 
