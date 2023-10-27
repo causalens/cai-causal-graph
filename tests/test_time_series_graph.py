@@ -522,6 +522,19 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
             with self.assertRaises(AssertionError):
                 _ = tscg.get_summary_graph()
 
+        # test get summary graph with a already summary graph
+        tsgraph = TimeSeriesCausalGraph()
+        tsgraph.add_node('c', variable_type=NodeVariableType.BINARY)
+        tsgraph.add_edge('a', 'b')
+        tsgraph.add_edge('b', 'c')
+        graph = CausalGraph.from_dict(tsgraph.to_dict())
+
+        summary_graph = tsgraph.get_summary_graph()
+
+        self.assertEqual(summary_graph, graph)
+        # deep equality
+        self.assertTrue(graph.__eq__(summary_graph, True))
+
     def test_variable_names(self):
         variables = self.tsdag.variables
         self.assertEqual(variables, ['X1', 'X2', 'X3'])
@@ -573,6 +586,19 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
             self.assertEqual(tscg.get_minimal_graph(), true_minimal)
             self.assertTrue(tscg.get_minimal_graph().is_minimal_graph())
+
+            graph = TimeSeriesCausalGraph()
+            graph.add_node('c', variable_type=NodeVariableType.BINARY)
+            graph.add_edge('a', 'b')
+            graph.add_edge('b', 'c')
+            graph.add_time_edge('a', -1, 'a', 0)
+            graph.add_time_edge('b', -1, 'b', 0)
+
+            self.assertTrue(graph.is_minimal_graph())
+
+            minimal_graph = graph.get_minimal_graph()
+            self.assertEqual(minimal_graph, graph)
+            self.assertTrue(graph.__eq__(minimal_graph, True))
 
     def test_extend_backward(self):
         # with 1 steps
@@ -661,6 +687,16 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
             new_destination = get_name_with_lag(vard, 0)
 
             self.assertEqual(tscg1.get_edge(new_source, new_destination).get_edge_type(), edge.get_edge_type())
+
+        # check that node variable types are the same
+        graph = TimeSeriesCausalGraph()
+        graph.add_node('c', variable_type=NodeVariableType.BINARY)
+        graph.add_edge('a', 'b')
+        graph.add_edge('b', 'c')
+
+        extended_graph = graph.extend_graph(backward_steps=1)
+
+        self.assertEqual(extended_graph.get_node('c lag(n=1)').variable_type, NodeVariableType.BINARY)
 
     def test_extend_graph_forward(self):
         # with 1 steps
@@ -865,6 +901,21 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
         # deep equality should fail as time awareness is lost and loses meta data for nodes.
         self.assertFalse(self.tsdag.skeleton.__eq__(reconstruction.skeleton, True))
+
+    def test_get_topological_order(self):
+        g = TimeSeriesCausalGraph()
+        g.add_edge('x', 'y')
+        g.add_edge('x', 't')
+        g.add_edge('t', 'y')
+        g.add_time_edge('x', -1, 't', 0)
+        g.add_time_edge('t', -1, 't', 0)
+
+        top_order = g.get_topological_order()
+        # self.assertListEqual(top_order, ['x', 't', 'y'])
+
+        # top_order = g.get_topological_order(return_all=True)
+        # self.assertListEqual(top_order, [['x', 't', 'y']])
+        
 
 
 class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
