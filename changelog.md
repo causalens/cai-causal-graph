@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.2.12
 
 - Added `cai_causal_graph.graph_components.Node.node_name` property to `cai_causal_graph.graph_components.Node` as an
   alias of `cai_causal_graph.graph_components.Node.identifier`.
