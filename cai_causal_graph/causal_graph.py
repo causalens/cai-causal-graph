@@ -1198,8 +1198,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """Remove a specific edge by source and destination node identifiers, as well as edge type."""
         self.delete_edge(source=source, destination=destination, edge_type=edge_type)
 
-    def get_children(self, node: NodeLike) -> List[str]:
-        """Get node identifiers for all children nodes for a specific node."""
+    def get_children_nodes(self, node: NodeLike) -> List[Node]:
+        """Get all children nodes for a specific node."""
         identifier = self._NodeCls.identifier_from(node)
         assert self.node_exists(node), (
             f'The provided node with identifier {identifier} is not present in the graph with nodes: '
@@ -1209,8 +1209,13 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         # get a list of outbound edges to the node
         outbound = self.get_node(identifier).get_outbound_edges()
 
-        # Remove all nodes that are not connected to the query node (identify parent nodes)
-        return list({e.destination.identifier for e in outbound})
+        # Remove all nodes that are not connected to the query node (identify children nodes)
+        return list({e.destination for e in outbound})
+
+    def get_children(self, node: NodeLike) -> List[str]:
+        """Get node identifiers for all children nodes for a specific node."""
+        # Get identifier for each child node
+        return [n.identifier for n in self.get_children_nodes(node)]
 
     def get_children_graph(self, node: NodeLike) -> CausalGraph:
         """
@@ -1243,8 +1248,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
         return children_graph
 
-    def get_parents(self, node: NodeLike) -> List[str]:
-        """Get node identifiers for all parent nodes for a specific node."""
+    def get_parent_nodes(self, node: NodeLike) -> List[Node]:
+        """Get all parent nodes for a specific node."""
         identifier = self._NodeCls.identifier_from(node)
         assert self.node_exists(node), (
             f'The provided node with identifier {identifier} is not present in the graph with nodes: '
@@ -1255,7 +1260,12 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         inbound = self.get_node(identifier).get_inbound_edges()
 
         # Remove all nodes that are not connected to the query node (identify parent nodes)
-        return list({e.source.identifier for e in inbound})
+        return list({e.source for e in inbound})
+
+    def get_parents(self, node: NodeLike) -> List[str]:
+        """Get node identifiers for all parent nodes for a specific node."""
+        # Get identifier for each parent node
+        return [n.identifier for n in self.get_parent_nodes(node)]
 
     def get_parents_graph(self, node: NodeLike) -> CausalGraph:
         """

@@ -99,6 +99,11 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         self._is_valid = False
 
     @property
+    def node_name(self) -> str:
+        """Alias for identifier."""
+        return self.identifier
+
+    @property
     def identifier(self) -> str:
         """Return the node identifier."""
         return self._identifier

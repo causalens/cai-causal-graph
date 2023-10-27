@@ -730,6 +730,10 @@ class TestCausalGraphSerialization(unittest.TestCase):
         for edge in b_children_graph.get_edges():
             self.assertEqual(edge.source.identifier, 'b')
 
+        self.assertEqual(len(c_children_graph.get_nodes()), 1)
+        self.assertListEqual(['c'], c_children_graph.get_node_names())
+        self.assertEqual(len(c_children_graph.get_edges()), 0)
+
     def test_get_children(self):
         cg_original = CausalGraph()
         cg_original.add_edge('a', 'b')
@@ -740,12 +744,21 @@ class TestCausalGraphSerialization(unittest.TestCase):
 
         cg = cg_original.copy()
 
+        a_children_nodes = cg.get_children_nodes('a')
+        b_children_nodes = cg.get_children_nodes('b')
+        c_children_nodes = cg.get_children_nodes('c')
         a_children = cg.get_children('a')
         b_children = cg.get_children('b')
         c_children = cg.get_children('c')
 
         self.assertEqual(cg, cg_original)
 
+        self.assertEqual(len(a_children_nodes), len(a_children))
+        self.assertEqual(len(b_children_nodes), len(b_children))
+        self.assertEqual(len(c_children_nodes), len(c_children))
+        self.assertListEqual([n.identifier for n in a_children_nodes], a_children)
+        self.assertListEqual([n.identifier for n in b_children_nodes], b_children)
+        self.assertListEqual([n.identifier for n in c_children_nodes], c_children)
         self.assertSetEqual(set(a_children), {'d', 'c', 'b'})
         self.assertSetEqual(set(b_children), {'d', 'e'})
         self.assertListEqual(c_children, [])
@@ -790,6 +803,9 @@ class TestCausalGraphSerialization(unittest.TestCase):
         causal_graph.add_edge('a', 'b')
         causal_graph_2 = causal_graph.copy()
 
+        h_parent_nodes = causal_graph.get_parent_nodes('h,0')
+        a_parent_nodes = causal_graph.get_parent_nodes('a')
+        k_parent_nodes = causal_graph.get_parent_nodes('k,0')
         star_causal_graph_h_parents = causal_graph.get_parents('h,0')
         star_causal_graph_a_parents = causal_graph.get_parents('a')
         star_causal_graph_k_parents = causal_graph.get_parents('k,0')
@@ -797,6 +813,12 @@ class TestCausalGraphSerialization(unittest.TestCase):
         # check that original graph is unaffected
         self.assertEqual(causal_graph, causal_graph_2)
 
+        self.assertEqual(len(h_parent_nodes), len(star_causal_graph_h_parents))
+        self.assertEqual(len(a_parent_nodes), len(star_causal_graph_a_parents))
+        self.assertEqual(len(k_parent_nodes), len(star_causal_graph_k_parents))
+        self.assertListEqual([n.identifier for n in h_parent_nodes], star_causal_graph_h_parents)
+        self.assertListEqual([n.identifier for n in a_parent_nodes], star_causal_graph_a_parents)
+        self.assertListEqual([n.identifier for n in k_parent_nodes], star_causal_graph_k_parents)
         self.assertSetEqual(set(star_causal_graph_h_parents), {'a', 'b', 'c', 'd', 'e', 'f', 'g'})
         self.assertSetEqual(set(star_causal_graph_k_parents), {'a', 'b', 'c', 'd', 'e', 'f', 'g'})
         self.assertListEqual(star_causal_graph_a_parents, [])
