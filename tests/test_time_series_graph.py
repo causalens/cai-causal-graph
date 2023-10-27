@@ -911,10 +911,10 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         g.add_time_edge('t', -1, 't', 0)
 
         top_order = g.get_topological_order()
-        # self.assertListEqual(top_order, ['x', 't', 'y'])
+        self.assertListEqual(top_order, ['x lag(n=1)', 't lag(n=1)', 'x', 't', 'y'])
 
-        # top_order = g.get_topological_order(return_all=True)
-        # self.assertListEqual(top_order, [['x', 't', 'y']])
+        top_order = g.get_topological_order(return_all=True)
+        self.assertListEqual(top_order, [['x lag(n=1)', 't lag(n=1)', 'x', 't', 'y']])
 
 
 class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):

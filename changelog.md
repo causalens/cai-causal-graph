@@ -2,8 +2,8 @@
 
 # NEXT
 
-- Improved the topological order to take into account time.
-- Fixed bug in `cai_causal_graph.causal_graph.CausalGraph` and `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` that
+- Improved the `cai_causal_graph.time_series_causal_graph.TimeSeriesGraph.get_topological_order` method for a `cai_causal_graph.time_series_causal_graph.TimeSeriesGraph` to better account for time.
+- Fixed a bug in `cai_causal_graph.causal_graph.CausalGraph` and `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` that
   prevented `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph`, `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_summary_graph` and `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_graph` from working properly as it did not maintain the correct extra information such as node variable types.
 
 ## 0.2.10
