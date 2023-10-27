@@ -561,7 +561,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """
         Prepare the source and destination nodes for adding an edge and return the source and destination nodes.
 
-        It will add the nodes to the graph if they do not exist yet. Additionally, it will check that if the an edge
+        It will add the nodes to the graph if they do not exist yet. Additionally, it will check that, if the edge
         already exists, it is of the same type as the edge to be added.
 
         :param source: The source node.
@@ -571,8 +571,10 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         source_meta = source.get_metadata() if isinstance(source, HasMetadata) else None
         destination_meta = destination.get_metadata() if isinstance(destination, HasMetadata) else None
 
-        source = self._NodeCls.identifier_from(source)
-        destination = self._NodeCls.identifier_from(destination)
+        if not isinstance(source, Node):
+            source = self._NodeCls.identifier_from(source)
+        if not isinstance(destination, Node):
+            destination = self._NodeCls.identifier_from(destination)
 
         # check that the source is not equal to destination
         if source == destination:
@@ -587,11 +589,17 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
         if len(source_nodes) != 1:
             # The node was not explicitly defined by the user, so we will add it implicitly based on the edge info
-            self.add_node(source, meta=source_meta)
+            if isinstance(source, Node):
+                self.add_node(node=source)
+            else:
+                self.add_node(source, meta=source_meta)
             source_nodes = self.get_nodes(source)
         if len(destination_nodes) != 1:
             # The node was not explicitly defined by the user, so we will add it implicitly based on the edge info
-            self.add_node(destination, meta=destination_meta)
+            if isinstance(destination, Node):
+                self.add_node(node=destination)
+            else:
+                self.add_node(destination, meta=destination_meta)
             destination_nodes = self.get_nodes(destination)
         if len(edges) != 0:
             # We don't allow implicit edge override. The user should delete the node or modify it.
@@ -1101,7 +1109,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
                 and meta is None
                 and len(kwargs) == 0
             ), 'If specifying `edge` argument, all other arguments should not be specified.'
-            source, destination = edge.get_edge_pair()
+            source, destination = edge.source, edge.destination
+
             edge_type = edge.get_edge_type()
             meta = deepcopy(edge.meta)
         else:
@@ -1111,6 +1120,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             )
 
         source_node, destination_node = self._prepare_nodes(source, destination)
+
         edge = self._EdgeCls(source_node, destination_node, edge_type=edge_type)
 
         # Add any meta

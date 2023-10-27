@@ -212,39 +212,117 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         for edge in self.get_edges():
             # get the relative time delta; asserts are needed for linting
-            assert isinstance(edge.source, TimeSeriesNode)
-            assert isinstance(edge.destination, TimeSeriesNode)
-            assert isinstance(edge.source.time_lag, int)
-            assert isinstance(edge.destination.time_lag, int)
-            assert edge.source.variable_name is not None
-            assert edge.destination.variable_name is not None
+            source = deepcopy(edge.source)
+            destination = deepcopy(edge.destination)
+            assert isinstance(source, TimeSeriesNode)
+            assert isinstance(destination, TimeSeriesNode)
+            assert isinstance(source.time_lag, int)
+            assert isinstance(destination.time_lag, int)
+            assert source.variable_name is not None
+            assert destination.variable_name is not None
 
-            time_delta = edge.destination.time_lag - edge.source.time_lag
+            time_delta = destination.time_lag - source.time_lag
+
+            # copy edge
+            edge = Edge.from_dict(edge.to_dict())
+
             # add the edge if the time delta is 0 (no need to extract the new names)
             # copy the edge type to the minimal graph
-            if time_delta == 0 and not minimal_cg.edge_exists(
-                edge.source.variable_name, edge.destination.variable_name
-            ):
-                minimal_cg.add_edge(
-                    edge.source.variable_name,
-                    edge.destination.variable_name,
-                    edge_type=edge.get_edge_type(),
+            if time_delta == 0 and not minimal_cg.edge_exists(source.variable_name, destination.variable_name):
+                # create the time series nodes
+                # update the node meta data to make sure the time lag is correct
+                source.meta[TIME_LAG] = 0
+                destination.meta[TIME_LAG] = 0
+
+                source = self._NodeCls(
+                    identifier=source.variable_name, meta=source.meta, variable_type=source.variable_type
                 )
+
+                destination = self._NodeCls(
+                    identifier=destination.variable_name,
+                    meta=destination.meta,
+                    variable_type=destination.variable_type,
+                )
+
+                edge = self._EdgeCls(source=source, destination=destination, edge_type=edge.edge_type, meta=edge.meta)
+
+                minimal_cg.add_edge(edge=edge)
+
             # otherwise if the time delta is not 0, we may have X[t-2]->X[t-1] and
             # we must add X[t-1]->X[t]
             else:
                 # get the new names according to the time delta
-                destination_name = get_name_with_lag(edge.destination.identifier, 0)
-                source_name = get_name_with_lag(edge.source.identifier, -time_delta)
+                destination_name = get_name_with_lag(destination.identifier, 0)
+                source_name = get_name_with_lag(source.identifier, -time_delta)
                 if not minimal_cg.edge_exists(source_name, destination_name):
-                    # add the edge
-                    minimal_cg.add_edge(
-                        source_name,
-                        destination_name,
-                        edge_type=edge.get_edge_type(),
+
+                    # update the node meta data to make sure the time lag is correct
+                    source.meta[TIME_LAG] = -time_delta
+                    destination.meta[TIME_LAG] = 0
+
+                    # create the nodes
+                    source = self._NodeCls(
+                        identifier=source_name,
+                        meta=source.meta,
+                        variable_type=source.variable_type,
                     )
 
+                    destination = self._NodeCls(
+                        identifier=destination_name,
+                        meta=destination.meta,
+                        variable_type=destination.variable_type,
+                    )
+
+                    # create the edge
+                    edge = self._EdgeCls(
+                        source=source, destination=destination, edge_type=edge.edge_type, meta=edge.meta
+                    )
+
+                    minimal_cg.add_edge(edge=edge)
+
         return minimal_cg
+
+    def _get_time_topological_order(self, ordered_nodes: List[str]) -> List[str]:
+        """Return the time topological order given the standard topological order. Only for internal use."""
+        min_time_lag = max([node.time_lag for node in self.get_nodes()])
+
+        # extract only nodes at min_time_lag
+        cont_ordered_nodes = [
+            node for node in ordered_nodes if self.get_node(node).time_lag == min_time_lag  # type: ignore
+        ]
+        # get the remaining nodes
+        lagged_nodes = [n for n in ordered_nodes if self.get_node(n).time_lag != min_time_lag]  # type: ignore
+
+        # sort lagged nodes based on the order they appear in the non-lagged list and by their lag values
+        lagged_nodes = sorted(
+            lagged_nodes,
+            key=lambda x: (cont_ordered_nodes.index(self.get_node(x).variable_name), self.get_node(x).time_lag),  # type: ignore
+        )
+
+        # merge the lists together
+        ordered_nodes = lagged_nodes + cont_ordered_nodes
+
+        return ordered_nodes
+
+    def get_topological_order(self, return_all: bool = False) -> Union[List[str], List[List[str]]]:
+        """
+        Return the topological order of the graph that is ordered in time.
+
+        For more details, see
+        `cai_causal_graph.causal_graph.CausalGraph.get_topological_order`.
+        """
+        ordered_nodes = super().get_topological_order(return_all=return_all)
+        if return_all:
+            top_order_list: List[List[str]] = []
+            for current_top_order in ordered_nodes:
+                assert isinstance(current_top_order, list)   # for linting
+                new_order = self._get_time_topological_order(current_top_order)
+                if new_order not in top_order_list:
+                    top_order_list.append(new_order)
+        else:
+            top_order_list = self._get_time_topological_order(ordered_nodes)   # type: ignore
+
+        return top_order_list
 
     def is_minimal_graph(self) -> bool:
         """
@@ -300,7 +378,23 @@ class TimeSeriesCausalGraph(CausalGraph):
                 if source_variable_name != destination_variable_name and not summary_graph.is_edge_by_pair(
                     (source_variable_name, destination_variable_name)
                 ):
-                    summary_graph.add_edge_by_pair((source_variable_name, destination_variable_name))
+                    # create the nodes
+                    source = self._NodeCls(
+                        identifier=source_variable_name,
+                        meta=source_node.meta,
+                        variable_type=source_node.variable_type,
+                    )
+                    destination = self._NodeCls(
+                        identifier=destination_variable_name,
+                        meta=destination_node.meta,
+                        variable_type=destination_node.variable_type,
+                    )
+
+                    # create the edge
+                    edge = self._EdgeCls(
+                        source=source, destination=destination, edge_type=edge.edge_type, meta=edge.meta
+                    )
+                    summary_graph.add_edge(edge=edge)
 
             self._summary_graph = summary_graph
 
@@ -451,9 +545,8 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         return sorted(var_names)
 
-    @staticmethod
     def _get_lagged_node(
-        identifier: Optional[NodeLike] = None, node: Optional[TimeSeriesNode] = None, lag: Optional[int] = None
+        self, identifier: Optional[NodeLike] = None, node: Optional[TimeSeriesNode] = None, lag: Optional[int] = None
     ) -> TimeSeriesNode:
         """
         Return the lagged node of a node with a given lag. Lag is overwritten if the node is already lagged.
@@ -482,6 +575,8 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         assert isinstance(identifier, str), 'The identifier must be a string. Got %s.' % type(identifier)
 
+        variable_type = None
+
         if node is None:
             # extract the variable name from the identifier
             variable_name, _ = get_variable_name_and_lag(identifier)
@@ -494,9 +589,16 @@ class TimeSeriesCausalGraph(CausalGraph):
             # modify the identifier of the provided node
             # update the meta information
             meta = node.meta.copy()
+            variable_type = node.variable_type
 
         assert node is not None, 'The node must be valid. Got None.'
-        node = TimeSeriesNode(variable_name=node.variable_name, time_lag=lag, meta=meta)
+
+        node = self._NodeCls(
+            variable_name=node.variable_name,
+            time_lag=lag,
+            meta=meta,
+            variable_type=variable_type if variable_type is not None else NodeVariableType.UNSPECIFIED,
+        )
         return node
 
     @_reset_ts_graph_attributes
