@@ -587,18 +587,18 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
             self.assertEqual(tscg.get_minimal_graph(), true_minimal)
             self.assertTrue(tscg.get_minimal_graph().is_minimal_graph())
 
-            graph = TimeSeriesCausalGraph()
-            graph.add_node('c', variable_type=NodeVariableType.BINARY)
-            graph.add_edge('a', 'b')
-            graph.add_edge('b', 'c')
-            graph.add_time_edge('a', -1, 'a', 0)
-            graph.add_time_edge('b', -1, 'b', 0)
+        graph = TimeSeriesCausalGraph()
+        graph.add_node('c', variable_type=NodeVariableType.BINARY)
+        graph.add_edge('a', 'b')
+        graph.add_edge('b', 'c')
+        graph.add_time_edge('a', -1, 'a', 0)
+        graph.add_time_edge('b', -1, 'b', 0)
 
-            self.assertTrue(graph.is_minimal_graph())
+        self.assertTrue(graph.is_minimal_graph())
 
-            minimal_graph = graph.get_minimal_graph()
-            self.assertEqual(minimal_graph, graph)
-            self.assertTrue(graph.__eq__(minimal_graph, True))
+        minimal_graph = graph.get_minimal_graph()
+        self.assertEqual(minimal_graph, graph)
+        self.assertTrue(graph.__eq__(minimal_graph, True))
 
     def test_extend_backward(self):
         # with 1 steps
@@ -915,7 +915,6 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
         # top_order = g.get_topological_order(return_all=True)
         # self.assertListEqual(top_order, [['x', 't', 'y']])
-        
 
 
 class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):

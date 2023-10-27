@@ -212,32 +212,36 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         for edge in self.get_edges():
             # get the relative time delta; asserts are needed for linting
-            assert isinstance(edge.source, TimeSeriesNode)
-            assert isinstance(edge.destination, TimeSeriesNode)
-            assert isinstance(edge.source.time_lag, int)
-            assert isinstance(edge.destination.time_lag, int)
-            assert edge.source.variable_name is not None
-            assert edge.destination.variable_name is not None
+            source = deepcopy(edge.source)
+            destination = deepcopy(edge.destination)
+            assert isinstance(source, TimeSeriesNode)
+            assert isinstance(destination, TimeSeriesNode)
+            assert isinstance(source.time_lag, int)
+            assert isinstance(destination.time_lag, int)
+            assert source.variable_name is not None
+            assert destination.variable_name is not None
 
-            time_delta = edge.destination.time_lag - edge.source.time_lag
+            time_delta = destination.time_lag - source.time_lag
 
             # copy edge
             edge = Edge.from_dict(edge.to_dict())
 
             # add the edge if the time delta is 0 (no need to extract the new names)
             # copy the edge type to the minimal graph
-            if time_delta == 0 and not minimal_cg.edge_exists(
-                edge.source.variable_name, edge.destination.variable_name
-            ):
+            if time_delta == 0 and not minimal_cg.edge_exists(source.variable_name, destination.variable_name):
                 # create the time series nodes
+                # update the node meta data to make sure the time lag is correct
+                source.meta[TIME_LAG] = 0
+                destination.meta[TIME_LAG] = 0
+
                 source = self._NodeCls(
-                    identifier=edge.source.variable_name, meta=edge.source.meta, variable_type=edge.source.variable_type
+                    identifier=source.variable_name, meta=source.meta, variable_type=source.variable_type
                 )
 
                 destination = self._NodeCls(
-                    identifier=edge.destination.variable_name,
-                    meta=edge.destination.meta,
-                    variable_type=edge.destination.variable_type,
+                    identifier=destination.variable_name,
+                    meta=destination.meta,
+                    variable_type=destination.variable_type,
                 )
 
                 edge = self._EdgeCls(source=source, destination=destination, edge_type=edge.edge_type, meta=edge.meta)
@@ -248,25 +252,25 @@ class TimeSeriesCausalGraph(CausalGraph):
             # we must add X[t-1]->X[t]
             else:
                 # get the new names according to the time delta
-                destination_name = get_name_with_lag(edge.destination.identifier, 0)
-                source_name = get_name_with_lag(edge.source.identifier, -time_delta)
+                destination_name = get_name_with_lag(destination.identifier, 0)
+                source_name = get_name_with_lag(source.identifier, -time_delta)
                 if not minimal_cg.edge_exists(source_name, destination_name):
 
                     # update the node meta data to make sure the time lag is correct
-                    edge.source.meta[TIME_LAG] = -time_delta
-                    edge.source.meta[TIME_LAG] = 0
+                    source.meta[TIME_LAG] = -time_delta
+                    destination.meta[TIME_LAG] = 0
 
                     # create the nodes
                     source = self._NodeCls(
                         identifier=source_name,
-                        meta=edge.source.meta,
-                        variable_type=edge.source.variable_type,
+                        meta=source.meta,
+                        variable_type=source.variable_type,
                     )
 
                     destination = self._NodeCls(
                         identifier=destination_name,
-                        meta=edge.destination.meta,
-                        variable_type=edge.destination.variable_type,
+                        meta=destination.meta,
+                        variable_type=destination.variable_type,
                     )
 
                     # create the edge
@@ -288,11 +292,13 @@ class TimeSeriesCausalGraph(CausalGraph):
         ordered_nodes = super().get_topological_order(return_all=return_all)
         if return_all:
             # sort by time lag
-            ordered_nodes = [sorted(ordering, key=lambda x: self.get_node(x[0]).time_lag) for ordering in ordered_nodes]
+            ordered_nodes = [
+                sorted(vord, key=lambda x: self.get_node(x[0]).time_lag) for vord in ordered_nodes  # type: ignore
+            ]
         else:
             # sort by time lag
-            ordered_nodes = sorted(ordered_nodes, key=lambda x: self.get_node(x).time_lag)
-        
+            ordered_nodes = sorted(ordered_nodes, key=lambda x: self.get_node(x).time_lag)  # type: ignore
+
         return ordered_nodes
 
     def is_minimal_graph(self) -> bool:
@@ -564,7 +570,12 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         assert node is not None, 'The node must be valid. Got None.'
 
-        node = self._NodeCls(variable_name=node.variable_name, time_lag=lag, meta=meta, variable_type=variable_type)
+        node = self._NodeCls(
+            variable_name=node.variable_name,
+            time_lag=lag,
+            meta=meta,
+            variable_type=variable_type if variable_type is not None else NodeVariableType.UNSPECIFIED,
+        )
         return node
 
     @_reset_ts_graph_attributes
