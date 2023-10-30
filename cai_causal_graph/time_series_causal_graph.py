@@ -851,8 +851,6 @@ class TimeSeriesCausalGraph(CausalGraph):
                 if source_time_lag > destination_time_lag:
                     source, destination = destination, source
 
-        print(destination, source)
-
         self._check_nodes_and_edge(source=source, destination=destination, edge_type=edge_type, edge=edge)
         edge = super().add_edge(
             source=source, destination=destination, edge_type=edge_type, meta=meta, edge=edge, **kwargs
