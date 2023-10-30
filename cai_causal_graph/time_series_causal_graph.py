@@ -823,7 +823,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                 if edge_type != EdgeType.DIRECTED_EDGE:
                     # if time_lag for source is greater than destination, then swap source and destination
                     assert isinstance(source, TimeSeriesNode) and isinstance(destination, TimeSeriesNode)
-                    if source.time_lag > destination.time_lag:
+                    if source_node.time_lag > destination_node.time_lag:
                         destination_node, source_node = source_node, destination_node
                 edge = self._EdgeCls(
                     source_node, destination_node, edge_type=edge.get_edge_type(), meta=edge.get_metadata()
