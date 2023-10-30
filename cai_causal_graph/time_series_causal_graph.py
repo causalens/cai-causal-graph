@@ -837,6 +837,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                 elif isinstance(source, str):
                     source_time_lag = get_variable_name_and_lag(source)[1]
                 else:
+                    assert isinstance(source, TimeSeriesNode)   # for linting
                     source_time_lag = source.time_lag
 
                 if isinstance(destination, Node) and not isinstance(destination, self._NodeCls):
@@ -844,8 +845,10 @@ class TimeSeriesCausalGraph(CausalGraph):
                     destination_time_lag = tmp_destination.time_lag
 
                 elif isinstance(source, str):
+                    assert destination is not None   # for linting
                     destination_time_lag = get_variable_name_and_lag(destination)[1]
                 else:
+                    assert isinstance(destination, TimeSeriesNode)   # for linting
                     destination_time_lag = destination.time_lag
 
                 if source_time_lag > destination_time_lag:
