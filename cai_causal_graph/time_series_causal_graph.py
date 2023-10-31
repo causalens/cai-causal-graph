@@ -811,18 +811,49 @@ class TimeSeriesCausalGraph(CausalGraph):
         if edge is not None:
             assert isinstance(edge, self._EdgeCls), f'Edge class must be of type {self._EdgeCls.__name__}.'
             # Check source node type
-            source_node = edge.source
+            source_node = deepcopy(edge.source)
             if isinstance(source_node, Node) and not isinstance(source_node, self._NodeCls):
                 source_node = self._NodeCls.from_dict(source_node.to_dict())
             # Check destination node type
-            destination_node = edge.destination
+            destination_node = deepcopy(edge.destination)
             if isinstance(destination_node, Node) and not isinstance(destination_node, self._NodeCls):
                 destination_node = self._NodeCls.from_dict(destination_node.to_dict())
             # See if either node was recreated, if yes, then create new edge with appropriate nodes
             if source_node != edge.source or destination_node != edge.destination:
+                if edge_type != EdgeType.DIRECTED_EDGE:
+                    # if time_lag for source is greater than destination, then swap source and destination
+                    assert isinstance(source, TimeSeriesNode) and isinstance(destination, TimeSeriesNode)
+                    if source_node.time_lag > destination_node.time_lag:
+                        destination_node, source_node = source_node, destination_node
                 edge = self._EdgeCls(
                     source_node, destination_node, edge_type=edge.get_edge_type(), meta=edge.get_metadata()
                 )
+
+        else:
+            # we need the nodes to be in the correct format to extract the time_lag. We only need to do this if the edge
+            # is non-directed.
+            if edge_type != EdgeType.DIRECTED_EDGE:
+                if isinstance(source, Node) and not isinstance(source, self._NodeCls):
+                    tmp_source = self._NodeCls.from_dict(source.to_dict())
+                    source_time_lag = tmp_source.time_lag
+                elif isinstance(source, str):
+                    source_time_lag = get_variable_name_and_lag(source)[1]
+                else:
+                    assert isinstance(source, TimeSeriesNode)   # for linting
+                    source_time_lag = source.time_lag
+
+                if isinstance(destination, Node) and not isinstance(destination, self._NodeCls):
+                    tmp_destination = self._NodeCls.from_dict(destination.to_dict())
+                    destination_time_lag = tmp_destination.time_lag
+                elif isinstance(source, str):
+                    assert destination is not None   # for linting
+                    destination_time_lag = get_variable_name_and_lag(destination)[1]
+                else:
+                    assert isinstance(destination, TimeSeriesNode)   # for linting
+                    destination_time_lag = destination.time_lag
+
+                if source_time_lag > destination_time_lag:
+                    source, destination = destination, source
 
         self._check_nodes_and_edge(source=source, destination=destination, edge_type=edge_type, edge=edge)
         edge = super().add_edge(

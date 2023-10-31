@@ -460,7 +460,14 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
         # check it preserves the edge types
         for edge in cg.edges:
-            self.assertEqual(tscg.get_edge(edge.source, edge.destination).get_edge_type(), edge.get_edge_type())
+            source_time_lag = get_variable_name_and_lag(edge.source)[1]
+            destination_time_lag = get_variable_name_and_lag(edge.destination)[1]
+            if source_time_lag > destination_time_lag:
+                # swap source and destination
+                source, destination = edge.destination, edge.source
+            else:
+                source, destination = edge.source, edge.destination
+            self.assertEqual(tscg.get_edge(source, destination).get_edge_type(), edge.get_edge_type())
 
     def test_from_adjacency_matrix(self):
         # test with the adjacency matrix corresponding to th minimal tsdag
@@ -915,6 +922,13 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
         top_order = g.get_topological_order(return_all=True)
         self.assertListEqual(top_order, [['x lag(n=1)', 't lag(n=1)', 'x', 't', 'y']])
+
+    def test_order_swapped(self):
+        tscg = TimeSeriesCausalGraph()
+        tscg.add_edge('x', 'y lag(n=1)', edge_type=EdgeType.UNDIRECTED_EDGE)
+
+        # check y lag(n=1) -- x exists
+        self.assertEqual(tscg.get_edge('y lag(n=1)', 'x').edge_type, EdgeType.UNDIRECTED_EDGE)
 
 
 class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
