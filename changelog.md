@@ -2,7 +2,7 @@
 
 ## NEXT
 
-- Fixed a bug to improve checking for cycles when adding edges by avoiding repeated checks.
+- Improved performance of checking for cycles when adding edges by avoiding repeated checks.
 
 ## 0.2.14
 
