@@ -830,6 +830,8 @@ class TimeSeriesCausalGraph(CausalGraph):
                 )
 
         else:
+            # we need the nodes to be in the correct format to extract the time_lag. We only need to do this if the edge
+            # is non-directed.
             if edge_type != EdgeType.DIRECTED_EDGE:
                 if isinstance(source, Node) and not isinstance(source, self._NodeCls):
                     tmp_source = self._NodeCls.from_dict(source.to_dict())
@@ -843,7 +845,6 @@ class TimeSeriesCausalGraph(CausalGraph):
                 if isinstance(destination, Node) and not isinstance(destination, self._NodeCls):
                     tmp_destination = self._NodeCls.from_dict(destination.to_dict())
                     destination_time_lag = tmp_destination.time_lag
-
                 elif isinstance(source, str):
                     assert destination is not None   # for linting
                     destination_time_lag = get_variable_name_and_lag(destination)[1]

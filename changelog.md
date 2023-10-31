@@ -4,8 +4,9 @@
 
 - Modified `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.add_edge` in
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` to always order source and destination nodes by
-  `time_lag` even when the edge is not directed. For example, `add_edge('c', 'a (lag=1)', edge_type='--')` will add a
-  undirected edge `a (lag=1) -- c` instead of `c -- a (lag=1)`. This is done just for convenience and to avoid confusion.
+  `time_lag` even when the edge is not directed. For example,
+  `add_edge('c', 'a (lag=1)', edge_type=EdgeType.UNDIRECTED_EDGE)` will add an undirected edge `a (lag=1) -- c` instead
+  of `c -- a (lag=1)`. This is done just for convenience and to avoid confusion.
 
 ## 0.2.13
 
