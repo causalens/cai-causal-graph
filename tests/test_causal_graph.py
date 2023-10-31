@@ -509,9 +509,9 @@ class TestCausalGraphSerialization(unittest.TestCase):
         rng = numpy.random.default_rng(2023)
 
         # Large dense adjacency matrix
-        adj_matrix = rng.random(size=(600, 600)) > 0.2
+        adj_matrix = numpy.triu(rng.random(size=(400, 400)) > 0.8)
 
-        # Should take <1s to complete
+        # Should take ~23s to complete
         graph = CausalGraph.from_adjacency_matrix(adjacency=adj_matrix)
 
     def test_consistency_of_node_names(self):
