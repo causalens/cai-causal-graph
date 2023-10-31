@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.2.14
 
 - Modified `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.add_edge` in
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` to always order source and destination nodes by
