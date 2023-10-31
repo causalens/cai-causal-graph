@@ -21,7 +21,7 @@ jobs:
         os: [ ubuntu-20.04 ]
         # Add other python distributions as required (should match the package python requirements).
         # This is to highlight any issues that would occur during `release`/`post-release` workflows.
-        python-version: [ '3.8', '3.9', '3.10', '3.11' ]  # Order here does not matter if we do not fail-fast above.
+        python-version: [ '3.8', '3.9', '3.10', '3.11', '3.12' ]  # Order here does not matter if we do not fail-fast above.
     steps:
       - name: Checkout current branch
         uses: actions/checkout@v3
@@ -32,25 +32,14 @@ jobs:
         with:
           architecture: x64  # Default architecture most systems operate on
           python-version: ${{ matrix.python-version }}  # This is defined by the strategy above
-      - name: Load cached venv
-        # Cache local .venv, the packages downloaded by poetry into custom cache .pypoetry and ~/.local (poetry itself)
-        uses: actions/cache@v3
-        with:
-          path: |
-            .venv
-            .pypoetry
-            ~/.local
-          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: |
-            venv-${{ runner.os }}-
       - name: Set up python build dependencies
-        # Making sure latest pip and wheel are installed.
+        # Ensure latest pip, setuptools, and wheel are installed.
         run: make install-build-deps
       - name: Install and configure poetry
         uses: snok/install-poetry@v1
         with:
           installer-parallel: true
-          version: 1.2.2  # This should be a specific micro version for reproducibility.
+          version: 1.4.2  # This should be a specific micro version for reproducibility.
       - name: Set poetry cache
         # To have a consistent cache directory between different os (linux/macosx)
         run: poetry config cache-dir .pypoetry

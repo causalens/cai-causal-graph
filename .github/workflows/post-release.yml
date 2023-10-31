@@ -14,11 +14,12 @@ jobs:
     runs-on: ${{ matrix.os }}  # This is defined by the strategy below
     strategy:
       fail-fast: false  # Should not fail fast as we want to have a full picture which distributions are affected
+      max-parallel: 1  # Force series execution to ensure we get response from PyPI
       matrix:
         # It is again enough to only test on linux, as mac osx is only used by developers.
         os: [ ubuntu-20.04 ]
         # All the python versions the package should be tested for clean pip installation from bdist or sdist (based on availability)
-        python-version: [ '3.8', '3.9', '3.10', '3.11' ]   # Order here does not matter if we do not fail-fast above.
+        python-version: [ '3.8', '3.9', '3.10', '3.11', '3.12' ]   # Order here does not matter if we do not fail-fast above.
     steps:
       - name: Get package version
         # This is the version that has just got release, as this workflow is triggered by the release workflow
@@ -33,6 +34,7 @@ jobs:
         env:
           # These credentials are needed to fetch the package and its dependencies from PyPI
           VERSION: '${{ github.event.client_payload.version }}'
+        shell: bash
         run: |
           # Create and enter an empty temporary directory so that there is no conflict between local module and package
           mkdir tmp && cd tmp
@@ -41,6 +43,9 @@ jobs:
           which python
           which pip
           pip list
+          # Sleep for 10 seconds to allow time for packages to become available on PyPI
+          sleep 10
+          echo "Slept for 10 seconds to allow time for package to become available on PyPI."
           # These are the python build dependencies
           pip install -U pip wheel setuptools
           pip install $PACKAGE==$VERSION

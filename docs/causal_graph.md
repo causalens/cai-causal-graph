@@ -50,21 +50,21 @@ edge types via the `edge_type` argument. For instance, you can add an undirected
 can be resolved to either `A -> C` or `A <- C` in a later downstream task.
 
 ```python
-from cai_causal_graph import EDGE_T
+from cai_causal_graph import EdgeType
 
 # add an undirected edge between A and C
-causal_graph.add_edge('A', 'C', edge_type=EDGE_T.UNDIRECTED_EDGE)
+causal_graph.add_edge('A', 'C', edge_type=EdgeType.UNDIRECTED_EDGE)
 ```
 
 These are the different edge types that are supported by the `cai_causal_graph.causal_graph.CausalGraph` class (these 
-can be accessed via the `cai_causal_graph.type_definitions.EDGE_T` enumeration):
+can be accessed via the `cai_causal_graph.type_definitions.EdgeType` enumeration):
 
-- `EDGE_T.DIRECTED_EDGE` (`->`)
-- `EDGE_T.UNDIRECTED_EDGE` (`--`)
-- `EDGE_T.BIDIRECTED_EDGE` (`<>`)
-- `EDGE_T.UNKNOWN_EDGE` (`oo`)
-- `EDGE_T.UNKNOWN_DIRECTED_EDGE` (`o>`)
-- `EDGE_T.UNKNOWN_UNDIRECTED_EDGE` (`o-`)
+- `EdgeType.DIRECTED_EDGE` (`->`)
+- `EdgeType.UNDIRECTED_EDGE` (`--`)
+- `EdgeType.BIDIRECTED_EDGE` (`<>`)
+- `EdgeType.UNKNOWN_EDGE` (`oo`)
+- `EdgeType.UNKNOWN_DIRECTED_EDGE` (`o>`)
+- `EdgeType.UNKNOWN_UNDIRECTED_EDGE` (`o-`)
 
 See the section on Markov Equivalence Classes at the end of this documentation page for more information on edge types.
 
@@ -74,7 +74,7 @@ See the section on Markov Equivalence Classes at the end of this documentation p
 
 The `cai_causal_graph.causal_graph.CausalGraph` class stores nodes via `cai_causal_graph.graph_components.Node` objects. 
 It is possible to obtain a list of these `cai_causal_graph.graph_components.Node` objects by calling the 
-`cai_causal_graph.causal_graph.CausalGraph.nodes`property.
+`cai_causal_graph.causal_graph.CausalGraph.nodes` property.
 
 ```python
 from typing import List
@@ -191,16 +191,16 @@ causal_graph.node_exists(source='node_1', destination='node_2')
 Importantly, each of the above queries can also include the `edge_type` of the relevant edge. By default, the
 `edge_type` argument of the above methods is `None`, which means the edge is queried no matter its type. However, in
 some settings you may wish to further specify the `edge_type` (see the Edge Types section above for more information
-on the available types as defined by the `cai_causal_graph.type_definitions.EDGE_T` enumeration). If the edge does not 
+on the available types as defined by the `cai_causal_graph.type_definitions.EdgeType` enumeration). If the edge does not 
 exist with that type (note that it may exist with a different type), then an 
 `cai_causal_graph.exceptions.CausalGraphErrors.EdgeDoesNotExistError` is raised.
 
 ```python
-from cai_causal_graph import EDGE_T
+from cai_causal_graph import EdgeType
 
 # query for the edge knowing that it is undirected
 edge_object: Edge = causal_graph.get_edge(
-    source='node_1', destination='node_2', edge_type=EDGE_T.UNDIRECTED_EDGE
+    source='node_1', destination='node_2', edge_type=EdgeType.UNDIRECTED_EDGE
 )
 ```
 

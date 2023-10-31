@@ -60,6 +60,12 @@ class TestCausalGraphSkeletonSerialization(unittest.TestCase):
 
         # Also confirm that equality method works.
         self.assertEqual(graph.skeleton, reconstruction)
+        self.assertTrue(graph.skeleton.__eq__(reconstruction, True))
+
+        # No metadata
+        self.assertDictEqual(graph.skeleton.to_dict(include_meta=False), reconstruction.to_dict(include_meta=False))
+        self.assertEqual(graph.skeleton, reconstruction)
+        self.assertTrue(graph.skeleton.__eq__(reconstruction, True))
 
     def assert_graph_networkx_conversion_is_correct(self, graph: CausalGraph):
         reconstruction = Skeleton.from_networkx(graph.skeleton.to_networkx())
@@ -73,6 +79,7 @@ class TestCausalGraphSkeletonSerialization(unittest.TestCase):
 
         # Also confirm that equality method works.
         self.assertEqual(graph.skeleton, reconstruction)
+        self.assertTrue(graph.skeleton.__eq__(reconstruction, True))
 
     def assert_graph_gml_conversion_is_correct(self, graph: CausalGraph):
         reconstruction = Skeleton.from_gml_string(graph.skeleton.to_gml_string())
@@ -84,6 +91,7 @@ class TestCausalGraphSkeletonSerialization(unittest.TestCase):
 
         # Also confirm that equality method works.
         self.assertEqual(graph.skeleton, reconstruction)
+        self.assertTrue(graph.skeleton.__eq__(reconstruction, True))
 
     def test_fully_connected_graph(self):
         skeleton = self.fully_connected_graph.skeleton

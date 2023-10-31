@@ -17,7 +17,7 @@ import unittest
 
 import numpy
 
-from cai_causal_graph import EDGE_T, CausalGraph
+from cai_causal_graph import CausalGraph, EdgeType
 from cai_causal_graph.graph_components import Node
 
 
@@ -56,14 +56,14 @@ class TestNodeSupport(unittest.TestCase):
         node_names = set(causal_graph.get_node_names())
         self.assertSetEqual({'a', 'b', 'x', 'y'}, node_names)
         all_edges = causal_graph.get_edges()
-        directed_edges = causal_graph.get_edges(edge_type=EDGE_T.DIRECTED_EDGE)
+        directed_edges = causal_graph.get_edges(edge_type=EdgeType.DIRECTED_EDGE)
         self.assertListEqual(all_edges, directed_edges)
         self.assertListEqual(directed_edges, causal_graph.get_directed_edges())
         self.assertEqual(len(all_edges), 4)
-        self.assertTrue(causal_graph.edge_exists('a', 'x', edge_type=EDGE_T.DIRECTED_EDGE))
-        self.assertTrue(causal_graph.edge_exists('b', 'x', edge_type=EDGE_T.DIRECTED_EDGE))
-        self.assertTrue(causal_graph.edge_exists('a', 'y', edge_type=EDGE_T.DIRECTED_EDGE))
-        self.assertTrue(causal_graph.edge_exists('b', 'y', edge_type=EDGE_T.DIRECTED_EDGE))
+        self.assertTrue(causal_graph.edge_exists('a', 'x', edge_type=EdgeType.DIRECTED_EDGE))
+        self.assertTrue(causal_graph.edge_exists('b', 'x', edge_type=EdgeType.DIRECTED_EDGE))
+        self.assertTrue(causal_graph.edge_exists('a', 'y', edge_type=EdgeType.DIRECTED_EDGE))
+        self.assertTrue(causal_graph.edge_exists('b', 'y', edge_type=EdgeType.DIRECTED_EDGE))
 
         # specify a graph with nodes but no edges
         causal_graph = CausalGraph(

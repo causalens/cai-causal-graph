@@ -24,8 +24,9 @@ install-no-dev:
 update-install-no-dev:
 	poetry update --no-dev -vv
 
-# Update pip and install build dependencies - does not assume poetry
-install-build-deps: .check-pip-variables .install-build-deps
+# Update pip, wheel and setuptools. This step does not assume poetry
+install-build-deps:
+	python -m pip install -U pip wheel setuptools
 
 # Run formatting on the package
 format: isort blue markdown
@@ -75,6 +76,13 @@ mypy:
 # Run linting checks of the package using mypy
 lint: mypy
 
+# Run bandit check on the package source directory (medium severity -ll and low confidence -i)
+bandit:
+	poetry run bandit -r -ll -i cai_causal_graph
+
+# Run security linting checks of the package using bandit
+security-lint: bandit
+
 # Run documentation coverage using interrogate
 interrogate:
 	poetry run interrogate ./
@@ -95,6 +103,13 @@ build-sdist:
 remove-generic-wheel:
 	rm -f dist/*-py3-*.whl
 
+# Package and publish the docs to causaLens' artifactory
+package-and-publish-docs:
+	poetry source add causalens https://causalens.jfrog.io/artifactory/api/pypi/python-open-source/simple/
+	poetry config http-basic.causalens $${ARTIFACTORY_USERNAME} $${ARTIFACTORY_PASSWORD}
+	poetry add --source=causalens docs-builder@~0.2.0
+	poetry run python ./tooling/scripts/docs-upload.py
+
 # Publish the package to PyPI
 publish:
 	poetry config pypi-token.pypi ${PYPI_TOKEN}
@@ -107,15 +122,6 @@ self-import-check:
 # Check the package can import
 self-import-check-poetry:
 	poetry run python -c "import cai_causal_graph"
-
-# Convenience target to check if PIP variables are set
-.check-pip-variables:
-	@[ ! -z "$POETRY_HTTP_BASIC_CAUSALENS_USERNAME" ] || (echo "Please set POETRY_HTTP_BASIC_CAUSALENS_USERNAME" && false)
-	@[ ! -z "$POETRY_HTTP_BASIC_CAUSALENS_PASSWORD" ] || (echo "Please set POETRY_HTTP_BASIC_CAUSALENS_PASSWORD" && false)
-
-# Upgrade pip, wheel and setuptools. This step does not assume poetry
-.install-build-deps:
-	python -m pip install -U pip wheel setuptools
 
 # Update pyproject.toml and <package>/__init__.py (the <package> should be set manually below)
 set-package-version-linux: .set-toml-version .set-init-version

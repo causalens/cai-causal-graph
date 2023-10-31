@@ -21,10 +21,9 @@ import networkx
 import numpy
 import pandas
 
+from cai_causal_graph import CausalGraph, EdgeType, NodeVariableType
 from cai_causal_graph import __version__ as VERSION
-from cai_causal_graph.causal_graph import CausalGraph
 from cai_causal_graph.exceptions import CausalGraphErrors
-from cai_causal_graph.type_definitions import EDGE_T, NODE_T
 
 
 class TestCausalGraphSerialization(unittest.TestCase):
@@ -65,6 +64,12 @@ class TestCausalGraphSerialization(unittest.TestCase):
 
         # Also confirm that equality method works.
         self.assertEqual(graph, reconstruction)
+        self.assertTrue(graph.__eq__(reconstruction, True))
+
+        # No metadata
+        self.assertDictEqual(graph.to_dict(include_meta=False), reconstruction.to_dict(include_meta=False))
+        self.assertEqual(graph, reconstruction)
+        self.assertTrue(graph.__eq__(reconstruction, True))
 
     def assert_graph_networkx_conversion_is_correct(self, graph: CausalGraph, include_dict: bool = True):
         reconstruction = CausalGraph.from_networkx(graph.to_networkx())
@@ -86,6 +91,7 @@ class TestCausalGraphSerialization(unittest.TestCase):
 
         # Also confirm that equality method works.
         self.assertEqual(graph, reconstruction)
+        self.assertTrue(graph.__eq__(reconstruction, True))
 
     def assert_graph_skeleton_conversion_is_correct(self, graph: CausalGraph):
         reconstruction = CausalGraph.from_skeleton(graph.skeleton)
@@ -102,6 +108,7 @@ class TestCausalGraphSerialization(unittest.TestCase):
 
         # Also confirm that equality method works. Again reconstruction won't have directions so just check skeletons.
         self.assertEqual(graph.skeleton, reconstruction.skeleton)
+        self.assertTrue(graph.skeleton.__eq__(reconstruction.skeleton, True))
 
         # We cannot check that their dict representations are the same as undirected edges can flip order in dictionary
         # without any issue around the actual graph representation. Therefore, keep this commented out.
@@ -120,6 +127,7 @@ class TestCausalGraphSerialization(unittest.TestCase):
 
         # Also confirm that equality method works.
         self.assertEqual(graph, reconstruction)
+        self.assertTrue(graph.__eq__(reconstruction, True))
 
     def test_graph_serializes(self):
         """This test ensures different serialization types and JSON serialization as well."""
@@ -129,11 +137,28 @@ class TestCausalGraphSerialization(unittest.TestCase):
             self.assertDictEqual(graph_as_dict, graph_as_dict_2)
             self.assertIsInstance(json.dumps(graph_as_dict), str)
 
+        # test with include_metadata=False
+        graph_as_dict_nometa = self.fully_connected_graph.to_dict(include_meta=False)
+        self.assertNotIn('meta', graph_as_dict_nometa['nodes']['x'].keys())
+        graph_as_dict_withmeta = self.fully_connected_graph.to_dict(include_meta=True)
+        self.assertIn('meta', graph_as_dict_withmeta['nodes']['x'].keys())
+
+        # test with a custom metadata
+        newg = self.fully_connected_graph.copy()
+        newg.add_node('xm', variable_type=NodeVariableType.CONTINUOUS, meta={'test': 'test'})
+        graph_as_dict_withmeta = newg.to_dict(include_meta=True)
+        # test that the metadata is in the dict
+        self.assertIn('test', graph_as_dict_withmeta['nodes']['xm']['meta'].keys())
+
+        graph_as_dict_nometa = newg.to_dict(include_meta=False)
+        # test that the metadata is not in the dict
+        self.assertNotIn('meta', graph_as_dict_nometa['nodes']['xm'].keys())
+
     def test_graph_is_json_serializable(self):
         cg = CausalGraph()
         cg.add_edge('a', 'b')
         cg.add_edge('b', 'c')
-        cg.add_node('d', variable_type=NODE_T.CONTINUOUS)
+        cg.add_node('d', variable_type=NodeVariableType.CONTINUOUS)
 
         cg_dict = cg.to_dict()
 
@@ -352,11 +377,11 @@ class TestCausalGraphSerialization(unittest.TestCase):
         causal_graph.add_edge('x4', 'x5')
 
         causal_graph.get_node('x2').meta = {'color': 'blue'}
-        causal_graph.get_node('x2').variable_type = NODE_T.CONTINUOUS
+        causal_graph.get_node('x2').variable_type = NodeVariableType.CONTINUOUS
 
         # replacing a node while specifying extra parameters
         meta = {'color': 'blue'}
-        variable_type = NODE_T.BINARY
+        variable_type = NodeVariableType.BINARY
         causal_graph.replace_node('x2', 'y2', meta=meta, variable_type=variable_type)
         node_identifiers = [node.identifier for node in causal_graph.get_nodes()]
         self.assertIn('y2', node_identifiers)
@@ -396,9 +421,14 @@ class TestCausalGraphSerialization(unittest.TestCase):
         self.assertEqual({'color': 'blue'}, cg_copy.get_node('x').meta)
         self.assertEqual({'color': 'red'}, cg_copy.get_edge('a', 'b').meta)
 
+        # test meta is not preserved when include_meta=False
+        cg_copy = causal_graph.copy(include_meta=False)
+        # meta should be empty
+        self.assertDictEqual(cg_copy.get_node('x').meta, {})
+
     def test_add_edge_from_edge(self):
         causal_graph = CausalGraph()
-        causal_graph.add_edge(source='a', destination='b', meta={'color': 'blue'}, edge_type=EDGE_T.UNDIRECTED_EDGE)
+        causal_graph.add_edge(source='a', destination='b', meta={'color': 'blue'}, edge_type=EdgeType.UNDIRECTED_EDGE)
 
         edge = causal_graph.get_edge(source='a', destination='b')
 
@@ -456,7 +486,7 @@ class TestCausalGraphSerialization(unittest.TestCase):
         for edge in edge_tuples:
             self.assertTrue(causal_graph.edge_exists(*edge))
             self.assertEqual(
-                causal_graph.get_edge(source=edge[0], destination=edge[1]).get_edge_type(), EDGE_T.DIRECTED_EDGE
+                causal_graph.get_edge(source=edge[0], destination=edge[1]).get_edge_type(), EdgeType.DIRECTED_EDGE
             )
 
         # check can add more nodes again
@@ -466,7 +496,7 @@ class TestCausalGraphSerialization(unittest.TestCase):
         for edge in [*edge_tuples, *more_edge_tuples]:
             self.assertTrue(causal_graph.edge_exists(*edge))
             self.assertEqual(
-                causal_graph.get_edge(source=edge[0], destination=edge[1]).get_edge_type(), EDGE_T.DIRECTED_EDGE
+                causal_graph.get_edge(source=edge[0], destination=edge[1]).get_edge_type(), EdgeType.DIRECTED_EDGE
             )
 
         # check bad edge raises
@@ -516,6 +546,25 @@ class TestCausalGraphSerialization(unittest.TestCase):
         cg.add_edge('b', 'c')
 
         self.assertEqual(CausalGraph.from_adjacency_matrix(*cg.to_numpy()), cg)
+
+    def test_copy(self):
+        cg = CausalGraph()
+        cg.add_node('a', meta={'some': 'thing'})
+        cg.add_edge('a', 'b', meta={'foo': 'bar'})
+        cg.add_edge('a', 'c', edge_type=EdgeType.BIDIRECTED_EDGE)
+
+        cg_copy = cg.copy()
+        self.assertIsInstance(cg_copy, CausalGraph)
+        self.assertEqual(cg_copy, cg)
+        self.assertTrue(cg_copy.__eq__(cg, deep=True))
+
+        # No metadata
+        cg_copy_no_meta = cg.copy(include_meta=False)
+        self.assertIsInstance(cg_copy_no_meta, CausalGraph)
+
+        self.assertEqual(cg_copy_no_meta, cg_copy)
+        self.assertEqual(cg_copy_no_meta, cg_copy)
+        self.assertFalse(cg_copy_no_meta.__eq__(cg_copy, deep=True))
 
     def test_adjacency(self):
         adj_1 = numpy.array([[0, 1, 0], [0, 0, 1], [0, 0, 0]])
@@ -681,6 +730,10 @@ class TestCausalGraphSerialization(unittest.TestCase):
         for edge in b_children_graph.get_edges():
             self.assertEqual(edge.source.identifier, 'b')
 
+        self.assertEqual(len(c_children_graph.get_nodes()), 1)
+        self.assertListEqual(['c'], c_children_graph.get_node_names())
+        self.assertEqual(len(c_children_graph.get_edges()), 0)
+
     def test_get_children(self):
         cg_original = CausalGraph()
         cg_original.add_edge('a', 'b')
@@ -691,12 +744,21 @@ class TestCausalGraphSerialization(unittest.TestCase):
 
         cg = cg_original.copy()
 
+        a_children_nodes = cg.get_children_nodes('a')
+        b_children_nodes = cg.get_children_nodes('b')
+        c_children_nodes = cg.get_children_nodes('c')
         a_children = cg.get_children('a')
         b_children = cg.get_children('b')
         c_children = cg.get_children('c')
 
         self.assertEqual(cg, cg_original)
 
+        self.assertEqual(len(a_children_nodes), len(a_children))
+        self.assertEqual(len(b_children_nodes), len(b_children))
+        self.assertEqual(len(c_children_nodes), len(c_children))
+        self.assertListEqual([n.identifier for n in a_children_nodes], a_children)
+        self.assertListEqual([n.identifier for n in b_children_nodes], b_children)
+        self.assertListEqual([n.identifier for n in c_children_nodes], c_children)
         self.assertSetEqual(set(a_children), {'d', 'c', 'b'})
         self.assertSetEqual(set(b_children), {'d', 'e'})
         self.assertListEqual(c_children, [])
@@ -741,6 +803,9 @@ class TestCausalGraphSerialization(unittest.TestCase):
         causal_graph.add_edge('a', 'b')
         causal_graph_2 = causal_graph.copy()
 
+        h_parent_nodes = causal_graph.get_parent_nodes('h,0')
+        a_parent_nodes = causal_graph.get_parent_nodes('a')
+        k_parent_nodes = causal_graph.get_parent_nodes('k,0')
         star_causal_graph_h_parents = causal_graph.get_parents('h,0')
         star_causal_graph_a_parents = causal_graph.get_parents('a')
         star_causal_graph_k_parents = causal_graph.get_parents('k,0')
@@ -748,6 +813,12 @@ class TestCausalGraphSerialization(unittest.TestCase):
         # check that original graph is unaffected
         self.assertEqual(causal_graph, causal_graph_2)
 
+        self.assertEqual(len(h_parent_nodes), len(star_causal_graph_h_parents))
+        self.assertEqual(len(a_parent_nodes), len(star_causal_graph_a_parents))
+        self.assertEqual(len(k_parent_nodes), len(star_causal_graph_k_parents))
+        self.assertListEqual([n.identifier for n in h_parent_nodes], star_causal_graph_h_parents)
+        self.assertListEqual([n.identifier for n in a_parent_nodes], star_causal_graph_a_parents)
+        self.assertListEqual([n.identifier for n in k_parent_nodes], star_causal_graph_k_parents)
         self.assertSetEqual(set(star_causal_graph_h_parents), {'a', 'b', 'c', 'd', 'e', 'f', 'g'})
         self.assertSetEqual(set(star_causal_graph_k_parents), {'a', 'b', 'c', 'd', 'e', 'f', 'g'})
         self.assertListEqual(star_causal_graph_a_parents, [])
@@ -824,31 +895,51 @@ class TestCausalGraphPrinting(unittest.TestCase):
         n = cg.add_node('a')
         e = cg.add_edge('a', 'b')
 
+        self.assertIsInstance(n.__hash__(), int)
+        self.assertIsInstance(e.__hash__(), int)
+        self.assertIsInstance(cg.__hash__(), int)
+
         self.assertIsInstance(n.__repr__(), str)
         self.assertIsInstance(e.__repr__(), str)
         self.assertIsInstance(cg.__repr__(), str)
+        self.assertTrue(n.__repr__().startswith('Node'))
+        self.assertTrue(e.__repr__().startswith('Edge'))
+        self.assertTrue(cg.__repr__().startswith('CausalGraph'))
 
         self.assertIsInstance(n.details(), str)
         self.assertIsInstance(e.details(), str)
         self.assertIsInstance(cg.details(), str)
+        self.assertTrue(n.details().startswith('Node'))
+        self.assertTrue(e.details().startswith('Edge'))
+        self.assertTrue(cg.details().startswith('CausalGraph'))
 
     def test_complex_nodes_and_edges(self):
         cg = CausalGraph()
 
         n = cg.add_node('a')
-        e = cg.add_edge('a', 'b', edge_type=EDGE_T.BIDIRECTED_EDGE)
+        e = cg.add_edge('a', 'b', edge_type=EdgeType.BIDIRECTED_EDGE)
+
+        self.assertIsInstance(n.__hash__(), int)
+        self.assertIsInstance(e.__hash__(), int)
+        self.assertIsInstance(cg.__hash__(), int)
 
         self.assertIsInstance(n.__repr__(), str)
         self.assertIsInstance(e.__repr__(), str)
         self.assertIsInstance(cg.__repr__(), str)
+        self.assertTrue(n.__repr__().startswith('Node'))
+        self.assertTrue(e.__repr__().startswith('Edge'))
+        self.assertTrue(cg.__repr__().startswith('CausalGraph'))
 
         self.assertIsInstance(n.details(), str)
         self.assertIsInstance(e.details(), str)
         self.assertIsInstance(cg.details(), str)
+        self.assertTrue(n.details().startswith('Node'))
+        self.assertTrue(e.details().startswith('Edge'))
+        self.assertTrue(cg.details().startswith('CausalGraph'))
 
     def test_add_node_from_node(self):
         causal_graph = CausalGraph()
-        causal_graph.add_node(identifier='a', meta={'color': 'blue'}, variable_type=NODE_T.BINARY)
+        causal_graph.add_node(identifier='a', meta={'color': 'blue'}, variable_type=NodeVariableType.BINARY)
 
         node = causal_graph.get_node(identifier='a')
 
@@ -894,7 +985,7 @@ class TestCausalGraphPrinting(unittest.TestCase):
             causal_graph.add_node(node=node, meta={'foo': 'bar'})
 
         with self.assertRaises(AssertionError):
-            causal_graph.add_node(node=node, variable_type=NODE_T.BINARY)
+            causal_graph.add_node(node=node, variable_type=NodeVariableType.BINARY)
 
         with self.assertRaises(AssertionError):
             causal_graph.add_node(node=node, my_kwargs='foo')
@@ -902,21 +993,21 @@ class TestCausalGraphPrinting(unittest.TestCase):
     def test_node_variable_type(self):
         cg = CausalGraph()
 
-        cg.add_node('a', variable_type=NODE_T.CONTINUOUS)
-        self.assertEqual(cg.get_node('a').variable_type, NODE_T.CONTINUOUS)
+        cg.add_node('a', variable_type=NodeVariableType.CONTINUOUS)
+        self.assertEqual(cg.get_node('a').variable_type, NodeVariableType.CONTINUOUS)
 
-        cg.get_node('a').variable_type = NODE_T.MULTICLASS
-        self.assertEqual(cg.get_node('a').variable_type, NODE_T.MULTICLASS)
+        cg.get_node('a').variable_type = NodeVariableType.MULTICLASS
+        self.assertEqual(cg.get_node('a').variable_type, NodeVariableType.MULTICLASS)
 
         cg.get_node('a').variable_type = 'binary'
-        self.assertEqual(cg.get_node('a').variable_type, NODE_T.BINARY)
+        self.assertEqual(cg.get_node('a').variable_type, NodeVariableType.BINARY)
 
         with self.assertRaises(ValueError):
             cg.get_node('a').variable_type = 'not_a_variable_type'
 
         # Test the above but directly through the constructor
         cg.add_node('b', variable_type='binary')
-        self.assertEqual(cg.get_node('b').variable_type, NODE_T.BINARY)
+        self.assertEqual(cg.get_node('b').variable_type, NodeVariableType.BINARY)
 
         with self.assertRaises(ValueError):
             cg.add_node('c', variable_type='not_a_variable_type')
@@ -924,7 +1015,9 @@ class TestCausalGraphPrinting(unittest.TestCase):
     def test_node_repr(self):
         cg = CausalGraph()
         cg.add_node('a')
-        cg.add_node('b', variable_type=NODE_T.CONTINUOUS)
+        cg.add_node('b', variable_type=NodeVariableType.CONTINUOUS)
 
+        self.assertEqual(cg['a'], cg.get_node('a'))
+        self.assertEqual(cg['b'], cg.get_node('b'))
         self.assertEqual(repr(cg['a']), 'Node("a")')
         self.assertEqual(repr(cg['b']), 'Node("b", type="continuous")')

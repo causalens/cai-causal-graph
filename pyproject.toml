@@ -9,7 +9,8 @@ line-length = 120
 color = true
 exclude = ["setup.py", "docs", "build", "tests"]
 fail-under = 100.0
-generate-badge = "./docs"
+generate-badge = "."
+badge-format = "svg"
 ignore-init-method = false
 ignore-init-module = true
 ignore-magic = true
@@ -41,7 +42,7 @@ cache_dir = '/dev/null'
 
 [tool.poetry]
 name = "cai-causal-graph"
-version = "0.1.0"
+version = "0.2.14"
 description = "A Causal AI package for causal graphs."
 license = "Apache-2.0"
 authors = ["causaLens <opensource@causalens.com>"]
@@ -55,9 +56,10 @@ packages = [{include = "cai_causal_graph"}]
 networkx = ">=3.0.0, <4.0.0"
 numpy = "^1.18.0"
 pandas = ">=1.0.0, <3.0.0"
-python = ">=3.8.0, <3.12.0"
+python = ">=3.8.0, <3.13.0"
 
 [tool.poetry.dev-dependencies]
+bandit = "^1.7.5"
 blue = ">=0.9.1, <1.0.0"
 interrogate = ">=1.5.0, <2.0.0"
 isort = ">=5.10.1, <6.0.0"
@@ -66,5 +68,6 @@ mdformat-gfm = ">=0.3.5, <1.0.0"
 mypy = ">=0.812.0, <1.0.0"
 nbmake =  ">=1.3.0, <1.4.0"
 pytest = ">=7.2.0, <8.0.0"
+requests = ">=2.25.1, <3.0.0"
 setuptools = ">=45"
 
