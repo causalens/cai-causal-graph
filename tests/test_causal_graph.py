@@ -505,6 +505,15 @@ class TestCausalGraphSerialization(unittest.TestCase):
         with self.assertRaises(CausalGraphErrors.CyclicConnectionError):
             causal_graph.add_edges_from(bad_edge_tuple)
 
+    def test_acyclicity_check_large_adjacency(self):
+        rng = numpy.random.default_rng(2023)
+
+        # Large dense adjacency matrix
+        adj_matrix = rng.random(size=(600, 600)) > 0.2
+
+        # Should take <1s to complete
+        graph = CausalGraph.from_adjacency_matrix(adjacency=adj_matrix)
+
     def test_consistency_of_node_names(self):
         cg = CausalGraph()
         cg.add_edge('a', 'b')

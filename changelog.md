@@ -2,8 +2,7 @@
 
 ## NEXT
 
-- Added a check to `cai_causal_graph.causal_graph.CausalGraph._assert_node_does_not_depend_on_itself` to avoid checking
-  nodes that have already been checked.
+- Fixed a bug to improve checking for cycles when adding edges by avoiding repeated checks.
 
 ## 0.2.14
 
