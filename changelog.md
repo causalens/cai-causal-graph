@@ -1,5 +1,10 @@
 # Changelog
 
+## NEXT
+
+- Added a check to `cai_causal_graph.causal_graph.CausalGraph._assert_node_does_not_depend_on_itself` to avoid checking
+  nodes that have already been checked.
+
 ## 0.2.14
 
 - Modified `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.add_edge` in
