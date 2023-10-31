@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.2.15
 
 - Improved performance of checking for cycles when adding edges by avoiding repeated checks.
 
