@@ -1,5 +1,9 @@
 # Changelog
 
+## NEXT
+
+- Improved performance of checking for cycles when adding edges by avoiding repeated checks.
+
 ## 0.2.14
 
 - Modified `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.add_edge` in

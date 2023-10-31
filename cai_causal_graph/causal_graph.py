@@ -1648,9 +1648,10 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             if current == identifier and len(checked) > 0:
                 # Do not fail if the identifier is being checked on the first iteration
                 raise AssertionError(f'Node {identifier} depends upon itself')
-            checked.add(current)
-            for edge in self._nodes_by_identifier[current].get_inbound_edges():
-                to_check.append(edge.source.identifier)
+            if current not in checked:
+                checked.add(current)
+                for edge in self._nodes_by_identifier[current].get_inbound_edges():
+                    to_check.append(edge.source.identifier)
 
     def _clean_empty_edge_dictionaries(self):
         """Remove any dictionaries that have no entries from the edge map."""
