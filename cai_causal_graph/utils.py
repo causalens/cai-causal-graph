@@ -39,7 +39,7 @@ def get_variable_name_and_lag(node_name: NodeLike) -> Tuple[str, int]:
     if not isinstance(node_name, str):
         raise TypeError(f'Expected node name to be a string, got type {type(node_name)}.')
 
-    is_match = re.match(r'^([\w\W]+?)(?: lag\(n=(\d+)\))?(?: future\(n=(\d+)\))?$', node_name)
+    is_match = re.match(r'^(.+?)(?: lag\(n=(\d+)\))?(?: future\(n=(\d+)\))?$', node_name)
 
     if is_match:
         variable_name = is_match.group(1)
