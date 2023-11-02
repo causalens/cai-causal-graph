@@ -41,7 +41,15 @@ def get_variable_name_and_lag(node_name: NodeLike) -> Tuple[str, int]:
 
     is_match = re.match(r'^(.+?)(?: lag\(n=(\d+)\))?(?: future\(n=(\d+)\))?$', node_name)
 
+    lag_matches = re.findall(r'lag\(n=(\d+)\)', node_name)
+    future_matches = re.findall(r'future\(n=(\d+)\)', node_name)
+    num_matches = (len(lag_matches) if lag_matches is not None else 0) + (len(future_matches) if future_matches is not None else 0)
+
     if is_match:
+
+        if num_matches > 1:
+            raise ValueError(f'Invalid node name: {node_name}. Multiple lag or future lags detected.')
+
         variable_name = is_match.group(1)
         past_lag = is_match.group(2)
         future_lag = is_match.group(3)

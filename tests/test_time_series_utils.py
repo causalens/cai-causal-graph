@@ -39,3 +39,14 @@ class TestTimeSeriesGraphUtils(TestCase):
         self.assertTupleEqual(get_variable_name_and_lag('  '), ('  ', 0))
         self.assertTupleEqual(get_variable_name_and_lag('   lag(n=1)'), ('  ', -1))
         self.assertTupleEqual(get_variable_name_and_lag('   future(n=1)'), ('  ', 1))
+
+    def test_get_variable_name_and_lag_raises(self):
+        self.assertRaises(ValueError, get_variable_name_and_lag, 'x1 lag(n=1) lag(n=2)')
+        self.assertRaises(ValueError, get_variable_name_and_lag, 'x1 future(n=1) future(n=2)')
+
+        self.assertRaises(ValueError, get_variable_name_and_lag, 'x1 lag(n=1) future(n=2)')
+        self.assertRaises(ValueError, get_variable_name_and_lag, 'x1 future(n=1) lag(n=2)')
+
+        self.assertRaises(ValueError, get_variable_name_and_lag, 'x1 lag(n=1) something in the middle future(n=2)')
+        self.assertRaises(ValueError, get_variable_name_and_lag, 'x1 future(n=1) something in the middle lag(n=2)')
+
