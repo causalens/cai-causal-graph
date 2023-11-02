@@ -3,6 +3,8 @@
 ## 0.2.15
 
 - Improved performance of checking for cycles when adding edges by avoiding repeated checks.
+- Fixed a bug where `cai_causal_graph.utils.get_variable_name_and_lag` would not match variable names with 
+  non-alphanumeric characters, and would not match variable names with the string `lag` or `future` in them.
 
 ## 0.2.14
 

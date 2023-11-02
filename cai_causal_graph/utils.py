@@ -23,6 +23,8 @@ def get_variable_name_and_lag(node_name: NodeLike) -> Tuple[str, int]:
     """
     Extract the variable name and time series lag from a node name.
 
+    It is assumed the variable name and the lag or future lag are separated by a space.
+
     Example:
         'X lag(n=2)' -> 'X', -2 if lagged in the past,
         'X future(n=2)' -> 'X', 2 if lagged in the future.
@@ -37,11 +39,7 @@ def get_variable_name_and_lag(node_name: NodeLike) -> Tuple[str, int]:
     if not isinstance(node_name, str):
         raise TypeError(f'Expected node name to be a string, got type {type(node_name)}.')
 
-    # Validation for cases with both "lag" and "future"
-    if 'lag' in node_name and 'future' in node_name:
-        raise ValueError(f'Invalid node name with both past and future lags: {node_name}.')
-
-    is_match = re.match(r'^(\w+)(?: lag\(n=(\d+)\))?(?: future\(n=(\d+)\))?$', node_name)
+    is_match = re.match(r'^([\w\W]+?)(?: lag\(n=(\d+)\))?(?: future\(n=(\d+)\))?$', node_name)
 
     if is_match:
         variable_name = is_match.group(1)
