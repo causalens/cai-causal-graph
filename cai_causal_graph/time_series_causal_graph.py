@@ -19,7 +19,7 @@ from __future__ import annotations
 import logging
 from copy import deepcopy
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
 
 import networkx
 import numpy
@@ -39,6 +39,7 @@ def _reset_ts_graph_attributes(func: Callable) -> Callable:
 
     Whenever a function is called that changes the graph, we need to reset these attributes.
     """
+
     # TODO - CAUSALAI-3369: Improve this decorator to remove need to reset the summary graph and other attributes
     @wraps(func)
     def wrapper(self: TimeSeriesCausalGraph, *args, **kwargs) -> Any:
@@ -64,8 +65,8 @@ class TimeSeriesCausalGraph(CausalGraph):
     - `cai_causal_graph.type_definitions.VARIABLE_NAME`: the name of the variable (without the lag information)
     """
 
-    _NodeCls = TimeSeriesNode
-    _EdgeCls = Edge
+    _NodeCls: Type[TimeSeriesNode] = TimeSeriesNode
+    _EdgeCls: Type[Edge] = Edge
 
     def __init__(
         self,
@@ -255,7 +256,6 @@ class TimeSeriesCausalGraph(CausalGraph):
                 destination_name = get_name_with_lag(destination.identifier, 0)
                 source_name = get_name_with_lag(source.identifier, -time_delta)
                 if not minimal_cg.edge_exists(source_name, destination_name):
-
                     # update the node meta data to make sure the time lag is correct
                     source.meta[TIME_LAG] = -time_delta
                     destination.meta[TIME_LAG] = 0
@@ -296,7 +296,10 @@ class TimeSeriesCausalGraph(CausalGraph):
         # sort lagged nodes based on the order they appear in the non-lagged list and by their lag values
         lagged_nodes = sorted(
             lagged_nodes,
-            key=lambda x: (cont_ordered_nodes.index(self.get_node(x).variable_name), self.get_node(x).time_lag),  # type: ignore
+            key=lambda x: (
+                cont_ordered_nodes.index(self.get_node(x).variable_name),  # type: ignore
+                self.get_node(x).time_lag,  # type: ignore
+            ),
         )
 
         # merge the lists together
@@ -315,12 +318,12 @@ class TimeSeriesCausalGraph(CausalGraph):
         if return_all:
             top_order_list: List[List[str]] = []
             for current_top_order in ordered_nodes:
-                assert isinstance(current_top_order, list)   # for linting
+                assert isinstance(current_top_order, list)  # for linting
                 new_order = self._get_time_topological_order(current_top_order)
                 if new_order not in top_order_list:
                     top_order_list.append(new_order)
         else:
-            top_order_list = self._get_time_topological_order(ordered_nodes)   # type: ignore
+            top_order_list = self._get_time_topological_order(ordered_nodes)  # type: ignore
 
         return top_order_list
 
@@ -432,7 +435,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         # create a new graph by copying the minimal graph
         extended_graph = minimal_graph.copy()
-        assert isinstance(extended_graph, TimeSeriesCausalGraph)   # for linting
+        assert isinstance(extended_graph, TimeSeriesCausalGraph)  # for linting
 
         if backward_steps is not None:
             # Start from 1 as 0 is already defined.
@@ -684,7 +687,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         if new_node_id is None:
             # update name from the variable name and time lag
-            new_node_id = get_name_with_lag(variable_name, time_lag)   # type: ignore
+            new_node_id = get_name_with_lag(variable_name, time_lag)  # type: ignore
         else:
             new_node_id = Node.identifier_from(new_node_id)
             variable_name, time_lag = get_variable_name_and_lag(Node.identifier_from(new_node_id))
@@ -839,17 +842,17 @@ class TimeSeriesCausalGraph(CausalGraph):
                 elif isinstance(source, str):
                     source_time_lag = get_variable_name_and_lag(source)[1]
                 else:
-                    assert isinstance(source, TimeSeriesNode)   # for linting
+                    assert isinstance(source, TimeSeriesNode)  # for linting
                     source_time_lag = source.time_lag
 
                 if isinstance(destination, Node) and not isinstance(destination, self._NodeCls):
                     tmp_destination = self._NodeCls.from_dict(destination.to_dict())
                     destination_time_lag = tmp_destination.time_lag
                 elif isinstance(source, str):
-                    assert destination is not None   # for linting
+                    assert destination is not None  # for linting
                     destination_time_lag = get_variable_name_and_lag(destination)[1]
                 else:
-                    assert isinstance(destination, TimeSeriesNode)   # for linting
+                    assert isinstance(destination, TimeSeriesNode)  # for linting
                     destination_time_lag = destination.time_lag
 
                 if source_time_lag > destination_time_lag:
@@ -1035,7 +1038,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                     )
                 )
             # add the edges to the graph
-            tsgraph.add_edges_from(edges)   # type: ignore
+            tsgraph.add_edges_from(edges)  # type: ignore
 
         return tsgraph
 
@@ -1120,7 +1123,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         # get the maximum lag of the nodes in the graph
         if self._maxlag is None:
-            self._maxlag = max([abs(node.time_lag) for node in self.get_minimal_graph().get_nodes()])   # type: ignore
+            self._maxlag = max([abs(node.time_lag) for node in self.get_minimal_graph().get_nodes()])  # type: ignore
         return self._maxlag
 
     @property
@@ -1139,7 +1142,9 @@ class TimeSeriesCausalGraph(CausalGraph):
             self._variables = sorted(list(set(variables)))
         return self._variables
 
-    def get_nodes(self, identifier: Optional[Union[NodeLike, List[NodeLike]]] = None) -> List[TimeSeriesNode]:  # type: ignore
+    def get_nodes(  # type: ignore
+        self, identifier: Optional[Union[NodeLike, List[NodeLike]]] = None
+    ) -> List[TimeSeriesNode]:  # type: ignore
         """
         Return the time series nodes in the graph.
 

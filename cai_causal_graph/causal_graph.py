@@ -18,7 +18,7 @@ from __future__ import annotations
 import itertools
 from collections import defaultdict
 from copy import deepcopy
-from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Type, Union
 
 import networkx
 import numpy
@@ -299,8 +299,8 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
 class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeserialize):
     """A low-level class that uniquely defines the state of a causal graph."""
 
-    _NodeCls = Node
-    _EdgeCls = Edge
+    _NodeCls: Type[Node] = Node
+    _EdgeCls: Type[Edge] = Edge
 
     def __init__(
         self,

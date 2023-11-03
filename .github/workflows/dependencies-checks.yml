@@ -47,7 +47,7 @@ jobs:
         # We run update of the lock, before setting up the virtual environment, as dependencies checks are specifically
         # designed to test the latest internal/external dependencies to flag issues.
         run: |
-          make update-install
+          make update-install && poetry show
       - name: Run package tests
         # We run the package tests, as release-acceptance-tests are only designed to run over release critical
         # functionality. The package (unit)tests should be more comprehensive.

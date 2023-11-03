@@ -99,7 +99,7 @@ jobs:
         run: make set-changelog-version-linux
       - name: Poetry update lock and install virtual environment
         # Necessary both to update the package dependencies and account for the new tag
-        run: make update-install
+        run: make update-install && poetry show
       - name: Build packages - default os and python
         # For the main python distribution build both wheel (bdist) and sdist and publish
         if: success()
@@ -127,15 +127,15 @@ jobs:
           BRANCH: ${{ steps.extract_branch.outputs.branch }}
         if: success()
         run: |
-                git config --global --add safe.directory .
-                rm -rf dist/
-                git add -u .
-                if test -f _unstage.txt; then
-                  git restore --staged --pathspec-from-file=_unstage.txt
-                fi
-                git add poetry.lock -f
-                git commit -m "Version Bump"
-                git push origin $(echo "HEAD:$BRANCH" | tr -d '[:space:]')
+          git config --global --add safe.directory .
+          rm -rf dist/
+          git add -u .
+          if test -f _unstage.txt; then
+            git restore --staged --pathspec-from-file=_unstage.txt
+          fi
+          git add poetry.lock -f
+          git commit -m "Version Bump"
+          git push origin $(echo "HEAD:$BRANCH" | tr -d '[:space:]')
       - name: Package and Publish Docs
         # We run this step after the package build and version bump commit as this modifies the virtual environment and
         # poetry.lock to add the docs-upload dependency. This is not publicly available so cannot be a dependency for
