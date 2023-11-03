@@ -57,7 +57,7 @@ jobs:
       # and although tests in the PR-CHECKS are passing, unless `main` was merged, the incompatibility of changes
       # would not be flagged. No need to do format or docs coverage, but type checking is useful.
       - name: Poetry update lock and install virtual environment
-        run: make update-install
+        run: make update-install && poetry show
       - name: Run type checking
         # This is required as it could have been invalidated by other merges to main since branching out
         run: make lint
