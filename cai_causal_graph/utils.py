@@ -23,7 +23,11 @@ def get_variable_name_and_lag(node_name: NodeLike) -> Tuple[str, int]:
     """
     Extract the variable name and time series lag from a node name.
 
-    It is assumed the variable name and the lag or future lag are separated by a space.
+    A lag or future lag is indicated by the string 'lag(n=Y)' or 'future(n=Y)' where Y is the lag. The lag can be any
+    integer. If these strings appear multiple times in a node name, then a `ValueError` is raised.
+
+    It is assumed the variable name and the lag or future lag are separated by a space. Anything prior to the space is
+    considered the variable name.
 
     Example:
         'X lag(n=2)' -> 'X', -2 if lagged in the past,
@@ -97,7 +101,7 @@ def get_name_with_lag(variable_or_node_name: str, lag: int) -> str:
 
 
 def extract_names_and_lags(
-    node_names: List[NodeLike],
+        node_names: List[NodeLike],
 ) -> Tuple[List[Dict[str, int]], int]:
     """
     Extract the names and lags from a list of node names.
