@@ -64,7 +64,7 @@ class TimeSeriesCausalGraph(CausalGraph):
     - `cai_causal_graph.type_definitions.VARIABLE_NAME`: the name of the variable (without the lag information)
     """
 
-    _NodeCls = TimeSeriesNode
+    _NodeCls = TimeSeriesNode   # type: ignore
     _EdgeCls = Edge
 
     def __init__(
