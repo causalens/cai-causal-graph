@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.2.16
 
 - Fixed a bug where `cai_causal_graph.utils.get_variable_name_and_lag` would not match variable names with
   non-alphanumeric characters, and would not match variable names with the string `lag` or `future` in them.
