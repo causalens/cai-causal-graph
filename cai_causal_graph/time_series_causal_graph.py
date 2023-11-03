@@ -296,8 +296,10 @@ class TimeSeriesCausalGraph(CausalGraph):
         # sort lagged nodes based on the order they appear in the non-lagged list and by their lag values
         lagged_nodes = sorted(
             lagged_nodes,
-            key=lambda x: (cont_ordered_nodes.index(self.get_node(x).variable_name), self.get_node(x).time_lag),
-            # type: ignore
+            key=lambda x: (
+                cont_ordered_nodes.index(self.get_node(x).variable_name),  # type: ignore
+                self.get_node(x).time_lag,  # type: ignore
+            ),
         )
 
         # merge the lists together
@@ -1140,7 +1142,7 @@ class TimeSeriesCausalGraph(CausalGraph):
             self._variables = sorted(list(set(variables)))
         return self._variables
 
-    def get_nodes(
+    def get_nodes(  # type: ignore
         self, identifier: Optional[Union[NodeLike, List[NodeLike]]] = None
     ) -> List[TimeSeriesNode]:  # type: ignore
         """
