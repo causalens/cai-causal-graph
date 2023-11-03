@@ -43,7 +43,9 @@ def get_variable_name_and_lag(node_name: NodeLike) -> Tuple[str, int]:
 
     lag_matches = re.findall(r'lag\(n=(\d+)\)', node_name)
     future_matches = re.findall(r'future\(n=(\d+)\)', node_name)
-    num_matches = (len(lag_matches) if lag_matches is not None else 0) + (len(future_matches) if future_matches is not None else 0)
+    num_matches = (len(lag_matches) if lag_matches is not None else 0) + (
+        len(future_matches) if future_matches is not None else 0
+    )
 
     if is_match:
 
