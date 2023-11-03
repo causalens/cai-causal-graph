@@ -66,7 +66,7 @@ class TimeSeriesCausalGraph(CausalGraph):
     """
 
     _NodeCls: Type[TimeSeriesNode] = TimeSeriesNode
-    _EdgeCls = Edge
+    _EdgeCls: Type[Edge] = Edge
 
     def __init__(
         self,
