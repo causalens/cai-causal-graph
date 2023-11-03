@@ -32,13 +32,13 @@ class TestTimeSeriesGraphUtils(TestCase):
 
         # With special characters
         self.assertTupleEqual(
-            get_variable_name_and_lag('1@£$%^&*()-+=*/_\\"\'<>?*~.'), ('1@£$%^&*()-+=*/_\\"\'<>?*~', 0)
+            get_variable_name_and_lag('1@£$%^&*()-+=*/_\\"\'<>?*~.'), ('1@£$%^&*()-+=*/_\\"\'<>?*~.', 0)
         )
         self.assertTupleEqual(
-            get_variable_name_and_lag('1@£$%^&*()-+=*/_\\"\'<>?*~. lag(n=2)'), ('1@£$%^&*()-+=*/_\\"\'<>?*~', -2)
+            get_variable_name_and_lag('1@£$%^&*()-+=*/_\\"\'<>?*~. lag(n=2)'), ('1@£$%^&*()-+=*/_\\"\'<>?*~.', -2)
         )
         self.assertTupleEqual(
-            get_variable_name_and_lag('1@£$%^&*()-+=*/_\\"\'<>?*~. future(n=2)'), ('1@£$%^&*()-+=*/_\\"\'<>?*~', 2)
+            get_variable_name_and_lag('1@£$%^&*()-+=*/_\\"\'<>?*~. future(n=2)'), ('1@£$%^&*()-+=*/_\\"\'<>?*~.', 2)
         )
 
         # Has something that looks like lag in the name
