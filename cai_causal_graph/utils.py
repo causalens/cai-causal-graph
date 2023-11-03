@@ -101,7 +101,7 @@ def get_name_with_lag(variable_or_node_name: str, lag: int) -> str:
 
 
 def extract_names_and_lags(
-        node_names: List[NodeLike],
+    node_names: List[NodeLike],
 ) -> Tuple[List[Dict[str, int]], int]:
     """
     Extract the names and lags from a list of node names.
