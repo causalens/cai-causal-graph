@@ -1,5 +1,9 @@
 # Changelog
 
+## NEXT
+
+- A dummy change
+
 ## 0.2.15
 
 - Improved performance of checking for cycles when adding edges by avoiding repeated checks.
@@ -136,8 +140,10 @@
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class has three new representations:
   - The minimal graph, which can be obtained via the
     `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph` method, defines the graph with
-    the minimal number of nodes and edges that is required to capture all the information encoded in the original graph.
-    This is because a time series causal graph may contain a lot of repetitive information. For example, if the original
+    the minimal number of nodes and edges that is required to capture all the information encoded in the original
+    graph.
+    This is because a time series causal graph may contain a lot of repetitive information. For example, if the
+    original
     graph is `x(t-2) -> x(t-1) -> x(t)`, then the minimal graph would be `x(t-1) -> x(t)`. In other words, it is a
     graph that has no edges whose destination is not time 0.
   - The summary graph, which can be obtained via the
