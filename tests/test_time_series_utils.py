@@ -1,14 +1,13 @@
 """
 Copyright (c) 2023 by Impulse Innovations Ltd. Private and confidential. Part of the causaLens product.
 """
-from cl_dev_tools import TestCase
+from unittest import TestCase
 
 from cai_causal_graph.utils import get_variable_name_and_lag
 
 
 class TestTimeSeriesGraphUtils(TestCase):
     def test_get_variable_name_and_lag(self):
-
         # 'Normal' name
         self.assertTupleEqual(get_variable_name_and_lag('x1'), ('x1', 0))
         self.assertTupleEqual(get_variable_name_and_lag('x1 lag(n=1)'), ('x1', -1))
@@ -21,13 +20,13 @@ class TestTimeSeriesGraphUtils(TestCase):
 
         # With special characters
         self.assertTupleEqual(
-            get_variable_name_and_lag('1@£$%^&*()-+=*/_\\"\'<>?*~'), ('1@£$%^&*()-+=*/_\\"\'<>?*~', 0)
+            get_variable_name_and_lag('1@£$%^&*()-+=*/_\\"\'<>?*~.'), ('1@£$%^&*()-+=*/_\\"\'<>?*~', 0)
         )
         self.assertTupleEqual(
-            get_variable_name_and_lag('1@£$%^&*()-+=*/_\\"\'<>?*~ lag(n=2)'), ('1@£$%^&*()-+=*/_\\"\'<>?*~', -2)
+            get_variable_name_and_lag('1@£$%^&*()-+=*/_\\"\'<>?*~. lag(n=2)'), ('1@£$%^&*()-+=*/_\\"\'<>?*~', -2)
         )
         self.assertTupleEqual(
-            get_variable_name_and_lag('1@£$%^&*()-+=*/_\\"\'<>?*~ future(n=2)'), ('1@£$%^&*()-+=*/_\\"\'<>?*~', 2)
+            get_variable_name_and_lag('1@£$%^&*()-+=*/_\\"\'<>?*~. future(n=2)'), ('1@£$%^&*()-+=*/_\\"\'<>?*~', 2)
         )
 
         # Has something that looks like lag in the name
