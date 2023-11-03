@@ -48,6 +48,18 @@ jobs:
         # designed to test the latest internal/external dependencies to flag issues.
         run: |
           make update-install && poetry show
+      - name: Run code format checks
+        # This is required as blue or isort could have updated since the last merge into main
+        run: make format-check
+      - name: Run type checking
+        # This is required as mypy could have updated since the last merge into main
+        run: make lint
+      - name: Run security checking
+        # This is required as bandit could have updated since the last merge into main
+        run: make security-lint
+      - name: Run interrogate documentation coverage check
+        # This is required as interrogate could have updated since the last merge into main
+        run: make interrogate
       - name: Run package tests
         # We run the package tests, as release-acceptance-tests are only designed to run over release critical
         # functionality. The package (unit)tests should be more comprehensive.
