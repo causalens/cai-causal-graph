@@ -50,7 +50,7 @@ readme = "README.md"
 homepage = "https://causalgraph.causalens.com/"
 repository = "https://github.com/causalens/cai-causal-graph"
 documentation = "https://causalgraph.causalens.com/"
-packages = [{include = "cai_causal_graph"}]
+packages = [{ include = "cai_causal_graph" }]
 
 [tool.poetry.dependencies]
 networkx = ">=3.0.0, <4.0.0"
@@ -66,8 +66,9 @@ isort = ">=5.10.1, <6.0.0"
 markdown = ">=3.4.0, <4.0.0"
 mdformat-gfm = ">=0.3.5, <1.0.0"
 mypy = ">=0.812.0, <1.0.0"
-nbmake =  ">=1.3.0, <1.4.0"
+nbmake = ">=1.3.0, <1.4.0"
 pytest = ">=7.2.0, <8.0.0"
 requests = ">=2.25.1, <3.0.0"
 setuptools = ">=45"
+charset-normalizer = "=3.3.1"
 
