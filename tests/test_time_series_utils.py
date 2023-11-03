@@ -56,6 +56,11 @@ class TestTimeSeriesGraphUtils(TestCase):
         self.assertTupleEqual(get_variable_name_and_lag('   lag(n=1)'), ('  ', -1))
         self.assertTupleEqual(get_variable_name_and_lag('   future(n=1)'), ('  ', 1))
 
+        # Incomplete match of lag does count as a lag
+        self.assertTupleEqual(get_variable_name_and_lag('x1 lag(n=1'), ('x1 lag(n=1', 0))
+        self.assertTupleEqual(get_variable_name_and_lag('x1 lag(n=1 lag(n=1)'), ('x1 lag(n=1', -1))
+        self.assertTupleEqual(get_variable_name_and_lag('x1 lag(n=1 future(n=1)'), ('x1 lag(n=1', 1))
+
     def test_get_variable_name_and_lag_raises(self):
         self.assertRaises(ValueError, get_variable_name_and_lag, 'x1 lag(n=1) lag(n=2)')
         self.assertRaises(ValueError, get_variable_name_and_lag, 'x1 future(n=1) future(n=2)')
