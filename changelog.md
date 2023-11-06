@@ -1,5 +1,15 @@
 # Changelog
 
+## NEXT
+
+> **_NOTE:_**  **Backwards compatibility warning!** The definition of the
+> `cai_causal_graph.type_definitions.EdgeConstraint` enumeration has changed.
+
+- Updated the `cai_causal_graph.type_definitions.EdgeConstraint` enumeration to simplify the enumeration members and
+  exposed it at the root level, so it can be imported as `from cai_causal_graph import EdgeConstraint`.
+  `cai_causal_graph.type_definitions.EdgeConstraint` is not used by the `cai-causal-graph` package but any packages
+  that rely on its definition, must be updated to reflect the new members.
+
 ## 0.2.17
 
 - Fixed the docstrings of `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_adjacency_matrices`,
