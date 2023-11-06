@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.2.17
 
 - Fixed the docstrings of `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_adjacency_matrices`,
   such that the examples render properly.
