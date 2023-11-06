@@ -968,23 +968,31 @@ class TimeSeriesCausalGraph(CausalGraph):
         to X-1 -> X, where X is the set of nodes.
 
         Example:
+        >>> import numpy
+        >>> from cai_causal_graph import TimeSeriesCausalGraph
+        >>>
+        >>> # define the adjacency matrices
         >>> adjacency_matrices = {
-        ...     -2: numpy.array([[0, 0, 0], [1, 0, 0], [0, 0, 1]]),
-        ...     -1: numpy.array([[0, 1, 0], [1, 0, 0], [0, 0, 0]]),
-        ...     0: numpy.array([[0, 1, 1], [0, 0, 1], [0, 0, 0]]),
-        ... }
-
-        Let the nodes be X,Y,Z. The corresponding edges are:
-        >>> edges = [
-        ...     (Z-2, Y),
-        ...     (X-1, X),
-        ...     (Y-1, X),
-        ...     (Y-1, Y),
-        ...     (Z-1, Z),
-        ...     (X, Y),
-        ...     (X, Z),
-        ...     (Y, Z),
-        ... ]
+        >>>     -2: numpy.array([[0, 0, 0], [1, 0, 0], [0, 0, 1]]),
+        >>>     -1: numpy.array([[0, 1, 0], [1, 0, 0], [0, 0, 0]]),
+        >>>     0: numpy.array([[0, 1, 1], [0, 0, 1], [0, 0, 0]]),
+        >>> }
+        >>>
+        >>> # construct a time series causal graph from the adjacency matrices
+        >>> graph = TimeSeriesCausalGraph.from_adjacency_matrices(adjacency_matrices, variable_names=['X', 'Y', 'Z'])
+        >>>
+        >>> # query the edges of the constructed time series causal graph
+        >>> graph.get_edges()
+        >>> # output:
+        >>> # [
+        >>> #   Edge("X", "Y", type=->),
+        >>> #   Edge("X", "Z", type=->),
+        >>> #   Edge("X lag(n=1)", "Y", type=->),
+        >>> #   Edge("Y", "Z", type=->),
+        >>> #   Edge("Y lag(n=1)", "X", type=->),
+        >>> #   Edge("Y lag(n=2)", "X", type=->),
+        >>> #   Edge("Z lag(n=2)", "Z", type=->)
+        >>> # ]
 
         :param adjacency_matrices: A dictionary of adjacency matrices. Keys are the time delta.
         :param variable_names: A list of variable names. If not provided, the variable names are integers starting
