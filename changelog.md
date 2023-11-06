@@ -1,5 +1,10 @@
 # Changelog
 
+## NEXT
+
+- Fixed the docstrings of `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_adjacency_matrices`,
+  such that the examples render properly.
+
 ## 0.2.16
 
 - Fixed a bug where `cai_causal_graph.utils.get_variable_name_and_lag` would not match variable names with
