@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from enum import Enum, IntEnum
+from enum import Enum
 from numbers import Real
 from typing import Tuple, Union
 
@@ -21,23 +21,25 @@ from cai_causal_graph.exceptions import CausalGraphErrors
 from cai_causal_graph.interfaces import HasIdentifier
 
 
-class EdgeConstraint(IntEnum):
+class EdgeConstraint(str, Enum):
     """
     Enumeration defining the types of edge constraints for domain knowledge.
 
     The enumeration members are:
-    - EdgeConstraint.NONE
-    - EdgeConstraint.UNDIRECTED_EDGE
-    - EdgeConstraint.FORWARD_DIRECTED_EDGE
-    - EdgeConstraint.BACKWARD_DIRECTED_EDGE
+    - EdgeConstraint.HARD_DIRECTED_EDGE
+    - EdgeConstraint.HARD_UNDIRECTED_EDGE
+    - EdgeConstraint.SOFT_DIRECTED_EDGE
     - EdgeConstraint.FORBIDDEN_EDGE
     """
 
-    NONE = 0  # This says no constraint, which is equivalent to saying it is unknown or maybe there is an edge.
-    UNDIRECTED_EDGE = 1
-    FORWARD_DIRECTED_EDGE = 2
-    BACKWARD_DIRECTED_EDGE = 3
-    FORBIDDEN_EDGE = 4
+    HARD_DIRECTED_EDGE = 'hard_directed'
+    HARD_UNDIRECTED_EDGE = 'hard_undirected'
+    SOFT_DIRECTED_EDGE = 'soft_directed'
+    FORBIDDEN_EDGE = 'forbidden'
+
+    def __str__(self) -> str:
+        """Return the string value for the enumeration."""
+        return self.value
 
 
 class EdgeType(str, Enum):
