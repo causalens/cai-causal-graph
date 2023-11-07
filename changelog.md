@@ -1,5 +1,9 @@
 # Changelog
 
+## NEXT
+
+- Bug fix in `cai_causal_graph.time_series.causal_graph.TimeSeriesCausalGraph.extend_graph` for forward extention.
+
 ## 0.3.0
 
 > **_NOTE:_**  **Backwards compatibility warning!** The definition of the
