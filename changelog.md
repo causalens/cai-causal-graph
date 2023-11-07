@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.3.2
 
 - Improved documentation.
 
