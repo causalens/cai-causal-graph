@@ -2,7 +2,13 @@
 
 ## NEXT
 
-- Bug fix in `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_graph` for forward extension.
+- Improved documentation.
+
+## 0.3.1
+
+- Fixed a bug for forward extension in the
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_graph` method in
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`.
 
 ## 0.3.0
 
