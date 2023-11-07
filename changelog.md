@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.3.0
 
 > **_NOTE:_**  **Backwards compatibility warning!** The definition of the
 > `cai_causal_graph.type_definitions.EdgeConstraint` enumeration has changed.
