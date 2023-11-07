@@ -774,6 +774,12 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
         self.assertEqual(extended_tsdag_3, tscg3)
 
+        cg = TimeSeriesCausalGraph()
+        cg.add_edge('x lag(n=1)', 'y')
+
+        # test it does not raise an error
+        cg.extend_graph(forward_steps=1)
+
     def test_add_time_edge(self):
         # test adding a time edge to a graph
         tsgraph = TimeSeriesCausalGraph()
