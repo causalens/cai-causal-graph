@@ -21,6 +21,7 @@ __all__ = [
     'Skeleton',
     'TimeSeriesCausalGraph',
     # Causal types
+    'EdgeConstraint',
     'EdgeType',
     'NodeVariableType',
     'EDGE_T',  # Keep for backwards compatibility.
@@ -30,8 +31,16 @@ __all__ = [
     'VARIABLE_NAME',
 ]
 
-__version__ = '0.2.13'
+__version__ = '0.3.0'
 
 from cai_causal_graph.causal_graph import CausalGraph, Skeleton
 from cai_causal_graph.time_series_causal_graph import TimeSeriesCausalGraph
-from cai_causal_graph.type_definitions import EDGE_T, NODE_T, TIME_LAG, VARIABLE_NAME, EdgeType, NodeVariableType
+from cai_causal_graph.type_definitions import (
+    EDGE_T,
+    NODE_T,
+    TIME_LAG,
+    VARIABLE_NAME,
+    EdgeConstraint,
+    EdgeType,
+    NodeVariableType,
+)

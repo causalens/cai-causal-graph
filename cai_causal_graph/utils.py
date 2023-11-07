@@ -23,6 +23,12 @@ def get_variable_name_and_lag(node_name: NodeLike) -> Tuple[str, int]:
     """
     Extract the variable name and time series lag from a node name.
 
+    A lag or future lag is indicated by the string 'lag(n=Y)' or 'future(n=Y)' where Y is the lag. The lag can be any
+    integer. If these strings appear multiple times in a node name, then a `ValueError` is raised.
+
+    It is assumed the variable name and the lag or future lag are separated by a space. Anything prior to the space is
+    considered the variable name.
+
     Example:
         'X lag(n=2)' -> 'X', -2 if lagged in the past,
         'X future(n=2)' -> 'X', 2 if lagged in the future.
@@ -37,13 +43,19 @@ def get_variable_name_and_lag(node_name: NodeLike) -> Tuple[str, int]:
     if not isinstance(node_name, str):
         raise TypeError(f'Expected node name to be a string, got type {type(node_name)}.')
 
-    # Validation for cases with both "lag" and "future"
-    if 'lag' in node_name and 'future' in node_name:
-        raise ValueError(f'Invalid node name with both past and future lags: {node_name}.')
+    is_match = re.match(r'^(.+?)(?: lag\(n=(\d+)\))?(?: future\(n=(\d+)\))?$', node_name)
 
-    is_match = re.match(r'^(\w+)(?: lag\(n=(\d+)\))?(?: future\(n=(\d+)\))?$', node_name)
+    lag_matches = re.findall(r'lag\(n=(\d+)\)', node_name)
+    future_matches = re.findall(r'future\(n=(\d+)\)', node_name)
+    num_matches = (len(lag_matches) if lag_matches is not None else 0) + (
+        len(future_matches) if future_matches is not None else 0
+    )
 
     if is_match:
+
+        if num_matches > 1:
+            raise ValueError(f'Invalid node name: {node_name}. Multiple lag or future lags detected.')
+
         variable_name = is_match.group(1)
         past_lag = is_match.group(2)
         future_lag = is_match.group(3)

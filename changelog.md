@@ -1,6 +1,30 @@
 # Changelog
 
-## NEXT
+## 0.3.0
+
+> **_NOTE:_**  **Backwards compatibility warning!** The definition of the
+> `cai_causal_graph.type_definitions.EdgeConstraint` enumeration has changed.
+
+- Updated the `cai_causal_graph.type_definitions.EdgeConstraint` enumeration to simplify the enumeration members and
+  exposed it at the root level, so it can be imported as `from cai_causal_graph import EdgeConstraint`.
+  `cai_causal_graph.type_definitions.EdgeConstraint` is not used by the `cai-causal-graph` package but any packages
+  that rely on its definition, must be updated to reflect the new members.
+
+## 0.2.17
+
+- Fixed the docstrings of `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_adjacency_matrices`,
+  such that the examples render properly.
+
+## 0.2.16
+
+- Fixed a bug where `cai_causal_graph.utils.get_variable_name_and_lag` would not match variable names with
+  non-alphanumeric characters, and would not match variable names with the string `lag` or `future` in them.
+
+## 0.2.15
+
+- Improved performance of checking for cycles when adding edges by avoiding repeated checks.
+
+## 0.2.14
 
 - Modified `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.add_edge` in
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` to always order source and destination nodes by
@@ -132,10 +156,10 @@
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class has three new representations:
   - The minimal graph, which can be obtained via the
     `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph` method, defines the graph with
-    the minimal number of nodes and edges that is required to capture all the information encoded in the original graph.
-    This is because a time series causal graph may contain a lot of repetitive information. For example, if the original
-    graph is `x(t-2) -> x(t-1) -> x(t)`, then the minimal graph would be `x(t-1) -> x(t)`. In other words, it is a
-    graph that has no edges whose destination is not time 0.
+    the minimal number of nodes and edges that is required to capture all the information encoded in the original
+    graph. This is because a time series causal graph may contain a lot of repetitive information. For example, if the
+    original graph is `x(t-2) -> x(t-1) -> x(t)`, then the minimal graph would be `x(t-1) -> x(t)`. In other words, it
+    is a graph that has no edges whose destination is not time 0.
   - The summary graph, which can be obtained via the
     `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_summary_graph` method, defines the graph
     collapsed in time so there is a single node per variable. For example, if the original graph is

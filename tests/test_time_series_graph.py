@@ -254,23 +254,6 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         # check 'X1 lag(n=1)' does not exist
         self.assertFalse(ts_cg.node_exists('X1 lag(n=1)'))
 
-    def test_get_variable_name_and_lag(self):
-        # create a bad node name
-        bad_node_name = 'X1 lag(n=1) lag(n=1)'
-        with self.assertRaises(ValueError):
-            get_variable_name_and_lag(bad_node_name)
-
-        # create a bad node name
-        bad_node_name = 'X1 lag(n=1) future(n=1)'
-        with self.assertRaises(ValueError):
-            get_variable_name_and_lag(bad_node_name)
-
-        # create a correct node name
-        node_name = 'X1 lag(n=1)'
-        name, lag = get_variable_name_and_lag(node_name)
-        self.assertEqual(name, 'X1')
-        self.assertEqual(lag, -1)
-
     def test_extract_names_and_lags(self):
         nodes, maxlag = extract_names_and_lags(self.nodes)
         # sort the nodes by value

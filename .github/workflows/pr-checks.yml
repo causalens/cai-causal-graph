@@ -45,7 +45,7 @@ jobs:
         # To have a consistent cache directory between different os (linux/macosx)
         run: poetry config cache-dir .pypoetry
       - name: Poetry update lock and install virtual environment
-        run: make update-install
+        run: make update-install && poetry show
       - name: Run code format checks
         run: make format-check
       - name: Run type checking
