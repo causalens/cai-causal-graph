@@ -1,5 +1,11 @@
 # Changelog
 
+## NEXT
+
+- Fixed a bug in `cai_causal_graph.identify_utils.identify_instruments` and
+  `cai_causal_graph.identify_utils.identify_mediators`, where an unclear error was raised if the `source` node was a
+  descendant of the `destination` node. Instead, these methods now return an empty list in that case.
+
 ## 0.3.2
 
 - Improved documentation.

@@ -346,6 +346,17 @@ class TestIdentifyInstruments(unittest.TestCase):
         with self.assertRaises(ValueError):
             identify_instruments(cg, source=cg.get_node('x'), destination=cg.get_node('x'))
 
+    def test_edge_cases(self):
+        # define an edge case causal graph
+        cg = CausalGraph()
+        cg.add_edge('x', 'y')
+        cg.add_edge('z', 'x')
+        cg.add_edge('z', 'y')
+
+        # call identify_instruments on the effect of y on x
+        instruments = identify_instruments(cg, source='y', destination='x')
+        self.assertEqual(len(instruments), 0)
+
 
 class TestIdentifyMediators(unittest.TestCase):
     def test_simple(self):
@@ -507,3 +518,14 @@ class TestIdentifyMediators(unittest.TestCase):
             identify_mediators(cg, source=cg.get_node('x'), destination='x')
         with self.assertRaises(ValueError):
             identify_mediators(cg, source=cg.get_node('x'), destination=cg.get_node('x'))
+
+    def test_edge_cases(self):
+        # define an edge case causal graph
+        cg = CausalGraph()
+        cg.add_edge('x', 'y')
+        cg.add_edge('z', 'x')
+        cg.add_edge('z', 'y')
+
+        # call identify_mediators on the effect of y on x
+        mediators = identify_mediators(cg, source='y', destination='x')
+        self.assertEqual(len(mediators), 0)
