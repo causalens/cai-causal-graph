@@ -181,6 +181,10 @@ def identify_instruments(
     # verify inputs and obtain node identifiers
     source_id, destination_id = _verify_identify_inputs(graph, source, destination)
 
+    # return an empty list if the destination is an ancestor of the source
+    if destination_id in graph.get_ancestors(source_id):
+        return []
+
     # get all the confounders between the source and destination
     confounders = identify_confounders(graph, source_id, destination_id)
 
@@ -255,6 +259,10 @@ def identify_mediators(
     """
     # verify inputs and obtain node identifiers
     source_id, destination_id = _verify_identify_inputs(graph, source, destination)
+
+    # return an empty list if the destination is an ancestor of the source
+    if destination_id in graph.get_ancestors(source_id):
+        return []
 
     # get all the confounders between the source and destination
     confounders = identify_confounders(graph, source_id, destination_id)
