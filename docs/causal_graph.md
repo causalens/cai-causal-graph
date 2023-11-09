@@ -43,6 +43,27 @@ causal_graph.add_edge('A', 'B')  # this adds a directed edge (i.e., an edge from
 causal_graph.add_edge('B', 'E')  # if the node does not exist, it gets added automatically
 ```
 
+### Node Variable Types
+
+Any node added to a causal graph will, by default, be an unspecified variable type. It is, however, possible to specify 
+different variable types via the `variable_type` argument. For a full list of variable types, see 
+`cai_causal_graph.type_definitions.NodeVariableType`. For instance, you can add a binary node `F`, as shown below.
+
+```python
+from cai_causal_graph import NodeVariableType
+
+causal_graph.add_node('F', variable_type=NodeVariableType.BINARY)
+```
+
+These are the different variable types that are supported (these can be accessed via the 
+`cai_causal_graph.type_definitions.NodeVariableType` enumeration):
+
+- `NodeVariableType.UNSPECIFIED`  (default for new nodes)
+- `NodeVariableType.CONTINUOUS`
+- `NodeVariableType.BINARY`
+- `NodeVariableType.MULTICLASS`
+- `NodeVariableType.ORDINAL`
+
 ### Edge Types
 
 Any edge added to causal graph will, by default, be a directed edge. It is, however, possible to specify different
@@ -59,7 +80,7 @@ causal_graph.add_edge('A', 'C', edge_type=EdgeType.UNDIRECTED_EDGE)
 These are the different edge types that are supported by the `cai_causal_graph.causal_graph.CausalGraph` class (these 
 can be accessed via the `cai_causal_graph.type_definitions.EdgeType` enumeration):
 
-- `EdgeType.DIRECTED_EDGE` (`->`)
+- `EdgeType.DIRECTED_EDGE` (`->`)  (default for new edges)
 - `EdgeType.UNDIRECTED_EDGE` (`--`)
 - `EdgeType.BIDIRECTED_EDGE` (`<>`)
 - `EdgeType.UNKNOWN_EDGE` (`oo`)

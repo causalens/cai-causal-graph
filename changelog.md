@@ -5,6 +5,10 @@
 - Fixed a bug in `cai_causal_graph.identify_utils.identify_instruments` and
   `cai_causal_graph.identify_utils.identify_mediators`, where an unclear error was raised if the `source` node was a
   descendant of the `destination` node. Instead, these methods now return an empty list in that case.
+- Extended the quickstart documentation to describe how to set the `variable_type` when adding a
+  `cai_causal_graph.graph_components.Node` / `cai_causal_graph.graph_components.TimeSeriesNode` to a
+  `cai_causal_graph.causal_graph.CausalGraph` / `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`,
+  respectively.
 
 ## 0.3.2
 
