@@ -1,5 +1,10 @@
 # Changelog
 
+## NEXT
+
+- Extended documentation to provide further information regarding the types of mixed graphs that can be defined in a
+  `cai_causal_graph.causal_graph.CausalGraph`.
+
 ## 0.3.3
 
 - Fixed a bug in `cai_causal_graph.identify_utils.identify_instruments` and

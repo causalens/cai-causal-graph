@@ -43,10 +43,11 @@ resolved to either `A -> B` or `A <- B`.
 A _Maximal Ancestral Graph_ (_MAG_) can encode all the information that a _CPDAG_ can, but also provides
 information such as whether a latent confounder is likely to exist or selection bias is likely to be present. Specifically,
 _MAGs_ may also contain bi-directed edges `A <> B`, which imply the existence of a latent confounder between the respective
-variables.
+variables. Additionally, an undirected edge `A -- B` in a _MAG_ implies the existence of a latent selection bias variable 
+leading to the association being observed between `A` and `B`.
 
 A _Partial Ancestral Graph_ (_PAG_) describes an equivalence class of _MAGs_. _PAGs_ may also contain "wild-card" or
-"circle" edges (`-o`), which can either be a directed or undirected arrow head, i.e. `A -o B` can be  resolved to
+"circle" edges (`-o`), which can either be a directed or undirected arrow head, i.e. `A -o B` can be resolved to
 `A -- B` or `A -> B`. The `o` end is referred to as "unknown" in this package.
 
 | Type of Graph                      | DAG                | CPDAG                | MAG                | PAG                |
@@ -75,6 +76,6 @@ become dependent given `Y`.
 :::
 
 :::warning
-In a `CPDAG` the `--` implies an existence of an edge which can be in either direction, `<-` or `->`. In a `PAG`
+In a _CPDAG_ the `--` implies an existence of an edge which can be in either direction, `<-` or `->`. In a _MAG_ or _PAG_,
 the `--` that is a possible outcome of a wildcard edge (for example `o-`) can also resolve to no edge et all.
 :::
