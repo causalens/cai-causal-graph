@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.3.4
 
 - Extended documentation to provide further information regarding the types of mixed graphs that can be defined in a
   `cai_causal_graph.causal_graph.CausalGraph`.
