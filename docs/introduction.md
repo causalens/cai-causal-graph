@@ -76,6 +76,7 @@ become dependent given `Y`.
 :::
 
 :::warning
-In a _CPDAG_ the `--` implies an existence of an edge which can be in either direction, `<-` or `->`. In a _MAG_ or _PAG_,
-the `--` that is a possible outcome of a wildcard edge (for example `o-`) can also resolve to no edge et all.
+In a _CPDAG_ the `--` edge implies an existence of an edge which can be in either direction, `<-` or `->`. In a _MAG_ or
+a _PAG_, the `--` edge implies the existence of latent selection variable. When resolving this, it can be possible to
+resolve to no edge at all. In a _PAG_, the `--` edge is a possible outcome of a wildcard edge (for example `o-`).
 :::
