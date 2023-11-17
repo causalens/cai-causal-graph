@@ -23,7 +23,7 @@ component in [decisionOS](https://causalens.com/decision-os/).
 
 The `cai-causal-graph` package provides a user-friendly implementation of a causal graph class 
 (`cai_causal_graph.causal_graph.CausalGraph`) that allows you to easily define mixed graphs that can represent various 
-types of causal graphs. See the [Types of Causal Graphs](introduction.md#types-of-causal-graphs) section below for information
+types of causal graphs. See the [Types of Causal Graphs](#types-of-causal-graphs) section below for information
 on different types of causal graphs.
 
 You can find a [quickstart](quickstart.md) to see how to easily build a basic graph, with further details provided in 
