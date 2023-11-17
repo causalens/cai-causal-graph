@@ -58,7 +58,7 @@ A _Partial Ancestral Graph_ (_PAG_) describes an equivalence class of _MAGs_. _P
 | Latent confounder edges `<>`       |        :x:         |         :x:          | :white_check_mark: | :white_check_mark: |
 | Wildcard edges `o-`, `o>` and `oo` |        :x:         |         :x:          |        :x:         | :white_check_mark: |
 
-See `cai_causal_graph.type_definitions.EdgeType` for all the supported edge types in `cai_causal_graph`.
+See `cai_causal_graph.type_definitions.EdgeType` for all the supported edge types in this package.
 Note that the `cai_causal_graph.causal_graph.CausalGraph` class can contain all the aforementioned edge types, and 
 can therefore represent the entire hierarchy of _DAGs_, _CPDAGs_, _MAGs_, and _PAGs_.
 
