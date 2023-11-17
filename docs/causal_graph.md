@@ -7,15 +7,9 @@ variable. As a result, causal graphs are one of the most fundamental building bl
 Causal graphs consist of _nodes_, i.e. variables, and _edges_, i.e. their causal relationships. A directed edge `->`
 between two nodes `A` and `B` would imply that `A` is a causal driver of `B`, but not the other way around. A causal
 graph is essentially a collection of such nodes and edges that aim to fully specify the data-generating process of
-corresponding data.
-
-There are several types of causal graphs, many of which can be captured by the 
-`cai_causal_graph.causal_graph.CausalGraph` class of the `cai-causal-graph` package. One of the most prominent types is 
-a _Directed Acyclic Graph_ (DAG), which only contains directed edges. Many downstream causality tasks require the use of 
-a DAG, such as causal modeling, counterfactual explanations, causal effect estimation, among others. Sometimes, however, 
-you may need to work with different causal graph types that can contain different edge types. See the section on Markov 
-Equivalence Classes (MECs) at the end of this documentation page for more detailed information about additional causal 
-graph types.
+corresponding data.  There are several types of edges besides the directed edge and consequently several types of
+causal graphs that can be captured by the `cai_causal_graph.causal_graph.CausalGraph` class.  See the
+[Types of Causal Graphs](introduction.md#types-of-causal-graphs) section for more information on this.
 
 ## Constructing a Causal Graph
 
@@ -87,7 +81,7 @@ can be accessed via the `cai_causal_graph.type_definitions.EdgeType` enumeration
 - `EdgeType.UNKNOWN_DIRECTED_EDGE` (`o>`)
 - `EdgeType.UNKNOWN_UNDIRECTED_EDGE` (`o-`)
 
-See the section on Markov Equivalence Classes at the end of this documentation page for more information on edge types.
+See the [Types of Causal Graphs](introduction.md#types-of-causal-graphs) section for more information on edge types.
 
 ## Interacting with a Causal Graph
 

@@ -23,7 +23,7 @@ component in [decisionOS](https://causalens.com/decision-os/).
 
 The `cai-causal-graph` package provides a user-friendly implementation of a causal graph class 
 (`cai_causal_graph.causal_graph.CausalGraph`) that allows you to easily define mixed graphs that can represent various 
-types of causal graphs. See the [Types of Causal Graphs](#types-of-causal-graphs) section below for information
+types of causal graphs. See the [Types of Causal Graphs](introduction.md#types-of-causal-graphs) section below for information
 on different types of causal graphs.
 
 You can find a [quickstart](quickstart.md) to see how to easily build a basic graph, with further details provided in 
@@ -52,10 +52,10 @@ A _Partial Ancestral Graph_ (_PAG_) describes an equivalence class of _MAGs_. _P
 | Type of Graph                      | DAG                | CPDAG                | MAG                | PAG                |
 |:-----------------------------------|:------------------:|:--------------------:|:------------------:|:------------------:|
 | Tester method                      | `graph.is_dag()`   |         :x:          |        :x:         |         :x:        |
-| Direct edges `->` and `<-`         | :white_check_mark: |  :white_check_mark:  | :white_check_mark: | :white_check_mark: |
+| Direct edges `->`                  | :white_check_mark: |  :white_check_mark:  | :white_check_mark: | :white_check_mark: |
 | Undirected edges `--`              |        :x:         |  :white_check_mark:  | :white_check_mark: | :white_check_mark: |
 | Latent confounder edges `<>`       |        :x:         |         :x:          | :white_check_mark: | :white_check_mark: |
-| Wildcard edges `-o`, `o-` and `oo` |        :x:         |         :x:          |        :x:         | :white_check_mark: |
+| Wildcard edges `o-`, `o>` and `oo` |        :x:         |         :x:          |        :x:         | :white_check_mark: |
 
 See `cai_causal_graph.type_definitions.EdgeType` for all the supported edge types in `cai_causal_graph`.
 Note that the `cai_causal_graph.causal_graph.CausalGraph` class can contain all the aforementioned edge types, and 
@@ -76,5 +76,5 @@ become dependent given `Y`.
 
 :::warning
 In a `CPDAG` the `--` implies an existence of an edge which can be in either direction, `<-` or `->`. In a `PAG`
-the `--` that is a possible outcome of a wildcard edge (for example `-o`) can also resolve to no edge et all.
+the `--` that is a possible outcome of a wildcard edge (for example `o-`) can also resolve to no edge et all.
 :::

@@ -40,7 +40,8 @@ causal_graph.add_node('F', variable_type=NodeVariableType.BINARY)
 
 Any edge added to a causal graph will, by default, be a directed edge. It is, however, possible to specify different
 edge types via the `edge_type` argument. For a full list of edge types, see
-`cai_causal_graph.type_definitions.EdgeType`. For instance, you can add an undirected edge `A -- C`, as shown below.
+[this section](introduction.md#types-of-causal-graphs). For instance, you can add an undirected edge `A -- C`, as
+shown below.
 
 ```python
 from cai_causal_graph import EdgeType
