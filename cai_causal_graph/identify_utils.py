@@ -371,7 +371,7 @@ def identify_markov_boundary(graph: Union[CausalGraph, Skeleton], node: NodeLike
         mb = list(
             set(graph.get_parents(node_id))
             | child_set
-            | {parent for child in child_set for parent in graph.get_parents(child)}
+            | {parent for child in child_set for parent in graph.get_parents(child) if parent != node_id}
         )
     else:
         # We already know it is Skeleton here so no need for elif.
