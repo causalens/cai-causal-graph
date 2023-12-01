@@ -18,7 +18,12 @@ from itertools import combinations
 
 from cai_causal_graph import CausalGraph, TimeSeriesCausalGraph
 from cai_causal_graph.exceptions import CausalGraphErrors
-from cai_causal_graph.identify_utils import identify_confounders, identify_instruments, identify_mediators, identify_markov_boundary
+from cai_causal_graph.identify_utils import (
+    identify_confounders,
+    identify_instruments,
+    identify_markov_boundary,
+    identify_mediators,
+)
 from cai_causal_graph.type_definitions import EDGE_T
 
 
