@@ -1,5 +1,10 @@
 # Changelog
 
+## NEXT
+
+- TODO: Added identify_markov_boundary ...
+- TODO: Added get_neighbors ...
+
 ## 0.3.4
 
 - Extended documentation to provide further information regarding the types of mixed graphs that can be defined in a
