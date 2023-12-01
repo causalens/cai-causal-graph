@@ -1221,7 +1221,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
     def get_neighbor_nodes(self, node: NodeLike) -> List[Node]:
         """Get all neighbor nodes for a specific node."""
-        return self.get_nodes(identifier=self.get_neighbors(node))
+        return self.get_nodes(identifier=self.get_neighbors(node))  # type: ignore
 
     def get_children_nodes(self, node: NodeLike) -> List[Node]:
         """Get all children nodes for a specific node."""
