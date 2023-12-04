@@ -1220,7 +1220,12 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         return self.skeleton.get_neighbors(identifier)
 
     def get_neighbor_nodes(self, node: NodeLike) -> List[Node]:
-        """Get all neighbor nodes for a specific node."""
+        """
+        Get all neighbor nodes for a specific node.
+
+        Note: It does not matter what the edge type is, as long as there is an edge between `node` and another node,
+        that other node is considered its neighbor.
+        """
         return self.get_nodes(identifier=self.get_neighbors(node))  # type: ignore
 
     def get_children_nodes(self, node: NodeLike) -> List[Node]:

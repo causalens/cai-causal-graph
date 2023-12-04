@@ -2,8 +2,14 @@
 
 ## NEXT
 
-- TODO: Added identify_markov_boundary ...
-- TODO: Added get_neighbors ...
+- Added the `cai_causal_graph.identify_utils.identify_markov_boundary` utility function, which allows you to identify
+  the Markov boundary of a node in a `cai_causal_graph.causal_graph.CausalGraph` or in a
+  `cai_causal_graph.causal_graph.Skeleton`.
+- Added `get_neighbor_nodes` and `get_neighbors` methods to `cai_causal_graph.causal_graph.CausalGraph` and
+  `cai_causal_graph.causal_graph.Skeleton`. `get_neighbor_nodes` returns the nodes neighboring the specified node while
+  `get_neighbors` returns the identifiers of the neighboring nodes. Note: For a
+  `cai_causal_graph.causal_graph.CausalGraph`, it does not matter what the edge type is, as long as there is an edge
+  between the specified node and another node, that other node is considered its neighbor.
 
 ## 0.3.4
 
