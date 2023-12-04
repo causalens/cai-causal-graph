@@ -18,8 +18,9 @@ import unittest
 import networkx
 import numpy
 
-from cai_causal_graph.causal_graph import CausalGraph, Skeleton
+from cai_causal_graph import CausalGraph, Skeleton
 from cai_causal_graph.exceptions import CausalGraphErrors
+from cai_causal_graph.graph_components import Node
 
 
 class TestCausalGraphSkeletonSerialization(unittest.TestCase):
@@ -139,6 +140,27 @@ class TestCausalGraphSkeletonSerialization(unittest.TestCase):
         # Test that deleting edges works fine
         self.fully_connected_graph.delete_edge('x', 'z1')
         self.assertEqual(3, len(self.fully_connected_graph.skeleton.edges))
+
+    def test_neighbors(self):
+        neighbors = self.fully_connected_graph.skeleton.get_neighbors('x')
+        self.assertEqual(len(neighbors), 2)
+        self.assertSetEqual(set(neighbors), {'z1', 'z2'})
+
+        neighbors = self.fully_connected_graph.skeleton.get_neighbors(self.fully_connected_graph.skeleton.get_node('x'))
+        self.assertEqual(len(neighbors), 2)
+        self.assertSetEqual(set(neighbors), {'z1', 'z2'})
+
+        neighbor_nodes = self.fully_connected_graph.skeleton.get_neighbor_nodes('x')
+        self.assertEqual(len(neighbor_nodes), 2)
+        self.assertTrue(all(isinstance(n, Node) for n in neighbor_nodes))
+        self.assertSetEqual({n.identifier for n in neighbor_nodes}, {'z1', 'z2'})
+
+        neighbor_nodes = self.fully_connected_graph.skeleton.get_neighbor_nodes(
+            self.fully_connected_graph.skeleton.get_node('x')
+        )
+        self.assertEqual(len(neighbor_nodes), 2)
+        self.assertTrue(all(isinstance(n, Node) for n in neighbor_nodes))
+        self.assertSetEqual({n.identifier for n in neighbor_nodes}, {'z1', 'z2'})
 
     def test_adjacency(self):
         adj_1 = numpy.array([[0, 1, 0], [0, 0, 1], [0, 0, 0]])
