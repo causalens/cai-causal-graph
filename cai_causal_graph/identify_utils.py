@@ -308,7 +308,7 @@ def identify_markov_boundary(graph: Union[CausalGraph, Skeleton], node: NodeLike
     Identify all the Markov boundary for the specified `node in the provided `graph`.
 
     The Markov boundary is defined as the minimal Markov blanket. The Markov blanket is defined as the set of variables
-    such that if you condition on them, it makes your variable of interest (`node`) in this case conditionally
+    such that if you condition on them, it makes your variable of interest (`node` in this case) conditionally
     independent of all other variables. The Markov boundary is minimal meaning that you cannot drop any variables from
     it for the conditional independence condition to still hold.
 
@@ -341,7 +341,8 @@ def identify_markov_boundary(graph: Union[CausalGraph, Skeleton], node: NodeLike
         >>> cg.add_edge('g', 'e')  # 'g' is a parent of 'e', which is a child of 'a'
         >>> cg.add_edge('g', 'z')
         >>>
-        >>> # compute Markov boundary for node; output: ['b', 'c', 'd', 'e', 'f', 'g']
+        >>> # compute Markov boundary for node 'a'; output: ['b', 'c', 'd', 'e', 'f', 'g']
+        >>> # parents: 'b' and 'c', children: 'd' and 'e', and other parents of children are 'f' and 'g'
         >>> # note the order may not match but the elements will be those six.
         >>> markov_boundary: List[str] = identify_markov_boundary(cg, node='a')
 
@@ -350,10 +351,11 @@ def identify_markov_boundary(graph: Union[CausalGraph, Skeleton], node: NodeLike
         >>> from cai_causal_graph import Skeleton
         >>> from cai_causal_graph.identify_utils import identify_markov_boundary
         >>>
-        >>> # Use causal graph from above and get is skeleton
+        >>> # use causal graph from above and get is skeleton
         >>> skeleton: Skeleton = cg.skeleton
         >>>
-        >>> # compute Markov boundary for node; output: ['b', 'c', 'd', 'e']
+        >>> # compute Markov boundary for node 'a'; output: ['b', 'c', 'd', 'e']
+        >>> # as we have no directional information in the undirected skeleton, the neighbors of 'a' are returned.
         >>> # note the order may not match but the elements will be those four.
         >>> markov_boundary: List[str] = identify_markov_boundary(skeleton, node='a')
 

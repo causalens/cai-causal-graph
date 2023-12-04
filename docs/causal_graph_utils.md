@@ -90,4 +90,54 @@ mediator_variables: List[str] = identify_mediators(cg, source='x', destination='
 
 ### Identifying Markov Boundary
 
-TODO
+The `cai-causal-graph` package implements the `cai_causal_graph.identify_utils.identify_markov_boundary` utility 
+function, which allows you to identify the Markov boundary for a variable in a directed acyclic graph (DAG) or a 
+variable in an undirected graph.
+
+The Markov boundary is defined as the minimal Markov blanket. The Markov blanket is defined as the set of variables
+such that if you condition on them, it makes your variable of interest (`node` in this case) conditionally independent 
+of all other variables. The Markov boundary is minimal meaning that you cannot drop any variables from it for the 
+conditional independence condition to still hold.
+
+For a DAG, provided as a `cai_causal_graph.causal_graph.CausalGraph` instance, the Markov boundary of a node is defined 
+as its parents, its children, and the other parents of its children.
+
+For an undirected graph, provided as a `cai_causal_graph.causal_graph.Skeleton` instance, the Markov boundary of a 
+node is simply defined as its neighbors.
+
+See https://en.wikipedia.org/wiki/Markov_blanket for further information. The code example below uses the graph 
+from this site.
+
+```python
+from typing import List
+from cai_causal_graph import CausalGraph, Skeleton
+from cai_causal_graph.identify_utils import identify_markov_boundary
+
+# define a causal graph
+cg = CausalGraph()
+cg.add_edge('u', 'b')
+cg.add_edge('v', 'c')
+cg.add_edge('b', 'a')  # 'b' is a parent of 'a'
+cg.add_edge('c', 'a')  # 'c' is a parent of 'a'
+cg.add_edge('a', 'd')  # 'd' is a child of 'a'
+cg.add_edge('a', 'e')  # 'e' is a child of 'a'
+cg.add_edge('w', 'f')
+cg.add_edge('f', 'd')  # 'f' is a parent of 'd', which is a child of 'a'
+cg.add_edge('d', 'x')
+cg.add_edge('d', 'y')
+cg.add_edge('g', 'e')  # 'g' is a parent of 'e', which is a child of 'a'
+cg.add_edge('g', 'z')
+
+# compute Markov boundary for node 'a'; output: ['b', 'c', 'd', 'e', 'f', 'g']
+# parents: 'b' and 'c', children: 'd' and 'e', and other parents of children are 'f' and 'g'
+# note the order may not match but the elements will be those six.
+markov_boundary: List[str] = identify_markov_boundary(cg, node='a')
+
+# use causal graph from above and get is skeleton
+skeleton: Skeleton = cg.skeleton
+
+# compute Markov boundary for node 'a'; output: ['b', 'c', 'd', 'e']
+# as we have no directional information in the undirected skeleton, the neighbors of 'a' are returned.
+# note the order may not match but the elements will be those four.
+markov_boundary: List[str] = identify_markov_boundary(skeleton, node='a')
+```
