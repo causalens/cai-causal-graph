@@ -91,7 +91,7 @@ mediator_variables: List[str] = identify_mediators(cg, source='x', destination='
 ### Identifying Markov Boundary
 
 The `cai-causal-graph` package implements the `cai_causal_graph.identify_utils.identify_markov_boundary` utility 
-function, which allows you to identify the Markov boundary for a variable in a directed acyclic graph (DAG) or a 
+function, which allows you to identify the Markov boundary for a variable in a directed acyclic graph (DAG) or for a 
 variable in an undirected graph.
 
 The Markov boundary is defined as the minimal Markov blanket. The Markov blanket is defined as the set of variables
