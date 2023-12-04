@@ -350,7 +350,12 @@ def identify_markov_boundary(graph: Union[CausalGraph, Skeleton], node: NodeLike
         >>> from cai_causal_graph import Skeleton
         >>> from cai_causal_graph.identify_utils import identify_markov_boundary
         >>>
-        >>> TODO
+        >>> # Use causal graph from above and get is skeleton
+        >>> skeleton: Skeleton = cg.skeleton
+        >>>
+        >>> # compute Markov boundary for node; output: ['b', 'c', 'd', 'e']
+        >>> # note the order may not match but the elements will be those four.
+        >>> markov_boundary: List[str] = identify_markov_boundary(skeleton, node='a')
 
     :param graph: The graph given by a `cai_causal_graph.causal_graph.CausalGraph` or
         `cai_causal_graph.causal_graph.Skeleton` instance. If a `cai_causal_graph.causal_graph.CausalGraph` is
