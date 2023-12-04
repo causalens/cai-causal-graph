@@ -121,8 +121,8 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
     def edges(self) -> List[Edge]:
         """
         Return a list of all edges. All edges will be of the type
-        `cai_causal_graph.type_definitions.EdgeType.UNDIRECTED_EDGE` because this class represents a skeleton, which only
-        has undirected edges and no directed edges.
+        `cai_causal_graph.type_definitions.EdgeType.UNDIRECTED_EDGE` because this class represents a skeleton, which
+        only has undirected edges and no directed edges.
         """
         # instantiate new edges to enforce undirected edge types
         return [
@@ -175,7 +175,8 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
         """Get node identifiers for all neighbor nodes for a specific node."""
         node_id = Node.identifier_from(node)
         assert node_id in self.get_node_names(), f'Node with identifier {node_id} does not exist in this skeleton.'
-        return list(self.to_networkx().neighbors(node_id))
+
+        return self._graph.get_neighbors(node_id)
 
     def get_neighbor_nodes(self, node: NodeLike) -> List[Node]:
         """Get all neighbor nodes for a specific node."""
@@ -1217,7 +1218,15 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         that other node is considered its neighbor.
         """
         identifier = self._NodeCls.identifier_from(node)  # As subclasses override NodeCls, need correct identifier.
-        return self.skeleton.get_neighbors(identifier)
+
+        assert identifier in self.get_node_names(), f'Node with identifier {identifier} does not exist in this graph.'
+
+        # inbound undirected edges
+        inbound = {e.destination.identifier for e in self.get_edges(source=identifier)}
+        # outbound undirected edges
+        outbound = {e.source.identifier for e in self.get_edges(destination=identifier)}
+
+        return list(inbound.union(outbound) - {identifier})
 
     def get_neighbor_nodes(self, node: NodeLike) -> List[Node]:
         """
