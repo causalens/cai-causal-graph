@@ -24,6 +24,7 @@ import pandas
 from cai_causal_graph import CausalGraph, EdgeType, NodeVariableType
 from cai_causal_graph import __version__ as VERSION
 from cai_causal_graph.exceptions import CausalGraphErrors
+from cai_causal_graph.graph_components import Node
 
 
 class TestCausalGraphSerialization(unittest.TestCase):
@@ -712,6 +713,25 @@ class TestCausalGraphSerialization(unittest.TestCase):
             causal_graph_deepcopy.get_node('x').get_identifier(),
             self.fully_connected_graph.get_node('x').get_identifier(),
         )
+
+    def test_neighbors(self):
+        neighbors = self.fully_connected_graph.get_neighbors('x')
+        self.assertEqual(len(neighbors), 2)
+        self.assertSetEqual(set(neighbors), {'z1', 'z2'})
+
+        neighbors = self.fully_connected_graph.get_neighbors(self.fully_connected_graph.get_node('x'))
+        self.assertEqual(len(neighbors), 2)
+        self.assertSetEqual(set(neighbors), {'z1', 'z2'})
+
+        neighbor_nodes = self.fully_connected_graph.get_neighbor_nodes('x')
+        self.assertEqual(len(neighbor_nodes), 2)
+        self.assertTrue(all(isinstance(n, Node) for n in neighbor_nodes))
+        self.assertSetEqual({n.identifier for n in neighbor_nodes}, {'z1', 'z2'})
+
+        neighbor_nodes = self.fully_connected_graph.get_neighbor_nodes(self.fully_connected_graph.get_node('x'))
+        self.assertEqual(len(neighbor_nodes), 2)
+        self.assertTrue(all(isinstance(n, Node) for n in neighbor_nodes))
+        self.assertSetEqual({n.identifier for n in neighbor_nodes}, {'z1', 'z2'})
 
     def test_get_children_graph(self):
         cg_original = CausalGraph()
