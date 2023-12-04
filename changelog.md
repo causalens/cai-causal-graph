@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.3.5
 
 - Added the `cai_causal_graph.identify_utils.identify_markov_boundary` utility function, which allows you to identify
   the Markov boundary of a node in a `cai_causal_graph.causal_graph.CausalGraph` or in a
