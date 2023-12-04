@@ -561,7 +561,8 @@ class TestIdentifyMediators(unittest.TestCase):
 
 
 class TestIdentifyMarkovBoundary(unittest.TestCase):
-    def test_simple_cg(self):
+    def test_simple(self):
+        # Test CausalGraph.
         cg = CausalGraph()
         cg.add_edge('u', 'b')
         cg.add_edge('v', 'c')
@@ -580,9 +581,19 @@ class TestIdentifyMarkovBoundary(unittest.TestCase):
         self.assertEqual(len(markov_boundary), 6)
         self.assertSetEqual(set(markov_boundary), {'b', 'c', 'd', 'e', 'f', 'g'})
 
-    def test_simple_skeleton(self):
-        # TODO
-        pass
+        # Test Skeleton.
+        markov_boundary = identify_markov_boundary(cg.skeleton, node='a')
+        self.assertEqual(len(markov_boundary), 4)
+        self.assertSetEqual(set(markov_boundary), {'b', 'c', 'd', 'e'})
+
+        # Test NodeLike.
+        markov_boundary = identify_markov_boundary(cg, node=cg.get_node('a'))
+        self.assertEqual(len(markov_boundary), 6)
+        self.assertSetEqual(set(markov_boundary), {'b', 'c', 'd', 'e', 'f', 'g'})
+
+        markov_boundary = identify_markov_boundary(cg.skeleton, node=cg.skeleton.get_node('a'))
+        self.assertEqual(len(markov_boundary), 4)
+        self.assertSetEqual(set(markov_boundary), {'b', 'c', 'd', 'e'})
 
     def test_non_dag(self):
         # Create a mixed graph
@@ -612,69 +623,100 @@ class TestIdentifyMarkovBoundary(unittest.TestCase):
         self.assertEqual(len(mb), 2)
         self.assertSetEqual(set(mb), {'x', 'y'})
 
-    # def test_time_series_graph(self):
-    #     # create a time-series causal graph
-    #     ts_cg = TimeSeriesCausalGraph()
-    #     ts_cg.add_edge('x', 'm')
-    #     ts_cg.add_edge('m', 'y')
-    #     ts_cg.add_edge('u', 'x')
-    #     ts_cg.add_edge('u', 'y')
-    #     ts_cg.add_edge('m lag(n=1)', 'm')
-    #     ts_cg.add_edge('u lag(n=1)', 'u')
-    #     ts_cg.add_edge('x lag(n=1)', 'x')
-    #     ts_cg.add_edge('y lag(n=1)', 'y')
-    #
-    #     # identify mediators
-    #     mediators = identify_mediators(ts_cg, source='x', destination='y')
-    #     self.assertSetEqual(set(mediators), {'m'})
-    #
-    # def test_nodelike(self):
-    #     # define a simple graph (standard mediator example)
-    #     cg = CausalGraph()
-    #     cg.add_edge('x', 'm')
-    #     cg.add_edge('m', 'y')
-    #     cg.add_edge('u', 'x')
-    #     cg.add_edge('u', 'y')
-    #     cg.add_edge('x', 'y')
-    #
-    #     # identify mediators
-    #     mediators = identify_mediators(cg, source=cg.get_node('x'), destination=cg.get_node('y'))
-    #     self.assertSetEqual(set(mediators), {'m'})
-    #
-    # def test_error_cases(self):
-    #     # define a simple graph (standard mediator example)
-    #     cg = CausalGraph()
-    #     cg.add_edge('x', 'm')
-    #     cg.add_edge('m', 'y')
-    #     cg.add_edge('u', 'x')
-    #     cg.add_edge('u', 'y')
-    #     cg.add_edge('x', 'y')
-    #
-    #     # node_1 not in graph
-    #     with self.assertRaises(CausalGraphErrors.NodeDoesNotExistError):
-    #         identify_mediators(cg, source='w', destination='y')
-    #
-    #     # node_2 not in graph
-    #     with self.assertRaises(CausalGraphErrors.NodeDoesNotExistError):
-    #         identify_mediators(cg, source='x', destination='w')
-    #
-    #     # node_1 == node_2
-    #     with self.assertRaises(ValueError):
-    #         identify_mediators(cg, source='x', destination='x')
-    #     with self.assertRaises(ValueError):
-    #         identify_mediators(cg, source='x', destination=cg.get_node('x'))
-    #     with self.assertRaises(ValueError):
-    #         identify_mediators(cg, source=cg.get_node('x'), destination='x')
-    #     with self.assertRaises(ValueError):
-    #         identify_mediators(cg, source=cg.get_node('x'), destination=cg.get_node('x'))
-    #
-    # def test_edge_cases(self):
-    #     # define an edge case causal graph
-    #     cg = CausalGraph()
-    #     cg.add_edge('x', 'y')
-    #     cg.add_edge('z', 'x')
-    #     cg.add_edge('z', 'y')
-    #
-    #     # call identify_mediators on the effect of y on x
-    #     mediators = identify_mediators(cg, source='y', destination='x')
-    #     self.assertEqual(len(mediators), 0)
+    def test_time_series_graph(self):
+        # Test TimeSeriesCausalGraph.
+        cg = TimeSeriesCausalGraph()
+        cg.add_edge('u', 'b')
+        cg.add_edge('v', 'c')
+        cg.add_edge('b', 'a')  # 'b' is a parent of 'a'
+        cg.add_edge('c', 'a')  # 'c' is a parent of 'a'
+        cg.add_edge('a', 'd')  # 'd' is a child of 'a'
+        cg.add_edge('a', 'e')  # 'e' is a child of 'a'
+        cg.add_edge('w', 'f')
+        cg.add_edge('f', 'd')  # 'f' is a parent of 'd', which is a child of 'a'
+        cg.add_edge('d', 'x')
+        cg.add_edge('d', 'y')
+        cg.add_edge('g', 'e')  # 'g' is a parent of 'e', which is a child of 'a'
+        cg.add_edge('g', 'z')
+        # Add auto-regressive terms.
+        cg.add_edge('a lag(n=1)', 'a')
+        cg.add_edge('b lag(n=1)', 'b')
+        cg.add_edge('c lag(n=1)', 'c')
+        cg.add_edge('d lag(n=1)', 'd')
+        cg.add_edge('e lag(n=1)', 'e')
+        cg.add_edge('f lag(n=1)', 'f')
+        cg.add_edge('g lag(n=1)', 'g')
+        cg.add_edge('u lag(n=1)', 'u')
+        cg.add_edge('v lag(n=1)', 'v')
+        cg.add_edge('w lag(n=1)', 'w')
+        cg.add_edge('x lag(n=1)', 'x')
+        cg.add_edge('y lag(n=1)', 'y')
+        cg.add_edge('z lag(n=1)', 'z')
+
+        markov_boundary = identify_markov_boundary(cg, node='a')
+        self.assertEqual(len(markov_boundary), 9)
+        self.assertSetEqual(
+            set(markov_boundary), {'a lag(n=1)', 'b', 'c', 'd', 'd lag(n=1)', 'e', 'e lag(n=1)', 'f', 'g'}
+        )
+
+        # Test Skeleton.
+        markov_boundary = identify_markov_boundary(cg.skeleton, node='a')
+        self.assertEqual(len(markov_boundary), 5)
+        self.assertSetEqual(set(markov_boundary), {'a lag(n=1)', 'b', 'c', 'd', 'e'})
+
+        # Test NodeLike.
+        markov_boundary = identify_markov_boundary(cg, node=cg.get_node('a'))
+        self.assertEqual(len(markov_boundary), 9)
+        self.assertSetEqual(
+            set(markov_boundary), {'a lag(n=1)', 'b', 'c', 'd', 'd lag(n=1)', 'e', 'e lag(n=1)', 'f', 'g'}
+        )
+
+        markov_boundary = identify_markov_boundary(cg.skeleton, node=cg.skeleton.get_node('a'))
+        self.assertEqual(len(markov_boundary), 5)
+        self.assertSetEqual(set(markov_boundary), {'a lag(n=1)', 'b', 'c', 'd', 'e'})
+
+    def test_edge_cases(self):
+        # Floating node so empty MB.
+        cg = CausalGraph()
+        cg.add_edge('x', 'y')
+        cg.add_edge('z', 'x')
+        cg.add_edge('z', 'y')
+        cg.add_node('a')
+
+        markov_boundary = identify_markov_boundary(cg, node='a')
+        self.assertEqual(len(markov_boundary), 0)
+
+        markov_boundary = identify_markov_boundary(cg.skeleton, node='a')
+        self.assertEqual(len(markov_boundary), 0)
+
+        # Let's also test confounding structure.
+        markov_boundary = identify_markov_boundary(cg, node='x')
+        self.assertEqual(len(markov_boundary), 2)
+        self.assertSetEqual(set(markov_boundary), {'z', 'y'})
+
+        markov_boundary = identify_markov_boundary(cg.skeleton, node='x')
+        self.assertEqual(len(markov_boundary), 2)
+        self.assertSetEqual(set(markov_boundary), {'z', 'y'})
+
+        markov_boundary = identify_markov_boundary(cg, node='y')
+        self.assertEqual(len(markov_boundary), 2)
+        self.assertSetEqual(set(markov_boundary), {'z', 'x'})
+
+        markov_boundary = identify_markov_boundary(cg.skeleton, node='y')
+        self.assertEqual(len(markov_boundary), 2)
+        self.assertSetEqual(set(markov_boundary), {'z', 'x'})
+
+        markov_boundary = identify_markov_boundary(cg, node='z')
+        self.assertEqual(len(markov_boundary), 2)
+        self.assertSetEqual(set(markov_boundary), {'x', 'y'})
+
+        markov_boundary = identify_markov_boundary(cg.skeleton, node='z')
+        self.assertEqual(len(markov_boundary), 2)
+        self.assertSetEqual(set(markov_boundary), {'x', 'y'})
+
+        # Finally test error case of node not in graph.
+        with self.assertRaises(CausalGraphErrors.NodeDoesNotExistError):
+            identify_markov_boundary(cg, node='b')
+
+        with self.assertRaises(CausalGraphErrors.NodeDoesNotExistError):
+            identify_markov_boundary(cg.skeleton, node='b')
