@@ -13,36 +13,40 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from typing import List, Tuple
+from typing import List, Optional, Tuple, Union
 
-from cai_causal_graph import CausalGraph
+from cai_causal_graph import CausalGraph, Skeleton
 from cai_causal_graph.exceptions import CausalGraphErrors
 from cai_causal_graph.graph_components import Node
 from cai_causal_graph.type_definitions import NodeLike
 
 
-def _verify_identify_inputs(graph: CausalGraph, node_1: NodeLike, node_2: NodeLike) -> Tuple[str, str]:
+def _verify_identify_inputs(
+    graph: Union[CausalGraph, Skeleton], node_1: NodeLike, node_2: Optional[NodeLike] = None
+) -> Tuple[str, str]:
     """
     Verify the inputs to the identify utilities.
 
-    :param graph: The causal graph given by a `cai_causal_graph.causal_graph.CausalGraph` instance. This must be a DAG,
-        i.e. it must only contain directed edges and be acyclic, otherwise a `TypeError` is raised.
+    :param graph: The graph given by a `cai_causal_graph.causal_graph.CausalGraph` or
+        `cai_causal_graph.causal_graph.Skeleton` instance. If a `cai_causal_graph.causal_graph.CausalGraph` is
+        provided, it must be a DAG, i.e. it must only contain directed edges and be acyclic, otherwise a `TypeError`
+        is raised.
     :param node_1: The first node or its identifier.
-    :param node_2: The second node or its identifier.
-    :return: A tuple of the node identifiers.
+    :param node_2: The second (optional) node or its identifier.
+    :return: A tuple of the node identifiers. If node_2 was `None`, then `''` is returned for its identifier.
     """
-    if not graph.is_dag():
+    if isinstance(graph, CausalGraph) and not graph.is_dag():
         raise TypeError(f'Expected a DAG, but got a mixed causal graph.')
 
     # Confirm node_1 and node_2 are in the graph.
     if not graph.node_exists(node_1):
         raise CausalGraphErrors.NodeDoesNotExistError(f'Node not found: {node_1}')
-    if not graph.node_exists(node_2):
+    if node_2 is not None and not graph.node_exists(node_2):
         raise CausalGraphErrors.NodeDoesNotExistError(f'Node not found: {node_2}')
 
     # Coerce NodeLike to identifier. We already know they are NodeLike as node_exists does this.
     node_1_id = Node.identifier_from(node_1)
-    node_2_id = Node.identifier_from(node_2)
+    node_2_id = Node.identifier_from(node_2) if node_2 is not None else ''
 
     # Ensure node_1 != node_2
     if node_1_id == node_2_id or node_1 == node_2:
@@ -297,3 +301,87 @@ def identify_mediators(
                 break
 
     return list(candidate_nodes)
+
+
+def identify_markov_boundary(graph: Union[CausalGraph, Skeleton], node: NodeLike) -> List[str]:
+    """
+    Identify all the Markov boundary for the specified `node in the provided `graph`.
+
+    The Markov boundary is defined as the minimal Markov blanket. The Markov blanket is defined as the set of variables
+    such that if you condition on them, it makes your variable of interest (`node` in this case) conditionally
+    independent of all other variables. The Markov boundary is minimal meaning that you cannot drop any variables from
+    it for the conditional independence condition to still hold.
+
+    For a directed acyclic graph (DAG), provided as a `cai_causal_graph.causal_graph.CausalGraph` instance, the Markov
+    boundary of node 'A' is defined as the parents of 'A', the children of 'A', and the other parents of the children
+    of 'A'.
+
+    For an undirected graph, provided as a `cai_causal_graph.causal_graph.Skeleton` instance, the Markov boundary of
+    node 'A' is simply defined as the neighbors of 'A'.
+
+    See https://en.wikipedia.org/wiki/Markov_blanket for further information.
+
+    Example for `cai_causal_graph.causal_graph.CausalGraph`:
+        >>> from typing import List
+        >>> from cai_causal_graph import CausalGraph
+        >>> from cai_causal_graph.identify_utils import identify_markov_boundary
+        >>>
+        >>> # define a causal graph
+        >>> cg = CausalGraph()
+        >>> cg.add_edge('u', 'b')
+        >>> cg.add_edge('v', 'c')
+        >>> cg.add_edge('b', 'a')  # 'b' is a parent of 'a'
+        >>> cg.add_edge('c', 'a')  # 'c' is a parent of 'a'
+        >>> cg.add_edge('a', 'd')  # 'd' is a child of 'a'
+        >>> cg.add_edge('a', 'e')  # 'e' is a child of 'a'
+        >>> cg.add_edge('w', 'f')
+        >>> cg.add_edge('f', 'd')  # 'f' is a parent of 'd', which is a child of 'a'
+        >>> cg.add_edge('d', 'x')
+        >>> cg.add_edge('d', 'y')
+        >>> cg.add_edge('g', 'e')  # 'g' is a parent of 'e', which is a child of 'a'
+        >>> cg.add_edge('g', 'z')
+        >>>
+        >>> # compute Markov boundary for node 'a'; output: ['b', 'c', 'd', 'e', 'f', 'g']
+        >>> # parents: 'b' and 'c', children: 'd' and 'e', and other parents of children are 'f' and 'g'
+        >>> # note the order may not match but the elements will be those six.
+        >>> markov_boundary: List[str] = identify_markov_boundary(cg, node='a')
+
+    Example for `cai_causal_graph.causal_graph.Skeleton`:
+        >>> from typing import List
+        >>> from cai_causal_graph import Skeleton
+        >>> from cai_causal_graph.identify_utils import identify_markov_boundary
+        >>>
+        >>> # use causal graph from above and get is skeleton
+        >>> skeleton: Skeleton = cg.skeleton
+        >>>
+        >>> # compute Markov boundary for node 'a'; output: ['b', 'c', 'd', 'e']
+        >>> # as we have no directional information in the undirected skeleton, the neighbors of 'a' are returned.
+        >>> # note the order may not match but the elements will be those four.
+        >>> markov_boundary: List[str] = identify_markov_boundary(skeleton, node='a')
+
+    :param graph: The graph given by a `cai_causal_graph.causal_graph.CausalGraph` or
+        `cai_causal_graph.causal_graph.Skeleton` instance. If a `cai_causal_graph.causal_graph.CausalGraph` is
+        provided, it must be a DAG, i.e. it must only contain directed edges and be acyclic, otherwise a `TypeError`
+        is raised.
+    :param node: The node or its identifier.
+    :return: A list of all node identifiers for the nodes in the Markov boundary of `node`.
+    """
+
+    # verify inputs and obtain node identifier
+    if isinstance(graph, (CausalGraph, Skeleton)):
+        node_id, _ = _verify_identify_inputs(graph, node, None)
+    else:
+        raise TypeError(f'Expected graph to be passed as a CausalGraph or Skeleton object. Got {type(graph)}.')
+
+    if isinstance(graph, CausalGraph):
+        child_set = set(graph.get_children(node_id))
+        mb = list(
+            set(graph.get_parents(node_id))
+            | child_set
+            | {parent for child in child_set for parent in graph.get_parents(child) if parent != node_id}
+        )
+    else:
+        # We already know it is Skeleton here so no need for elif.
+        mb = graph.get_neighbors(node_id)
+
+    return mb

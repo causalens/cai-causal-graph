@@ -100,29 +100,29 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
         # Instantiate new nodes to remove any edge information.
         return [Node(n.identifier, meta=n.meta) for n in self._graph.nodes]
 
-    def get_node(self, identifier: str) -> Node:
+    def get_node(self, identifier: NodeLike) -> Node:
         """Return node that matches the identifier."""
-        matching_nodes = [node for node in self.nodes if node.identifier == identifier]
-        assert len(matching_nodes) > 0, f'No node found matching identifier {identifier}.'
-        assert (
-            len(matching_nodes) < 2
-        ), f'Found more than one matching node for identifier {identifier}: {matching_nodes}!'
+        node_id = Node.identifier_from(identifier)
+        matching_nodes = [node for node in self.nodes if node.identifier == node_id]
+        assert len(matching_nodes) > 0, f'No node found matching identifier {node_id}.'
+        assert len(matching_nodes) < 2, f'Found more than one matching node for identifier {node_id}: {matching_nodes}!'
         return matching_nodes[0]
 
     def get_node_names(self) -> List[str]:
         """Return a list of each node's identifier."""
         return [node.identifier for node in self._graph.nodes]
 
-    def node_exists(self, identifier: str) -> bool:
+    def node_exists(self, identifier: NodeLike) -> bool:
         """Check if node exists."""
-        return identifier in self.get_node_names()
+        node_id = Node.identifier_from(identifier)
+        return node_id in self.get_node_names()
 
     @property
     def edges(self) -> List[Edge]:
         """
         Return a list of all edges. All edges will be of the type
-        `cai_causal_graph.type_definitions.EdgeType.UNDIRECTED_EDGE` because this class represents a skeleton, which only
-        has undirected edges and no directed edges.
+        `cai_causal_graph.type_definitions.EdgeType.UNDIRECTED_EDGE` because this class represents a skeleton, which
+        only has undirected edges and no directed edges.
         """
         # instantiate new edges to enforce undirected edge types
         return [
@@ -171,8 +171,20 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
         validate_pair_type(pair)
         return self.edge_exists(pair[0], pair[1])
 
+    def get_neighbors(self, node: NodeLike) -> List[str]:
+        """Get node identifiers for all neighbor nodes for a specific node."""
+        node_id = Node.identifier_from(node)
+        assert node_id in self.get_node_names(), f'Node with identifier {node_id} does not exist in this skeleton.'
+
+        return self._graph.get_neighbors(node_id)
+
+    def get_neighbor_nodes(self, node: NodeLike) -> List[Node]:
+        """Get all neighbor nodes for a specific node."""
+        neighbor_ids = self.get_neighbors(node)
+        return [node for node in self.nodes if node.identifier in neighbor_ids]
+
     def is_empty(self) -> bool:
-        """Return True if there are no nodes and edges. False otherwise."""
+        """Return `True` if there are no nodes and edges. `False` otherwise."""
         return len(self.nodes) == 0 and len(self.edges) == 0
 
     @property
@@ -1197,6 +1209,33 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
     def remove_edge(self, /, source: str, destination: str, *, edge_type: Optional[EdgeType] = None):
         """Remove a specific edge by source and destination node identifiers, as well as edge type."""
         self.delete_edge(source=source, destination=destination, edge_type=edge_type)
+
+    def get_neighbors(self, node: NodeLike) -> List[str]:
+        """
+        Get node identifiers for all neighbor nodes for a specific node.
+
+        Note: It does not matter what the edge type is, as long as there is an edge between `node` and another node,
+        that other node is considered its neighbor.
+        """
+        identifier = self._NodeCls.identifier_from(node)  # As subclasses override NodeCls, need correct identifier.
+
+        assert identifier in self.get_node_names(), f'Node with identifier {identifier} does not exist in this graph.'
+
+        # inbound undirected edges
+        inbound = {e.destination.identifier for e in self.get_edges(source=identifier)}
+        # outbound undirected edges
+        outbound = {e.source.identifier for e in self.get_edges(destination=identifier)}
+
+        return list(inbound.union(outbound) - {identifier})
+
+    def get_neighbor_nodes(self, node: NodeLike) -> List[Node]:
+        """
+        Get all neighbor nodes for a specific node.
+
+        Note: It does not matter what the edge type is, as long as there is an edge between `node` and another node,
+        that other node is considered its neighbor.
+        """
+        return self.get_nodes(identifier=self.get_neighbors(node))  # type: ignore
 
     def get_children_nodes(self, node: NodeLike) -> List[Node]:
         """Get all children nodes for a specific node."""
