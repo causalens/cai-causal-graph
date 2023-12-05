@@ -94,6 +94,11 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
         """Check if the skeleton is not equal to another skeleton."""
         return not (self == other)
 
+    def __iter__(self) -> Iterator:
+        """Return item,value tuples of the content of `self.to_dict()`."""
+        for k, v in self.to_dict().items():
+            yield k, v
+
     @property
     def nodes(self) -> List[Node]:
         """Return a list of all nodes."""
@@ -421,7 +426,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             return self.get_edge(item[0], item[1])
 
     def __iter__(self) -> Iterator:
-        """Return item,value tuples of the content of self.to_dict()."""
+        """Return item,value tuples of the content of `self.to_dict()`."""
         for k, v in self.to_dict().items():
             yield k, v
 
