@@ -93,6 +93,11 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
     def __ne__(self, other: object) -> bool:
         """Check if the skeleton is not equal to another skeleton."""
         return not (self == other)
+    
+    def __iter__(self) -> Iterator:
+        """Return item,value tuples of the content of self.to_dict()."""
+        for k, v in self.to_dict().items():
+            yield k, v
 
     @property
     def nodes(self) -> List[Node]:
