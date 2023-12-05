@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.3.6
 
 - Added `__iter__` to `cai_causal_graph.causal_graph.Skeleton`.
 
