@@ -2,7 +2,7 @@
 
 ## NEXT
 
-- Added `__iter__` to `cai_causal_graph.causal_graph.Skeleton`
+- Added `__iter__` to `cai_causal_graph.causal_graph.Skeleton`.
 
 ## 0.3.5
 
