@@ -975,6 +975,8 @@ class TimeSeriesCausalGraph(CausalGraph):
         For example, the adjacency matrix with time delta -1 is stored in adjacency_matrices[-1] and would correspond
         to X-1 -> X, where X is the set of nodes.
 
+        Moreover, if floating nodes are present, only the contemporaneous nodes will be added to the graph.
+
         Example:
         >>> import numpy
         >>> from cai_causal_graph import TimeSeriesCausalGraph
