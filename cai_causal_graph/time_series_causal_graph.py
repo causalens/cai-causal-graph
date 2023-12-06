@@ -1042,6 +1042,12 @@ class TimeSeriesCausalGraph(CausalGraph):
         # create the empty graph
         tsgraph = TimeSeriesCausalGraph()
 
+        # first add all the nodes (there could be floating nodes)
+        lags = list(adjacency_matrices.keys())
+        for variable_name in variable_names_str:
+            for lag in lags:
+                tsgraph.add_node(variable_name=variable_name, time_lag=lag)
+
         for time_delta, adjacency_matrix in adjacency_matrices.items():
             # create the edges
             edges: List[Tuple[str, str]] = []
