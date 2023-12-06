@@ -47,7 +47,6 @@ def _reset_ts_graph_attributes(func: Callable) -> Callable:
         self._minimal_graph = None
         self._summary_graph = None
         self._stationary_graph = None
-        self._max_time_lag = None
         self._variables = None
         return function
 
