@@ -2,7 +2,7 @@
 
 ## NEXT
 
-- "Fixed a bug in `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_adjacency_matrices` for
+- Fixed a bug in `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_adjacency_matrices` for
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` where the method was not adding floating nodes to
   the graph. Now any floating nodes at time lag 0 will be added.
 
