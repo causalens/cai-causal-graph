@@ -1168,7 +1168,8 @@ class TimeSeriesCausalGraph(CausalGraph):
     def maxlag(self) -> Optional[int]:
         """Return the maximum absolute past lag of the graph."""
         # get the maximum lag of the nodes in the graph
-        return abs(get_min_lag(self))
+        min_lag = get_min_lag(self)
+        return abs(min_lag) if min_lag is not None else None
 
     @property
     def max_time_lag(self) -> Optional[int]:
