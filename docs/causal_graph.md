@@ -7,15 +7,9 @@ variable. As a result, causal graphs are one of the most fundamental building bl
 Causal graphs consist of _nodes_, i.e. variables, and _edges_, i.e. their causal relationships. A directed edge `->`
 between two nodes `A` and `B` would imply that `A` is a causal driver of `B`, but not the other way around. A causal
 graph is essentially a collection of such nodes and edges that aim to fully specify the data-generating process of
-corresponding data.
-
-There are several types of causal graphs, many of which can be captured by the 
-`cai_causal_graph.causal_graph.CausalGraph` class of the `cai-causal-graph` package. One of the most prominent types is 
-a _Directed Acyclic Graph_ (DAG), which only contains directed edges. Many downstream causality tasks require the use of 
-a DAG, such as causal modeling, counterfactual explanations, causal effect estimation, among others. Sometimes, however, 
-you may need to work with different causal graph types that can contain different edge types. See the section on Markov 
-Equivalence Classes (MECs) at the end of this documentation page for more detailed information about additional causal 
-graph types.
+corresponding data.  There are several types of edges besides the directed edge and consequently several types of
+causal graphs that can be captured by the `cai_causal_graph.causal_graph.CausalGraph` class.  See the
+[Types of Causal Graphs](introduction.md#types-of-causal-graphs) section for more information on this.
 
 ## Constructing a Causal Graph
 
@@ -43,6 +37,27 @@ causal_graph.add_edge('A', 'B')  # this adds a directed edge (i.e., an edge from
 causal_graph.add_edge('B', 'E')  # if the node does not exist, it gets added automatically
 ```
 
+### Node Variable Types
+
+Any node added to a causal graph will, by default, be an unspecified variable type. It is, however, possible to specify 
+different variable types via the `variable_type` argument. For a full list of variable types, see 
+`cai_causal_graph.type_definitions.NodeVariableType`. For instance, you can add a binary node `F`, as shown below.
+
+```python
+from cai_causal_graph import NodeVariableType
+
+causal_graph.add_node('F', variable_type=NodeVariableType.BINARY)
+```
+
+These are the different variable types that are supported (these can be accessed via the 
+`cai_causal_graph.type_definitions.NodeVariableType` enumeration):
+
+- `NodeVariableType.UNSPECIFIED`  (default for new nodes)
+- `NodeVariableType.CONTINUOUS`
+- `NodeVariableType.BINARY`
+- `NodeVariableType.MULTICLASS`
+- `NodeVariableType.ORDINAL`
+
 ### Edge Types
 
 Any edge added to causal graph will, by default, be a directed edge. It is, however, possible to specify different
@@ -59,14 +74,14 @@ causal_graph.add_edge('A', 'C', edge_type=EdgeType.UNDIRECTED_EDGE)
 These are the different edge types that are supported by the `cai_causal_graph.causal_graph.CausalGraph` class (these 
 can be accessed via the `cai_causal_graph.type_definitions.EdgeType` enumeration):
 
-- `EdgeType.DIRECTED_EDGE` (`->`)
+- `EdgeType.DIRECTED_EDGE` (`->`)  (default for new edges)
 - `EdgeType.UNDIRECTED_EDGE` (`--`)
 - `EdgeType.BIDIRECTED_EDGE` (`<>`)
 - `EdgeType.UNKNOWN_EDGE` (`oo`)
 - `EdgeType.UNKNOWN_DIRECTED_EDGE` (`o>`)
 - `EdgeType.UNKNOWN_UNDIRECTED_EDGE` (`o-`)
 
-See the section on Markov Equivalence Classes at the end of this documentation page for more information on edge types.
+See the [Types of Causal Graphs](introduction.md#types-of-causal-graphs) section for more information on edge types.
 
 ## Interacting with a Causal Graph
 

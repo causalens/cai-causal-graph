@@ -1,8 +1,44 @@
 # Changelog
 
-## NEXT
+## 0.3.6
 
-- Bug fix in `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_graph` for forward extension.
+- Added `__iter__` to `cai_causal_graph.causal_graph.Skeleton`.
+
+## 0.3.5
+
+- Added the `cai_causal_graph.identify_utils.identify_markov_boundary` utility function, which allows you to identify
+  the Markov boundary of a node in a `cai_causal_graph.causal_graph.CausalGraph` or in a
+  `cai_causal_graph.causal_graph.Skeleton`.
+- Added `get_neighbor_nodes` and `get_neighbors` methods to `cai_causal_graph.causal_graph.CausalGraph` and
+  `cai_causal_graph.causal_graph.Skeleton`. `get_neighbor_nodes` returns the nodes neighboring the specified node while
+  `get_neighbors` returns the identifiers of the neighboring nodes. Note: For a
+  `cai_causal_graph.causal_graph.CausalGraph`, it does not matter what the edge type is, as long as there is an edge
+  between the specified node and another node, that other node is considered its neighbor.
+
+## 0.3.4
+
+- Extended documentation to provide further information regarding the types of mixed graphs that can be defined in a
+  `cai_causal_graph.causal_graph.CausalGraph`.
+
+## 0.3.3
+
+- Fixed a bug in `cai_causal_graph.identify_utils.identify_instruments` and
+  `cai_causal_graph.identify_utils.identify_mediators`, where an unclear error was raised if the `source` node was a
+  descendant of the `destination` node. Instead, these methods now return an empty list in that case.
+- Extended the quickstart documentation to describe how to set the `variable_type` when adding a
+  `cai_causal_graph.graph_components.Node` / `cai_causal_graph.graph_components.TimeSeriesNode` to a
+  `cai_causal_graph.causal_graph.CausalGraph` / `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`,
+  respectively.
+
+## 0.3.2
+
+- Improved documentation.
+
+## 0.3.1
+
+- Fixed a bug for forward extension in the
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_graph` method in
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`.
 
 ## 0.3.0
 

@@ -33,35 +33,50 @@ class.
 
 # Types of Causal Graphs
 
-The most common type of mixed graph used to represent a causal graph is a _Directed Acyclic Graph_ (_DAG_), which has
-ony directed edges and the no cycles. However, discovering a single _DAG_ for a given data set is difficult. Certain 
-causal relationships are indistinguishable from each other with only observational data, because they encode the
-same conditional independencies. The set of such causal relationships is called the _Markov equivalence class_ (_MEC_)
-for a particular set of nodes.
+A _Directed Acyclic Graph_ (_DAG_) is the most common type of mixed graph used to represent a causal graph. It has
+only directed edges between nodes (`->`) and permits no cycles. 
 
-For instance, if you identify the graphical structure `X -> Y -> Z`, then corresponding data would show that `X` 
-**is** independent of `Z` given `Y`. However, the graphical structures `X <- Y <- Z` and `X <- Y -> Z` would lead to 
-the exact same conditional independence test result as above. Only if the graphical structure found was a collider 
-connection `X -> Y <- Z` would you be able to identify the structure from observational data,
-because the data would tell you that `X` and `Z` are independent, but become dependent given `Y`. The _MEC_ of 
-`(X, Y, Z)` is typically represented with undirected edges, i.e., `X -- Y -- Z`.
+A _Completed Partially Directed Acyclic Graph_ (_CPDAG_) can contain directed (`->`) and undirected (`--`) edges.
+In this case, an undirected edge implies that a causal relationship exists but can point either way, i.e., `A -- B` can be
+resolved to either `A -> B` or `A <- B`.
 
-One prominent representation of _MECs_ is a _Completed Partially Directed Acyclic Graph_ (_CPDAG_), which only contains
-directed (`->`) and undirected (`--`) edges. In this case, an undirected edge simply implies that a causal relationship
-can point either way, i.e., `A -- B` can be resolved to either `A -> B` or `A <- B`. In the above example, the _CPDAG_
-_MEC_ of the two _DAGs_ is therefore `A -- B -- C`.
+A _Maximal Ancestral Graph_ (_MAG_) can encode all the information that a _CPDAG_ can, but also provides
+information such as whether a latent confounder is likely to exist or selection bias is likely to be present. Specifically,
+_MAGs_ may also contain bi-directed edges `A <> B`, which imply the existence of a latent confounder between the respective
+variables. Additionally, an undirected edge `A -- B` in a _MAG_ implies the existence of a latent selection bias variable 
+leading to the association being observed between `A` and `B`.
 
-A _Maximal Ancestral Graph_ (_MAG_) can encode all the information that _CPDAGs_ can, but also provides
-more detailed information about the relationships between variables, such as including whether a latent confounder is
-likely to exist or selection bias is likely to be present. Specifically, _MAGs_ may also contain bi-directed edges
-`A <> B`, which implies that there is a latent confounder between the respective variables. A _Partial Ancestral Graph_ (_PAG_) 
-describes an equivalence class of _MAGs_. _PAGs_ may also contain "wild-card" or "circle" edges `A -o B`, which can 
-either be a directed or undirected arrow head, i.e. `A -o B` can be  resolved to `A -- B` or `A -> B`. The `o` end is r
-eferenced to as "unknown" in this package. See `cai_causal_graph.type_definitions.EdgeType` for all the supported edge 
-types. Similar to a _CPDAG_, a _PAG_ can represent  a number of _DAGs_. Therefore, _PAGs_, _CPDAGs_ and _DAGs_ can be 
-thought of in a hierarchical way.
+A _Partial Ancestral Graph_ (_PAG_) describes an equivalence class of _MAGs_. _PAGs_ may also contain "wild-card" or
+"circle" edges (`-o`), which can either be a directed or undirected arrow head, i.e. `A -o B` can be resolved to
+`A -- B` or `A -> B`. The `o` end is referred to as "unknown" in this package.
 
-![DAG CPDAG PAG](images/DAG_CPDAG_PAG.png)
+| Type of Graph                      | DAG                | CPDAG                | MAG                | PAG                |
+|:-----------------------------------|:------------------:|:--------------------:|:------------------:|:------------------:|
+| Tester method                      | `graph.is_dag()`   |         :x:          |        :x:         |         :x:        |
+| Direct edges `->`                  | :white_check_mark: |  :white_check_mark:  | :white_check_mark: | :white_check_mark: |
+| Undirected edges `--`              |        :x:         |  :white_check_mark:  | :white_check_mark: | :white_check_mark: |
+| Latent confounder edges `<>`       |        :x:         |         :x:          | :white_check_mark: | :white_check_mark: |
+| Wildcard edges `o-`, `o>` and `oo` |        :x:         |         :x:          |        :x:         | :white_check_mark: |
 
+See `cai_causal_graph.type_definitions.EdgeType` for all the supported edge types in this package.
 Note that the `cai_causal_graph.causal_graph.CausalGraph` class can contain all the aforementioned edge types, and 
-can therefore represent _DAGs_, _CPDAGs_, _MAGs_, and _PAGs_.
+can therefore represent the entire hierarchy of _DAGs_, _CPDAGs_, _MAGs_, and _PAGs_.
+
+:::info
+Discovering a single _DAG_ for a given data set is difficult. Certain causal relationships are indistinguishable from
+each other with only observational data, because they encode the same conditional independencies between variables. 
+The set of such causal relationships is called the _Markov equivalence class_ (_MEC_) for a particular set of nodes.
+
+Multiple _DAGs_/_CPDAGs_/_MAGs_/_PAGs_ can be consistent with the same _MEC_. For instance, if you identify the
+graphical structure `X -> Y -> Z`, then corresponding data would show that `X` **is** independent of `Z` given `Y`.
+However, the graphical structures `X <- Y <- Z` and `X <- Y -> Z` would lead to the exact same conditional independence
+test result as above. Only if the graphical structure found was a collider connection `X -> Y <- Z` would you be able to
+identify the structure from observational data, because the data would tell you that `X` and `Z` are independent, but
+become dependent given `Y`.
+:::
+
+:::warning
+In a _CPDAG_ the `--` edge implies an existence of an edge which can be in either direction, `<-` or `->`. In a _MAG_ or
+a _PAG_, the `--` edge implies the existence of latent selection variable. When resolving this, it can be possible to
+resolve to no edge at all. In a _PAG_, the `--` edge is a possible outcome of a wildcard edge (for example `o-`).
+:::

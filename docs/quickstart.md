@@ -28,9 +28,20 @@ causal_graph.add_edge('A', 'B')  # this adds a directed edge (i.e., an edge from
 causal_graph.add_edge('B', 'E')  # if the node does not exist, it gets added automatically
 ```
 
-Any edge added to causal graph will, by default, be a directed edge. It is, however, possible to specify different
+Any node added to a causal graph will, by default, be an unspecified variable type. It is, however, possible to specify 
+different variable types via the `variable_type` argument. For a full list of variable types, see 
+`cai_causal_graph.type_definitions.NodeVariableType`. For instance, you can add a binary node `F`, as shown below.
+
+```python
+from cai_causal_graph import NodeVariableType
+
+causal_graph.add_node('F', variable_type=NodeVariableType.BINARY)
+```
+
+Any edge added to a causal graph will, by default, be a directed edge. It is, however, possible to specify different
 edge types via the `edge_type` argument. For a full list of edge types, see
-`cai_causal_graph.type_definitions.EdgeType`. For instance, you can add an undirected edge `A -- C`, as shown below.
+[this section](introduction.md#types-of-causal-graphs). For instance, you can add an undirected edge `A -- C`, as
+shown below.
 
 ```python
 from cai_causal_graph import EdgeType
@@ -58,8 +69,8 @@ from cai_causal_graph import TimeSeriesCausalGraph
 ts_causal_graph = TimeSeriesCausalGraph()
 
 # Add edges to the causal graph; this will also add the nodes if they are not present in the graph yet.
-ts_causal_graph.add_edge('X1 lag(n=1)', 'X2')
-ts_causal_graph.add_edge('X2 lag(n=1)', 'X2')
+ts_causal_graph.add_edge('X1 lag(n=1)', 'X2')  # this adds a directed edge (i.e., an edge from X1 lag(n=1) to X2) by default
+ts_causal_graph.add_edge('X2 lag(n=1)', 'X2')  # this adds a directed edge (i.e., an edge from X2 lag(n=1) to X2) by default
 ```
 
 This is equivalent to the following:
@@ -70,8 +81,8 @@ from cai_causal_graph import TimeSeriesCausalGraph
 ts_causal_graph = TimeSeriesCausalGraph()
 
 # add edges to the causal graph
-ts_causal_graph.add_time_edge('X1', -1, 'X2', 0)
-ts_causal_graph.add_time_edge('X2', -1, 'X2', 0)
+ts_causal_graph.add_time_edge('X1', -1, 'X2', 0)  # this is a directed edge by default, unless specified otherwise
+ts_causal_graph.add_time_edge('X2', -1, 'X2', 0)  # this is a directed edge by default, unless specified otherwise
 ```
 
 `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` is aware of the time lags of the variables and can 
@@ -82,6 +93,10 @@ the edge `X1 lag(n=1) -> X2` means that `X1` at time `t-1` is a causal driver of
 
 The method `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.add_time_edge` is a convenience method to
 add edges between nodes with different time lags without having to specify them in the node names.
+
+Similar to `cai_causal_graph.causal_graph.CausalGraph`, any node added to the time series causal graph will, by 
+default, be an unspecified variable type. It is, however, possible to specify different node variable types via the 
+`variable_type` argument. For a full list of variable types, see `cai_causal_graph.type_definitions.NodeVariableType`.
 
 Similar to `cai_causal_graph.causal_graph.CausalGraph`, any edge added to the time series causal graph will, by 
 default, be a directed edge. It is, however, possible to specify different edge types via the `edge_type` argument. 

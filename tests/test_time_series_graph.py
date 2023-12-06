@@ -788,8 +788,13 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         cg = TimeSeriesCausalGraph()
         cg.add_edge('x lag(n=1)', 'y')
 
-        # test it does not raise an error
-        cg.extend_graph(forward_steps=1)
+        # test it does not raise an error and matches expected graph
+        extended_cg = cg.extend_graph(forward_steps=1)
+        gt_extended = TimeSeriesCausalGraph()
+        gt_extended.add_edge('x lag(n=1)', 'y')
+        gt_extended.add_edge('x', 'y future(n=1)')
+        gt_extended.add_node('x future(n=1)')
+        self.assertEqual(extended_cg, gt_extended)
 
     def test_add_time_edge(self):
         # test adding a time edge to a graph
