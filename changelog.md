@@ -7,8 +7,7 @@
 - Added `max_time_lag` and `min_time_lag` properties to
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` to return the maximum and minimum lag of the graph,
   respectively.
-- Fixed a bug with the property `maxlag`: it was removed to avoid confusion since it could give wrong information
-  if the future was included in the graph.
+- Fixed a bug with the property `maxlag` since it could give wrong information if the future was included in the graph.
 
 ## 0.3.7
 

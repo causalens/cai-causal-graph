@@ -1165,6 +1165,12 @@ class TimeSeriesCausalGraph(CausalGraph):
         return adjacency_matrices
 
     @property
+    def maxlag(self) -> Optional[int]:
+        """Return the maximum absolute past lag of the graph."""
+        # get the maximum lag of the nodes in the graph
+        return abs(get_min_lag(self))
+
+    @property
     def max_time_lag(self) -> Optional[int]:
         """
         Return the maximum lag of the graph.
