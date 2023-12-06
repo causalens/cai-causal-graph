@@ -452,6 +452,15 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
                 source, destination = edge.source, edge.destination
             self.assertEqual(tscg.get_edge(source, destination).get_edge_type(), edge.get_edge_type())
 
+        # test if node meta are preserved
+        cg = CausalGraph()
+        cg.add_node('a', meta={'some': 'test'})
+        cg.add_node('b', meta={'some': 'test2'})
+
+        tscg = TimeSeriesCausalGraph.from_causal_graph(cg)
+        self.assertDictEqual(tscg.get_node('a').meta, {'variable_name': 'a', 'time_lag': 0, 'some': 'test'})
+        self.assertDictEqual(tscg.get_node('b').meta, {'variable_name': 'b', 'time_lag': 0, 'some': 'test2'})
+
     def test_from_adjacency_matrix(self):
         # test with the adjacency matrix corresponding to th minimal tsdag
         mg = self.tsdag.get_minimal_graph()

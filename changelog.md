@@ -1,5 +1,12 @@
 # Changelog
 
+## NEXT
+
+- Bugfix in `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_causal_graph` where the method was
+  not adding the node correctly.
+- Added properties `max_time_lag` and `min_time_lag` to `cai_causal_graph.time_series_causal_graph. TimeSeriesCausalGraph` to
+  return the maximum and minimum lag of the graph, respectively. The property `maxlag` was removed to avoid confusion.
+
 ## 0.3.7
 
 - Fixed a bug in `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_adjacency_matrices` for

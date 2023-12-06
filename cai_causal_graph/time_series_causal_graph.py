@@ -47,11 +47,39 @@ def _reset_ts_graph_attributes(func: Callable) -> Callable:
         self._minimal_graph = None
         self._summary_graph = None
         self._stationary_graph = None
-        self._maxlag = None
+        self._max_time_lag = None
         self._variables = None
         return function
 
     return wrapper
+
+
+def get_min_lag(ts_graph: TimeSeriesCausalGraph) -> Optional[int]:
+    """
+    Get the minimum lag from a list of lags.
+
+    :param ts_graph: The time series causal graph.
+    return: The minimum lag.
+    """
+    assert isinstance(
+        ts_graph, TimeSeriesCausalGraph
+    ), f'Expected ts_graph to be a TimeSeriesGraph, got type {type(ts_graph)}.'
+    nodes = ts_graph.get_nodes()
+    return min([node.time_lag for node in ts_graph.get_nodes()]) if len(nodes) > 0 else None
+
+
+def get_max_lag(ts_graph: TimeSeriesCausalGraph) -> Optional[int]:
+    """
+    Get the maximum lag from a list of lags.
+
+    :param ts_graph: The time series causal graph.
+    return: The maximum lag.
+    """
+    assert isinstance(
+        ts_graph, TimeSeriesCausalGraph
+    ), f'Expected ts_graph to be a TimeSeriesGraph, got type {type(ts_graph)}.'
+    nodes = ts_graph.get_nodes()
+    return max([node.time_lag for node in ts_graph.get_nodes()]) if len(nodes) > 0 else None
 
 
 class TimeSeriesCausalGraph(CausalGraph):
@@ -112,8 +140,9 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         super().__init__(input_list, output_list, fully_connected)
 
-        # autoregressive order of the graph (max lag)
-        self._maxlag: Optional[int] = None
+        # max and min lags
+        self._max_time_lag: Optional[int] = None  # DO NOT ACCESS THIS DIRECTLY AS IT MAY BE NOT UP TO DATE
+        self._min_time_lag: Optional[int] = None  # DO NOT ACCESS THIS DIRECTLY AS IT MAY BE NOT UP TO DATE
         # list of variables in the graph, i.e. discarding the lags (X1(t-1) and X1 are the same variable)
         self._variables: Optional[List[str]] = None
         self._summary_graph: Optional[CausalGraph] = None
@@ -441,7 +470,7 @@ class TimeSeriesCausalGraph(CausalGraph):
             # Start from 1 as 0 is already defined.
             # We cannot start directly from maxlag as it may be possible that not all the nodes from 1 to -maxlag are
             # defined (as they were not needed in the minimal graph).
-            maxlag = minimal_graph.maxlag
+            maxlag = abs(minimal_graph.min_time_lag)
             assert maxlag is not None
 
             for lag in range(1, backward_steps + 1):
@@ -931,7 +960,7 @@ class TimeSeriesCausalGraph(CausalGraph):
             # get the variable name and lag from the node name
             variable_name, lag = get_variable_name_and_lag(node.identifier)
             node = TimeSeriesNode(variable_name=variable_name, time_lag=lag, meta=meta)
-            ts_cg.add_node(node)
+            ts_cg.add_node(node=node)
 
         # copy edges
         for edge in causal_graph.get_edges():
@@ -1137,16 +1166,28 @@ class TimeSeriesCausalGraph(CausalGraph):
         return adjacency_matrices
 
     @property
-    def maxlag(self) -> Optional[int]:
+    def max_time_lag(self) -> Optional[int]:
         """
-        Return the autoregressive order of the graph.
+        Return the maximum lag of the graph.
 
-        The autoregressive order of the graph is the maximum lag of the nodes in the minimal graph.
+        The maximum lag of the graph is the maximum lag of the nodes in the minimal graph.
         """
         # get the maximum lag of the nodes in the graph
-        if self._maxlag is None:
-            self._maxlag = max([abs(node.time_lag) for node in self.get_minimal_graph().get_nodes()])  # type: ignore
-        return self._maxlag
+        if self._max_time_lag is None:
+            self._max_time_lag = get_max_lag(self)  # type: ignore
+        return self._max_time_lag
+
+    @property
+    def min_time_lag(self) -> Optional[int]:
+        """
+        Return the minimum lag of the graph.
+
+        The minimum lag of the graph is the minimum lag of the nodes in the minimal graph.
+        """
+        # get the minimum lag of the nodes in the graph
+        if self._min_time_lag is None:
+            self._min_time_lag = get_min_lag(self)  # type: ignore
+        return self._min_time_lag
 
     @property
     def variables(self) -> Optional[List[str]]:
