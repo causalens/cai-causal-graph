@@ -141,8 +141,8 @@ class TimeSeriesCausalGraph(CausalGraph):
         super().__init__(input_list, output_list, fully_connected)
 
         # max and min lags
-        self._max_time_lag: Optional[int] = None  # DO NOT ACCESS THIS DIRECTLY AS IT MAY BE NOT UP TO DATE
-        self._min_time_lag: Optional[int] = None  # DO NOT ACCESS THIS DIRECTLY AS IT MAY BE NOT UP TO DATE
+        self._max_time_lag: Optional[int] = None  # DO NOT ACCESS THIS DIRECTLY AS IT MAY NOT BE UP-TO-DATE
+        self._min_time_lag: Optional[int] = None  # DO NOT ACCESS THIS DIRECTLY AS IT MAY NOT BE UP-TO-DATE
         # list of variables in the graph, i.e. discarding the lags (X1(t-1) and X1 are the same variable)
         self._variables: Optional[List[str]] = None
         self._summary_graph: Optional[CausalGraph] = None
