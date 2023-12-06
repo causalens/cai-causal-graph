@@ -496,11 +496,11 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         # test for floating nodes
         # create a matrix with just one edge
         matrices = {0: numpy.zeros((3, 3)), -1: numpy.zeros((3, 3))}
-        matrices[0][0, 1] = 1
-        # there should be 3+3 nodes
+        matrices[-1][0, 1] = 1
+        # there should be 3+1 nodes
         variables = ['X1', 'X2', 'X3']
         tsdag = TimeSeriesCausalGraph.from_adjacency_matrices(matrices, variables)
-        nodes = sorted(['X1', 'X2', 'X3', 'X1 lag(n=1)', 'X2 lag(n=1)', 'X3 lag(n=1)'])
+        nodes = sorted(['X1', 'X2', 'X3', 'X1 lag(n=1)'])
         self.assertEqual(sorted([n.identifier for n in tsdag.nodes]), nodes)
         self.assertEqual(len(tsdag.edges), 1)
 
