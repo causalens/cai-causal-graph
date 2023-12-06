@@ -462,6 +462,9 @@ class TimeSeriesCausalGraph(CausalGraph):
         # first get the minimal graph
         minimal_graph = self.get_minimal_graph()
 
+        if minimal_graph.is_empty():
+            return minimal_graph
+
         # create a new graph by copying the minimal graph
         extended_graph = minimal_graph.copy()
         assert isinstance(extended_graph, TimeSeriesCausalGraph)  # for linting
@@ -470,7 +473,7 @@ class TimeSeriesCausalGraph(CausalGraph):
             # Start from 1 as 0 is already defined.
             # We cannot start directly from maxlag as it may be possible that not all the nodes from 1 to -maxlag are
             # defined (as they were not needed in the minimal graph).
-            maxlag = abs(minimal_graph.min_time_lag)
+            maxlag = abs(minimal_graph.min_time_lag) if minimal_graph.min_time_lag is not None else None
             assert maxlag is not None
 
             for lag in range(1, backward_steps + 1):
