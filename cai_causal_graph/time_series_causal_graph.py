@@ -943,12 +943,15 @@ class TimeSeriesCausalGraph(CausalGraph):
     @classmethod
     def from_causal_graph(cls, causal_graph: CausalGraph) -> TimeSeriesCausalGraph:
         """
-        Return a time series causal graph from a causal graph.
+        Return a time series causal graph from a causal graph. If the causal graph is already a time series causal
+        graph, it is returned as is.
 
         This is useful for converting a causal graph from a single time step into a time series causal graph.
 
         :param causal_graph: The causal graph.
         """
+        if isinstance(causal_graph, TimeSeriesCausalGraph):
+            return causal_graph
 
         sepsets = deepcopy(causal_graph._sepsets)
 
