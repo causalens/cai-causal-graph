@@ -493,6 +493,17 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         with self.assertRaises(AssertionError):
             _ = TimeSeriesCausalGraph.from_adjacency_matrices(matrices, variables)
 
+        # test for floating nodes
+        # create a matrix with just one edge
+        matrices = {0: numpy.zeros((3, 3)), -1: numpy.zeros((3, 3))}
+        matrices[-1][0, 1] = 1
+        # there should be 3+1 nodes
+        variables = ['X1', 'X2', 'X3']
+        tsdag = TimeSeriesCausalGraph.from_adjacency_matrices(matrices, variables)
+        nodes = sorted(['X1', 'X2', 'X3', 'X1 lag(n=1)'])
+        self.assertEqual(sorted([n.identifier for n in tsdag.nodes]), nodes)
+        self.assertEqual(len(tsdag.edges), 1)
+
     def test_summary_graph(self):
         summary_graph = self.tsdag.get_summary_graph()
         # the graph should be  X3 <- X1 -> X2
