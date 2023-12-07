@@ -53,34 +53,6 @@ def _reset_ts_graph_attributes(func: Callable) -> Callable:
     return wrapper
 
 
-def get_min_lag(ts_graph: TimeSeriesCausalGraph) -> Optional[int]:
-    """
-    Get the minimum lag from a TimeSeriesCausalGraph.
-
-    :param ts_graph: The time series causal graph.
-    :return: The minimum lag.
-    """
-    assert isinstance(
-        ts_graph, TimeSeriesCausalGraph
-    ), f'Expected ts_graph to be a TimeSeriesGraph, got type {type(ts_graph)}.'
-    nodes = ts_graph.get_nodes()
-    return min([node.time_lag for node in nodes]) if len(nodes) > 0 else None
-
-
-def get_max_lag(ts_graph: TimeSeriesCausalGraph) -> Optional[int]:
-    """
-    Get the maximum lag from a TimeSeriesCausalGraph.
-
-    :param ts_graph: The time series causal graph.
-    :return: The maximum lag.
-    """
-    assert isinstance(
-        ts_graph, TimeSeriesCausalGraph
-    ), f'Expected ts_graph to be a TimeSeriesGraph, got type {type(ts_graph)}.'
-    nodes = ts_graph.get_nodes()
-    return max([node.time_lag for node in nodes]) if len(nodes) > 0 else None
-
-
 class TimeSeriesCausalGraph(CausalGraph):
     """
     A causal graph for time series data.
@@ -1169,31 +1141,44 @@ class TimeSeriesCausalGraph(CausalGraph):
 
     @property
     def maxlag(self) -> Optional[int]:
-        """Return the maximum absolute past lag of the graph."""
+        """
+        Return the maximum absolute past lag of the graph. Retained for backwards compatibility.
+
+        Thus, a positive integer is returned.
+        """
         # get the maximum lag of the nodes in the graph
-        min_lag = get_min_lag(self)
-        return abs(min_lag) if min_lag is not None else None
+        return self.max_backward_lag
 
     @property
     def max_forward_lag(self) -> Optional[int]:
         """
-        Return the maximum lag of the graph.
+        Return the maximum forward time lag of the graph.
 
-        The maximum lag of the graph is the maximum lag of the nodes in the minimal graph.
+        For example, if the graph is X lag(n=2) -> Y future(n=1), the maximum forward lag is 1.
+
+        If the graph is empty, None is returned. Otherwise, the maximum forward lag is a positive integer.
         """
+        if len(self.nodes) == 0:
+            return None
         # get the maximum lag of the nodes in the graph
-        return get_max_lag(self)
+        pos_time_lags = [node.time_lag for node in self.get_nodes() if node.time_lag >= 0]
+        max_forward_lag = max(pos_time_lags) if len(pos_time_lags) > 0 else None
+        return max_forward_lag
 
     @property
     def max_backward_lag(self) -> Optional[int]:
         """
-        Return the minimum lag of the graph.
+        Return the maximum backward time lag of the graph.
 
-        The minimum lag of the graph is the minimum lag of the nodes in the minimal graph.
+        For example, if the graph is X lag(n=2) -> Y future(n=1), the maximum backward lag is 2.
+
+        If the graph is empty, None is returned. Otherwise, the maximum backward lag is a negative integer.
         """
-        # get the minimum lag of the nodes in the graph
-        signed_min_lag = get_min_lag(self)
-        return -signed_min_lag if signed_min_lag is not None else None
+        if len(self.nodes) == 0:
+            return None
+        neg_time_lags = [node.time_lag for node in self.nodes if node.time_lag <= 0]
+        max_backward_lag = abs(min(neg_time_lags)) if len(neg_time_lags) > 0 else None
+        return max_backward_lag
 
     @property
     def variables(self) -> Optional[List[str]]:
