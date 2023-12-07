@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.3.8
 
 - Fixed a bug in `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_causal_graph` for
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` where the method was not adding floating nodes
