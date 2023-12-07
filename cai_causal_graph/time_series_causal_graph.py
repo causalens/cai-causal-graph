@@ -47,7 +47,6 @@ def _reset_ts_graph_attributes(func: Callable) -> Callable:
         self._minimal_graph = None
         self._summary_graph = None
         self._stationary_graph = None
-        self._maxlag = None
         self._variables = None
         return function
 
@@ -112,8 +111,6 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         super().__init__(input_list, output_list, fully_connected)
 
-        # autoregressive order of the graph (max lag)
-        self._maxlag: Optional[int] = None
         # list of variables in the graph, i.e. discarding the lags (X1(t-1) and X1 are the same variable)
         self._variables: Optional[List[str]] = None
         self._summary_graph: Optional[CausalGraph] = None
@@ -433,6 +430,9 @@ class TimeSeriesCausalGraph(CausalGraph):
         # first get the minimal graph
         minimal_graph = self.get_minimal_graph()
 
+        if minimal_graph.is_empty():
+            return minimal_graph
+
         # create a new graph by copying the minimal graph
         extended_graph = minimal_graph.copy()
         assert isinstance(extended_graph, TimeSeriesCausalGraph)  # for linting
@@ -441,7 +441,7 @@ class TimeSeriesCausalGraph(CausalGraph):
             # Start from 1 as 0 is already defined.
             # We cannot start directly from maxlag as it may be possible that not all the nodes from 1 to -maxlag are
             # defined (as they were not needed in the minimal graph).
-            maxlag = minimal_graph.maxlag
+            maxlag = minimal_graph.max_backward_lag
             assert maxlag is not None
 
             for lag in range(1, backward_steps + 1):
@@ -915,12 +915,18 @@ class TimeSeriesCausalGraph(CausalGraph):
     @classmethod
     def from_causal_graph(cls, causal_graph: CausalGraph) -> TimeSeriesCausalGraph:
         """
-        Return a time series causal graph from a causal graph.
+        Instantiate a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` from a
+        `cai_causal_graph.causal_graph.CausalGraph` object. If the `cai_causal_graph.causal_graph.CausalGraph` is
+        already a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`, it is returned as is.
 
-        This is useful for converting a causal graph from a single time step into a time series causal graph.
+        This is useful for converting a `cai_causal_graph.causal_graph.CausalGraph` from a single time step into a
+        `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`.
 
-        :param causal_graph: The causal graph.
+        :param causal_graph: The causal graph as a `cai_causal_graph.causal_graph.CausalGraph` object.
+        :return: A `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` object.
         """
+        if isinstance(causal_graph, TimeSeriesCausalGraph):
+            return causal_graph
 
         sepsets = deepcopy(causal_graph._sepsets)
 
@@ -931,7 +937,7 @@ class TimeSeriesCausalGraph(CausalGraph):
             # get the variable name and lag from the node name
             variable_name, lag = get_variable_name_and_lag(node.identifier)
             node = TimeSeriesNode(variable_name=variable_name, time_lag=lag, meta=meta)
-            ts_cg.add_node(node)
+            ts_cg.add_node(node=node)
 
         # copy edges
         for edge in causal_graph.get_edges():
@@ -1139,14 +1145,48 @@ class TimeSeriesCausalGraph(CausalGraph):
     @property
     def maxlag(self) -> Optional[int]:
         """
-        Return the autoregressive order of the graph.
+        Return the absolute maximum backward time lag of the graph. Retained for backwards compatibility.
 
-        The autoregressive order of the graph is the maximum lag of the nodes in the minimal graph.
+        For example, if the graph is X lag(n=2) -> Y future(n=1), the maximum backward lag is 2.
+
+        If the graph is empty or only forward lags are present, None is returned. Otherwise, the maximum backward lag
+        is a non-negative integer where 0 is returned if only contemporaneous nodes are present.
         """
         # get the maximum lag of the nodes in the graph
-        if self._maxlag is None:
-            self._maxlag = max([abs(node.time_lag) for node in self.get_minimal_graph().get_nodes()])  # type: ignore
-        return self._maxlag
+        return self.max_backward_lag
+
+    @property
+    def max_forward_lag(self) -> Optional[int]:
+        """
+        Return the maximum forward time lag of the graph.
+
+        For example, if the graph is X lag(n=2) -> Y future(n=1), the maximum forward lag is 1.
+
+        If the graph is empty or only backward lags are present, None is returned. Otherwise, the maximum forward lag
+        is a non-negative integer where 0 is returned if only contemporaneous nodes are present.
+        """
+        if len(self.nodes) == 0:
+            return None
+        # get the maximum lag of the nodes in the graph
+        pos_time_lags = [node.time_lag for node in self.get_nodes() if node.time_lag >= 0]
+        max_forward_lag = max(pos_time_lags) if len(pos_time_lags) > 0 else None
+        return max_forward_lag
+
+    @property
+    def max_backward_lag(self) -> Optional[int]:
+        """
+        Return the absolute maximum backward time lag of the graph.
+
+        For example, if the graph is X lag(n=2) -> Y future(n=1), the maximum backward lag is 2.
+
+        If the graph is empty or only forward lags are present, None is returned. Otherwise, the maximum backward lag
+        is a non-negative integer where 0 is returned if only contemporaneous nodes are present.
+        """
+        if len(self.nodes) == 0:
+            return None
+        neg_time_lags = [node.time_lag for node in self.get_nodes() if node.time_lag <= 0]
+        max_backward_lag = abs(min(neg_time_lags)) if len(neg_time_lags) > 0 else None
+        return max_backward_lag
 
     @property
     def variables(self) -> Optional[List[str]]:

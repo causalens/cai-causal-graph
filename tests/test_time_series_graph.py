@@ -452,6 +452,15 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
                 source, destination = edge.source, edge.destination
             self.assertEqual(tscg.get_edge(source, destination).get_edge_type(), edge.get_edge_type())
 
+        # test if node meta are preserved
+        cg = CausalGraph()
+        cg.add_node('a', meta={'some': 'test'})
+        cg.add_node('b', meta={'some': 'test2'})
+
+        tscg = TimeSeriesCausalGraph.from_causal_graph(cg)
+        self.assertDictEqual(tscg.get_node('a').meta, {'variable_name': 'a', 'time_lag': 0, 'some': 'test'})
+        self.assertDictEqual(tscg.get_node('b').meta, {'variable_name': 'b', 'time_lag': 0, 'some': 'test2'})
+
     def test_from_adjacency_matrix(self):
         # test with the adjacency matrix corresponding to th minimal tsdag
         mg = self.tsdag.get_minimal_graph()
@@ -545,6 +554,64 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         self.assertTrue(self.tsdag.is_minimal_graph())
         # dag_1
         self.assertFalse(self.tsdag_1.is_minimal_graph())
+
+    def test_max_backwards_lag(self):
+        # dag
+        self.assertEqual(self.tsdag.max_backward_lag, 1)
+        # dag_1
+        self.assertEqual(self.tsdag_1.max_backward_lag, 2)
+
+        # test with a new graph
+        tsdag = TimeSeriesCausalGraph()
+        self.assertIsNone(tsdag.max_backward_lag)
+
+        tsdag.add_edge('X1 lag(n=2)', 'X1', edge_type=EdgeType.DIRECTED_EDGE)
+
+        self.assertEqual(tsdag.max_backward_lag, 2)
+
+        # remove the lagged node
+        tsdag.remove_node('X1 lag(n=2)')
+        self.assertEqual(tsdag.max_backward_lag, 0)
+
+        # remove the contemporaneous node
+        tsdag.remove_node('X1')
+        self.assertIsNone(tsdag.max_backward_lag)
+
+        # test with only positive lags
+        tsdag = TimeSeriesCausalGraph()
+        tsdag.add_edge('X1 future(n=1)', 'X1 future(n=2)', edge_type=EdgeType.DIRECTED_EDGE)
+        self.assertIsNone(tsdag.max_backward_lag)
+
+    def test_max_forwards_lag(self):
+        # dag
+        self.assertEqual(self.tsdag.max_forward_lag, 0)
+        # dag_1
+        self.assertEqual(self.tsdag_1.max_forward_lag, 0)
+
+        # extend the graph in the future
+        new_tscg = self.tsdag.extend_graph(forward_steps=2)
+        self.assertEqual(new_tscg.max_forward_lag, 2)
+
+        # test with a new graph
+        tsdag = TimeSeriesCausalGraph()
+        self.assertIsNone(tsdag.max_forward_lag)
+
+        tsdag.add_edge('X1', 'X1 future(n=2)', edge_type=EdgeType.DIRECTED_EDGE)
+
+        self.assertEqual(tsdag.max_forward_lag, 2)
+
+        # remove the lagged node
+        tsdag.remove_node('X1 future(n=2)')
+        self.assertEqual(tsdag.max_forward_lag, 0)
+
+        # remove the contemporaneous node
+        tsdag.remove_node('X1')
+        self.assertIsNone(tsdag.max_forward_lag)
+
+        # test with only negative lags
+        tsdag = TimeSeriesCausalGraph()
+        tsdag.add_edge('X1 lag(n=2)', 'X1 lag(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
+        self.assertIsNone(tsdag.max_forward_lag)
 
     def test_get_minimal_graph(self):
         # dag
