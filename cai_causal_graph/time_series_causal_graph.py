@@ -469,7 +469,7 @@ class TimeSeriesCausalGraph(CausalGraph):
             # Start from 1 as 0 is already defined.
             # We cannot start directly from maxlag as it may be possible that not all the nodes from 1 to -maxlag are
             # defined (as they were not needed in the minimal graph).
-            maxlag = abs(minimal_graph.min_time_lag) if minimal_graph.min_time_lag is not None else None
+            maxlag = minimal_graph.max_backward_lag if minimal_graph.max_backward_lag is not None else None
             assert maxlag is not None
 
             for lag in range(1, backward_steps + 1):
@@ -1175,7 +1175,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         return abs(min_lag) if min_lag is not None else None
 
     @property
-    def max_time_lag(self) -> Optional[int]:
+    def max_forward_lag(self) -> Optional[int]:
         """
         Return the maximum lag of the graph.
 
@@ -1185,14 +1185,14 @@ class TimeSeriesCausalGraph(CausalGraph):
         return get_max_lag(self)
 
     @property
-    def min_time_lag(self) -> Optional[int]:
+    def max_backward_lag(self) -> Optional[int]:
         """
         Return the minimum lag of the graph.
 
         The minimum lag of the graph is the minimum lag of the nodes in the minimal graph.
         """
         # get the minimum lag of the nodes in the graph
-        return get_min_lag(self)
+        return -get_min_lag(self)
 
     @property
     def variables(self) -> Optional[List[str]]:

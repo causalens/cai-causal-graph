@@ -4,9 +4,9 @@
 
 - Fixed a bug in `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_causal_graph` for
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` where the method was not adding the node correctly.
-- Added `max_time_lag` and `min_time_lag` properties to
-  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` to return the maximum and minimum lag of the graph,
-  respectively.
+- Added `max_backward_lag` and `min_forward_lag` properties to
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` to return the absolute backward and forward time
+  lag of the graph, respectively.
 - Fixed a bug with the property `maxlag` since it could give wrong information if the future was included in the graph.
 
 ## 0.3.7
