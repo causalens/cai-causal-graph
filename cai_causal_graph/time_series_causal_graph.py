@@ -915,12 +915,15 @@ class TimeSeriesCausalGraph(CausalGraph):
     @classmethod
     def from_causal_graph(cls, causal_graph: CausalGraph) -> TimeSeriesCausalGraph:
         """
-        Return a time series causal graph from a causal graph. If the causal graph is already a time series causal
-        graph, it is returned as is.
+        Instantiate a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` from a
+        `cai_causal_graph.causal_graph.CausalGraph` object. If the `cai_causal_graph.causal_graph.CausalGraph` is
+        already a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`, it is returned as is.
 
-        This is useful for converting a causal graph from a single time step into a time series causal graph.
+        This is useful for converting a `cai_causal_graph.causal_graph.CausalGraph` from a single time step into a
+        `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`.
 
-        :param causal_graph: The causal graph.
+        :param causal_graph: The causal graph as a `cai_causal_graph.causal_graph.CausalGraph` object.
+        :return: A `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` object.
         """
         if isinstance(causal_graph, TimeSeriesCausalGraph):
             return causal_graph
