@@ -9,7 +9,9 @@
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.max_forward_lag` properties to
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` to return the absolute maximum backward and
   forward time lag of the graph, respectively.
-- Fixed a bug with the property `maxlag` since it could give wrong information if the future was included in the graph.
+- Fixed a bug with the property `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.maxlag` in
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` since it could give wrong information if the
+  future was included in the graph.
 
 ## 0.3.7
 

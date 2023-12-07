@@ -441,7 +441,7 @@ class TimeSeriesCausalGraph(CausalGraph):
             # Start from 1 as 0 is already defined.
             # We cannot start directly from maxlag as it may be possible that not all the nodes from 1 to -maxlag are
             # defined (as they were not needed in the minimal graph).
-            maxlag = minimal_graph.max_backward_lag if minimal_graph.max_backward_lag is not None else None
+            maxlag = minimal_graph.max_backward_lag
             assert maxlag is not None
 
             for lag in range(1, backward_steps + 1):
@@ -1146,7 +1146,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         For example, if the graph is X lag(n=2) -> Y future(n=1), the maximum backward lag is 2.
 
-        If the graph is empty or only past lags are present, None is returned. Otherwise, the maximum backward lag
+        If the graph is empty or only forward lags are present, None is returned. Otherwise, the maximum backward lag
         is a non-negative integer where 0 is returned if only contemporaneous nodes are present.
         """
         # get the maximum lag of the nodes in the graph
@@ -1159,7 +1159,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         For example, if the graph is X lag(n=2) -> Y future(n=1), the maximum forward lag is 1.
 
-        If the graph is empty or only forward lags are present, None is returned. Otherwise, the maximum forward lag
+        If the graph is empty or only backward lags are present, None is returned. Otherwise, the maximum forward lag
         is a non-negative integer where 0 is returned if only contemporaneous nodes are present.
         """
         if len(self.nodes) == 0:
@@ -1176,7 +1176,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         For example, if the graph is X lag(n=2) -> Y future(n=1), the maximum backward lag is 2.
 
-        If the graph is empty or only past lags are present, None is returned. Otherwise, the maximum backward lag
+        If the graph is empty or only forward lags are present, None is returned. Otherwise, the maximum backward lag
         is a non-negative integer where 0 is returned if only contemporaneous nodes are present.
         """
         if len(self.nodes) == 0:
