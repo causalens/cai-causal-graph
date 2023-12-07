@@ -1142,11 +1142,12 @@ class TimeSeriesCausalGraph(CausalGraph):
     @property
     def maxlag(self) -> Optional[int]:
         """
-        Return the absolute maximum backward time lag of the graph.
+        Return the absolute maximum backward time lag of the graph. Retained for backwards compatibility.
 
         For example, if the graph is X lag(n=2) -> Y future(n=1), the maximum backward lag is 2.
 
-        If the graph is empty, None is returned. Otherwise, the maximum backward lag is a positive integer.
+        If the graph is empty or only past lags are present, None is returned. Otherwise, the maximum backward lag
+        is a non-negative integer where 0 is returned if only contemporaneous nodes are present.
         """
         # get the maximum lag of the nodes in the graph
         return self.max_backward_lag
