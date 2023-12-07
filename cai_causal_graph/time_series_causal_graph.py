@@ -1192,7 +1192,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         The minimum lag of the graph is the minimum lag of the nodes in the minimal graph.
         """
         # get the minimum lag of the nodes in the graph
-        return -get_min_lag(self)
+        return -get_min_lag(self) if get_min_lag(self) is not None else None
 
     @property
     def variables(self) -> Optional[List[str]]:
