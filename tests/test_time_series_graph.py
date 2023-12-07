@@ -577,6 +577,11 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         tsdag.remove_node('X1')
         self.assertIsNone(tsdag.max_backward_lag)
 
+        # test with only positive lags
+        tsdag = TimeSeriesCausalGraph()
+        tsdag.add_edge('X1 future(n=1)', 'X1 future(n=2)', edge_type=EdgeType.DIRECTED_EDGE)
+        self.assertIsNone(tsdag.max_backward_lag)
+
     def test_max_forwards_lag(self):
         # dag
         self.assertEqual(self.tsdag.max_forward_lag, 0)
@@ -601,6 +606,11 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
         # remove the contemporaneous node
         tsdag.remove_node('X1')
+        self.assertIsNone(tsdag.max_forward_lag)
+
+        # test with only negative lags
+        tsdag = TimeSeriesCausalGraph()
+        tsdag.add_edge('X1 lag(n=2)', 'X1 lag(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
         self.assertIsNone(tsdag.max_forward_lag)
 
     def test_get_minimal_graph(self):
