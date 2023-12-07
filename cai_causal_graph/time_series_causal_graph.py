@@ -1176,7 +1176,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         if len(self.nodes) == 0:
             return None
-        neg_time_lags = [node.time_lag for node in self.nodes if node.time_lag <= 0]
+        neg_time_lags = [node.time_lag for node in self.get_nodes() if node.time_lag <= 0]
         max_backward_lag = abs(min(neg_time_lags)) if len(neg_time_lags) > 0 else None
         return max_backward_lag
 
