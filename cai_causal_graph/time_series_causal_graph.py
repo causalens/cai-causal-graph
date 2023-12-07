@@ -1159,7 +1159,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         For example, if the graph is X lag(n=2) -> Y future(n=1), the maximum forward lag is 1.
 
-        If the graph is empty or only past lags are present, None is returned. Otherwise, the maximum backward lag
+        If the graph is empty or only forward lags are present, None is returned. Otherwise, the maximum forward lag
         is a non-negative integer where 0 is returned if only contemporaneous nodes are present.
         """
         if len(self.nodes) == 0:
