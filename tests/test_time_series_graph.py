@@ -993,7 +993,9 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         self.assertListEqual(top_order, ['x lag(n=1)', 't lag(n=1)', 'x', 't', 'y'])
 
         top_order = g.get_topological_order(return_all=True)
-        self.assertListEqual(top_order, [['x lag(n=1)', 't lag(n=1)', 'x', 't', 'y']])
+        self.assertListEqual(
+            top_order, [['x lag(n=1)', 't lag(n=1)', 'x', 't', 'y'], ['t lag(n=1)', 'x lag(n=1)', 'x', 't', 'y']]
+        )
 
     def test_order_swapped(self):
         tscg = TimeSeriesCausalGraph()
