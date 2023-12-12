@@ -1000,7 +1000,7 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         # Confirm it raises when not a dag.
         g.add_edge('z', 'x', edge_type=EdgeType.UNDIRECTED_EDGE)
         with self.assertRaises(AssertionError):
-            g.get_topolocial_order()
+            g.get_topological_order()
 
         # Test with extended graph.
         cg = CausalGraph()
