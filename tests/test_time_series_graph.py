@@ -1024,10 +1024,10 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         extended_graph = ts_cg.extend_graph(backward_steps=1, forward_steps=1)
 
         top_order = extended_graph.get_topological_order()
-        self.assertListEqual(top_order, ['x lag(n=1)', 'y lag(n=1)', 'x', 'y', 'x future(n=1)', 'y future(n=1'])
+        self.assertListEqual(top_order, ['x lag(n=1)', 'y lag(n=1)', 'x', 'y', 'x future(n=1)', 'y future(n=1)'])
 
         top_order = extended_graph.get_topological_order(return_all=True)
-        self.assertListEqual(top_order, [['x lag(n=1)', 'y lag(n=1)', 'x', 'y', 'x future(n=1)', 'y future(n=1']])
+	self.assertListEqual(top_order, [['x lag(n=1)', 'y lag(n=1)', 'x', 'y', 'x future(n=1)', 'y future(n=1)']])
 
     def test_order_swapped(self):
         tscg = TimeSeriesCausalGraph()
