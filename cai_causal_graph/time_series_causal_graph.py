@@ -280,13 +280,13 @@ class TimeSeriesCausalGraph(CausalGraph):
         return minimal_cg
 
     def _get_time_topological_order(self, ordered_nodes: List[str]) -> List[str]:
-        """Return only ig the list is ordered in time. Only for internal use."""
+        """Return the provided list if it is ordered in time; otherwise, an empty list is returned."""
 
-        # choose the ones that respect the time ordering
+        # Iterate through the list to ensure it respects the time ordering.
         for j, node in enumerate(ordered_nodes):
             if j == 0:
                 continue
-            assert isinstance(node, str)
+            assert isinstance(node, str)  # for linting
             # check if the time delta is correct
             if self.get_node(ordered_nodes[j - 1]).time_lag > self.get_node(ordered_nodes[j]).time_lag:   # type: ignore
                 return []
@@ -304,7 +304,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         for current_top_order in ordered_nodes:
             assert isinstance(current_top_order, list)  # for linting
             new_order = self._get_time_topological_order(current_top_order)
-            if new_order not in top_order_list and len(new_order) != 0:
+            if new_order not in top_order_list and len(new_order) > 0:
                 top_order_list.append(new_order)
 
         if not return_all:
