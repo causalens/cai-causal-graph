@@ -280,27 +280,16 @@ class TimeSeriesCausalGraph(CausalGraph):
         return minimal_cg
 
     def _get_time_topological_order(self, ordered_nodes: List[str]) -> List[str]:
-        """Return the time topological order given the standard topological order. Only for internal use."""
-        min_time_lag = max([node.time_lag for node in self.get_nodes()])
+        """Return the provided list if it is ordered in time; otherwise, an empty list is returned."""
 
-        # extract only nodes at min_time_lag
-        cont_ordered_nodes = [
-            node for node in ordered_nodes if self.get_node(node).time_lag == min_time_lag  # type: ignore
-        ]
-        # get the remaining nodes
-        lagged_nodes = [n for n in ordered_nodes if self.get_node(n).time_lag != min_time_lag]  # type: ignore
-
-        # sort lagged nodes based on the order they appear in the non-lagged list and by their lag values
-        lagged_nodes = sorted(
-            lagged_nodes,
-            key=lambda x: (
-                cont_ordered_nodes.index(self.get_node(x).variable_name),  # type: ignore
-                self.get_node(x).time_lag,  # type: ignore
-            ),
-        )
-
-        # merge the lists together
-        ordered_nodes = lagged_nodes + cont_ordered_nodes
+        # Iterate through the list to ensure it respects the time ordering.
+        for j, node in enumerate(ordered_nodes):
+            if j == 0:
+                continue
+            assert isinstance(node, str)  # for linting
+            # check if the time delta is correct
+            if self.get_node(ordered_nodes[j - 1]).time_lag > self.get_node(ordered_nodes[j]).time_lag:   # type: ignore
+                return []
 
         return ordered_nodes
 
@@ -308,19 +297,18 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         Return the topological order of the graph that is ordered in time.
 
-        For more details, see
-        `cai_causal_graph.causal_graph.CausalGraph.get_topological_order`.
+        For more details, see `cai_causal_graph.causal_graph.CausalGraph.get_topological_order`.
         """
-        ordered_nodes = super().get_topological_order(return_all=return_all)
-        if return_all:
-            top_order_list: List[List[str]] = []
-            for current_top_order in ordered_nodes:
-                assert isinstance(current_top_order, list)  # for linting
-                new_order = self._get_time_topological_order(current_top_order)
-                if new_order not in top_order_list:
-                    top_order_list.append(new_order)
-        else:
-            top_order_list = self._get_time_topological_order(ordered_nodes)  # type: ignore
+        ordered_nodes = super().get_topological_order(return_all=True)
+        top_order_list: List[List[str]] = []
+        for current_top_order in ordered_nodes:
+            assert isinstance(current_top_order, list)  # for linting
+            new_order = self._get_time_topological_order(current_top_order)
+            if new_order not in top_order_list and len(new_order) > 0:
+                top_order_list.append(new_order)
+
+        if not return_all:
+            top_order_list = top_order_list[0]  # type: ignore
 
         return top_order_list
 
