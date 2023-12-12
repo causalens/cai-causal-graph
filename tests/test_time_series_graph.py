@@ -997,6 +997,38 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
             top_order, [['x lag(n=1)', 't lag(n=1)', 'x', 't', 'y'], ['t lag(n=1)', 'x lag(n=1)', 'x', 't', 'y']]
         )
 
+        # Confirm it raises when not a dag.
+        g.add_edge('z', 'x', edge_type=EdgeType.UNDIRECTED_EDGE)
+        with self.assertRaises(AssertionError):
+            g.get_topolocial_order()
+
+        # Test with extended graph.
+        cg = CausalGraph()
+        cg.add_edge('x', 'y')
+        ts_cg = TimeSeriesCausalGraph.from_causal_graph(cg)
+
+        top_order = ts_cg.get_topological_order()
+        self.assertListEqual(top_order, ['x', 'y'])
+
+        top_order = ts_cg.get_topological_order(return_all=True)
+        self.assertListEqual(top_order, [['x', 'y']])
+
+        extended_graph = ts_cg.extend_graph(backward_steps=2, forward_steps=0)
+
+        top_order = extended_graph.get_topological_order()
+        self.assertListEqual(top_order, ['x lag(n=2)', 'y lag(n=2)', 'x lag(n=1)', 'y lag(n=1)', 'x', 'y'])
+
+        top_order = extended_graph.get_topological_order(return_all=True)
+        self.assertListEqual(top_order, [['x lag(n=2)', 'y lag(n=2)', 'x lag(n=1)', 'y lag(n=1)', 'x', 'y']])
+
+        extended_graph = ts_cg.extend_graph(backward_steps=1, forward_steps=1)
+
+        top_order = extended_graph.get_topological_order()
+        self.assertListEqual(top_order, ['x lag(n=1)', 'y lag(n=1)', 'x', 'y', 'x future(n=1)', 'y future(n=1'])
+
+        top_order = extended_graph.get_topological_order(return_all=True)
+        self.assertListEqual(top_order, [['x lag(n=1)', 'y lag(n=1)', 'x', 'y', 'x future(n=1)', 'y future(n=1']])
+
     def test_order_swapped(self):
         tscg = TimeSeriesCausalGraph()
         tscg.add_edge('x', 'y lag(n=1)', edge_type=EdgeType.UNDIRECTED_EDGE)
