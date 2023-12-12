@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.3.9
 
 - Fixed a bug in the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_topological_order` method in
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`.
