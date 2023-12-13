@@ -440,8 +440,8 @@ class TimeSeriesCausalGraph(CausalGraph):
             maxlag = minimal_graph.max_backward_lag
             assert maxlag is not None
 
-            # create all the nodes from 0 to backward_steps
-            for lag in range(0, backward_steps + 1):
+            # create all the nodes from 1 to backward_steps
+            for lag in range(1, backward_steps + 1):
                 for node in minimal_graph.get_nodes():
                     # create the node with -lag (if it does not exist)
                     lagged_node = self._get_lagged_node(node=node, lag=-lag)
