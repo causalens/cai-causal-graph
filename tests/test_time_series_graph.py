@@ -686,6 +686,13 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         self.assertEqual(len(min_tsgraph.nodes), 3)
         self.assertTrue(min_tsgraph.node_exists('c'))
 
+        # b - 1->c
+        tsdag = TimeSeriesCausalGraph()
+        tsdag.add_edge('b lag(n=1)', 'c')
+        min_tsgraph = tsdag.get_minimal_graph()
+        self.assertTrue(min_tsgraph.edge_exists('b lag(n=1)', 'c'))
+        self.assertEqual(len(min_tsgraph.nodes), 2)
+
     def test_extend_backward(self):
         # with 1 steps
         # dag
