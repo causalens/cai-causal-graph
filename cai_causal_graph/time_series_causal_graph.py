@@ -277,6 +277,12 @@ class TimeSeriesCausalGraph(CausalGraph):
 
                     minimal_cg.add_edge(edge=edge)
 
+        # check for floating nodes
+        if self.variables is not None and len(self.variables) > 0:
+            for variable in self.variables:
+                if not minimal_cg.node_exists(variable):
+                    minimal_cg.add_node(variable)
+
         return minimal_cg
 
     def _get_time_topological_order(self, ordered_nodes: List[str]) -> List[str]:
@@ -432,6 +438,15 @@ class TimeSeriesCausalGraph(CausalGraph):
             maxlag = minimal_graph.max_backward_lag
             assert maxlag is not None
 
+            # create all the nodes from 0 to backward_steps
+            for lag in range(0, backward_steps + 1):
+                for node in minimal_graph.get_nodes():
+                    # create the node with -lag (if it does not exist)
+                    lagged_node = self._get_lagged_node(node=node, lag=-lag)
+                    # if node does not exist, add it
+                    if not extended_graph.node_exists(lagged_node.identifier):
+                        extended_graph.add_node(node=lagged_node)
+
             for lag in range(1, backward_steps + 1):
                 for edge in minimal_graph.get_edges():
                     assert isinstance(edge.destination, TimeSeriesNode)
@@ -442,19 +457,9 @@ class TimeSeriesCausalGraph(CausalGraph):
 
                     # check if the new source node would go beyond the backward_steps
                     if -lag - time_delta < -backward_steps:
-                        # add the destination node if it does not exist (e.g. floating nodes)
-                        if not extended_graph.node_exists(lagged_destination_node.identifier):
-                            extended_graph.add_node(node=lagged_destination_node)
                         continue
 
                     lagged_source_node = self._get_lagged_node(node=edge.source, lag=-lag - time_delta)
-
-                    # add the lagged nodes
-                    if not extended_graph.node_exists(lagged_source_node.identifier):
-                        extended_graph.add_node(node=lagged_source_node)
-
-                    if not extended_graph.node_exists(lagged_destination_node.identifier):
-                        extended_graph.add_node(node=lagged_destination_node)
 
                     # add the lagged edge
                     if not extended_graph.edge_exists(
