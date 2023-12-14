@@ -1103,7 +1103,7 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         self.assertListEqual(ts_cg.extend_graph(1, 0).get_topological_order(return_all=True), [['x lag(n=1)', 'x']])
 
         self.assertListEqual(
-            ts_cg.extend_graph(2, 2).get_toplogical_order(),
+            ts_cg.extend_graph(2, 2).get_topological_order(),
             ['x lag(n=2)', 'x lag(n=1)', 'x', 'x future(n=1)', 'x future(n=2)'],
         )
 
