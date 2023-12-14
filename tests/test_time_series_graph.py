@@ -668,6 +668,31 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         self.assertEqual(minimal_graph, graph)
         self.assertTrue(graph.__eq__(minimal_graph, True))
 
+        # test with floating nodes
+        tsdag = TimeSeriesCausalGraph()
+        tsdag.add_node('a lag(n=2)')
+        min_tsgraph = tsdag.get_minimal_graph()
+        self.assertEqual(len(min_tsgraph.nodes), 1)
+        self.assertTrue(min_tsgraph.node_exists('a'))
+
+        # test with b-1 -> b, c-2, c-1
+        tsdag = TimeSeriesCausalGraph()
+        tsdag.add_edge('b lag(n=1)', 'b')
+        tsdag.add_node('c lag(n=2)')
+        tsdag.add_node('c lag(n=1)')
+        min_tsgraph = tsdag.get_minimal_graph()
+
+        self.assertTrue(min_tsgraph.edge_exists('b lag(n=1)', 'b'))
+        self.assertEqual(len(min_tsgraph.nodes), 3)
+        self.assertTrue(min_tsgraph.node_exists('c'))
+
+        # b - 1->c
+        tsdag = TimeSeriesCausalGraph()
+        tsdag.add_edge('b lag(n=1)', 'c')
+        min_tsgraph = tsdag.get_minimal_graph()
+        self.assertTrue(min_tsgraph.edge_exists('b lag(n=1)', 'c'))
+        self.assertEqual(len(min_tsgraph.nodes), 2)
+
     def test_extend_backward(self):
         # with 1 steps
         # dag
@@ -766,6 +791,20 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
         self.assertEqual(extended_graph.get_node('c lag(n=1)').variable_type, NodeVariableType.BINARY)
 
+        # test it adds the contemporaneous node
+        graph = TimeSeriesCausalGraph()
+        graph.add_node('a lag(n=1)')
+        ext_graph = graph.extend_graph(backward_steps=1, forward_steps=0)
+
+        # check it adds the contemporaneous node
+        self.assertTrue(ext_graph.node_exists('a'))
+
+        ext_graph = graph.extend_graph(backward_steps=3, forward_steps=3)
+        # check it adds all the nodes
+        for i in range(-3, 4):
+            name = get_name_with_lag('a', i)
+            self.assertTrue(ext_graph.node_exists(name))
+
     def test_extend_graph_forward(self):
         # with 1 steps
         # dag
@@ -862,6 +901,14 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         gt_extended.add_edge('x', 'y future(n=1)')
         gt_extended.add_node('x future(n=1)')
         self.assertEqual(extended_cg, gt_extended)
+
+        # test it adds the contemporaneous node
+        graph = TimeSeriesCausalGraph()
+        graph.add_node('a future(n=1)')
+        ext_graph = graph.extend_graph(backward_steps=0, forward_steps=1)
+
+        # check it adds the contemporaneous node
+        self.assertTrue(ext_graph.node_exists('a'))
 
     def test_add_time_edge(self):
         # test adding a time edge to a graph
@@ -1028,6 +1075,37 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
         top_order = extended_graph.get_topological_order(return_all=True)
         self.assertListEqual(top_order, [['x lag(n=1)', 'y lag(n=1)', 'x', 'y', 'x future(n=1)', 'y future(n=1)']])
+
+        # Test with floating nodes.
+        cg = CausalGraph()
+        cg.add_node('x')
+        cg.add_node('y')
+        ts_cg = TimeSeriesCausalGraph.from_causal_graph(cg)
+
+        self.assertListEqual(ts_cg.get_topological_order(), ['y', 'x'])
+        self.assertListEqual(ts_cg.get_topological_order(return_all=True), [['y', 'x'], ['x', 'y']])
+
+        extended_graph = ts_cg.extend_graph(1, 1)
+        self.assertListEqual(
+            extended_graph.get_topological_order(),
+            ['y lag(n=1)', 'x lag(n=1)', 'x', 'y', 'x future(n=1)', 'y future(n=1)'],
+        )
+
+        # Test with no contemporaneous nodes.
+        ts_cg = TimeSeriesCausalGraph()
+        ts_cg.add_node('x lag(n=1)')
+
+        self.assertListEqual(ts_cg.get_topological_order(), ['x lag(n=1)'])
+        self.assertListEqual(ts_cg.get_topological_order(return_all=True), [['x lag(n=1)']])
+
+        # Add contemporaneous in via extend.
+        self.assertListEqual(ts_cg.extend_graph(1, 0).get_topological_order(), ['x lag(n=1)', 'x'])
+        self.assertListEqual(ts_cg.extend_graph(1, 0).get_topological_order(return_all=True), [['x lag(n=1)', 'x']])
+
+        self.assertListEqual(
+            ts_cg.extend_graph(2, 2).get_topological_order(),
+            ['x lag(n=2)', 'x lag(n=1)', 'x', 'x future(n=1)', 'x future(n=2)'],
+        )
 
     def test_order_swapped(self):
         tscg = TimeSeriesCausalGraph()
