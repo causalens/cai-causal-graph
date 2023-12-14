@@ -1,5 +1,11 @@
 # Changelog
 
+## NEXT
+
+- Fixed a bug in the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_graph` method in
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` where the method was not adding nodes correctly with
+  particular graph configurations.
+
 ## 0.3.10
 
 - Fixed a bug in the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph` method in
