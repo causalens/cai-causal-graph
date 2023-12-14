@@ -31,7 +31,7 @@ __all__ = [
     'VARIABLE_NAME',
 ]
 
-__version__ = '0.3.11.dev0'
+__version__ = '0.3.11'
 
 from cai_causal_graph.causal_graph import CausalGraph, Skeleton
 from cai_causal_graph.time_series_causal_graph import TimeSeriesCausalGraph
