@@ -1087,8 +1087,8 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
         extended_graph = ts_cg.extend_graph(1, 1)
         self.assertListEqual(
-            extended_graph.get_topological_order(), 
-            ['y lag(n=1)', 'x lag(n=1)', 'x', 'y', 'x future(n=1)', 'y future(n=1)']
+            extended_graph.get_topological_order(),
+            ['y lag(n=1)', 'x lag(n=1)', 'x', 'y', 'x future(n=1)', 'y future(n=1)'],
         )
 
         # Test with no contemporaneous nodes.
@@ -1103,8 +1103,8 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         self.assertListEqual(ts_cg.extend_graph(1, 0).get_topological_order(return_all=True), [['x lag(n=1)', 'x']])
 
         self.assertListEqual(
-            ts_cg.extend_graph(2, 2).get_toplogical_order(), 
-            ['x lag(n=2)', 'x lag(n=1)', 'x', 'x future(n=1)', 'x future(n=2)']
+            ts_cg.extend_graph(2, 2).get_toplogical_order(),
+            ['x lag(n=2)', 'x lag(n=1)', 'x', 'x future(n=1)', 'x future(n=2)'],
         )
 
     def test_order_swapped(self):
