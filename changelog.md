@@ -2,8 +2,10 @@
 
 ## NEXT
 
-- Fixed a bug in `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph` where the method
-  was not adding the floating nodes correctly. This also impacted the graph extension.
+- Fixed a bug in the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph` method in
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` where floating nodes were not added correctly.
+  This also impacted the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_graph` method in
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`; it is also fixed now for floating nodes.
 
 ## 0.3.9
 
