@@ -805,6 +805,16 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
             name = get_name_with_lag('a', i)
             self.assertTrue(ext_graph.node_exists(name))
 
+        # test with a graph that is not aligned at lag 0
+        graph = TimeSeriesCausalGraph()
+        graph.add_nodes_from(['tier_0_0 lag(n=1)', 'tier_0_1', 'tier_1', 'tier_2'])
+        graph.add_edge('tier_0_0 lag(n=1)', 'tier_0_1')
+        graph.add_edge('tier_0_1', 'tier_2')
+        graph.add_edge('tier_1', 'tier_2')
+
+        extended_graph = graph.extend_graph(backward_steps=1, forward_steps=0)
+        self.assertTrue(extended_graph.node_exists('tier_0_0'))
+
     def test_extend_graph_forward(self):
         # with 1 steps
         # dag
