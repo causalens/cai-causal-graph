@@ -118,6 +118,7 @@ def identify_confounders(graph: CausalGraph, node_1: NodeLike, node_2: NodeLike)
                     set(_identify_confounders_no_checks_no_descendant_pruning_networkx(final_graph, parent, n2))
                 )
 
+        # add the edges that were removed back
         for edge in removed_edges:
             final_graph.add_edge(*edge)
 
@@ -137,9 +138,11 @@ def identify_confounders(graph: CausalGraph, node_1: NodeLike, node_2: NodeLike)
     # convert to networkx for optimized performance
     digraph: networkx.DiGraph = pruned_graph.to_networkx()
 
+    # identify confounders starting the search from each node
     confounders = _identify_confounders_no_checks_no_descendant_pruning_networkx(digraph, node_1_id, node_2_id)
     reverse_confounders = _identify_confounders_no_checks_no_descendant_pruning_networkx(digraph, node_2_id, node_1_id)
 
+    # identify a set of minimal confounders as the intesection between the two sets
     minimal_confounders = confounders.intersection(reverse_confounders)
 
     return list(minimal_confounders)
