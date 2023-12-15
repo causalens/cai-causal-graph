@@ -1,5 +1,12 @@
 # Changelog
 
+## NEXT
+
+- Improved efficiency of `cai_causal_graph.identify_utils.identify_confounders` by performing all operations
+  directly using `networkx`, removing the need to copy graphs and improving recursive logic, such that
+  only the minimal confounders of the specified nodes are calculated (rather than recursively calculating minimal
+  confounders of each parent). This results in significant speedups (in the order of hundreds of times in some cases).
+
 ## 0.3.11
 
 - Fixed a bug in the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_graph` method in
