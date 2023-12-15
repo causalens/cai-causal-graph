@@ -58,6 +58,9 @@ def _verify_identify_inputs(
     return node_1_id, node_2_id
 
 
+global recursion
+
+
 def identify_confounders(graph: CausalGraph, node_1: NodeLike, node_2: NodeLike) -> List[str]:
     """
     Identify all confounders between `node_1` and `node_2` in the provided `graph`.
@@ -92,21 +95,29 @@ def identify_confounders(graph: CausalGraph, node_1: NodeLike, node_2: NodeLike)
     :param node_2: The second node or its identifier.
     :return: A list of all confounders between `node_1` and `node_2`.
     """
+    global recursion
+    recursion = 1
 
     def _identify_confounders_no_checks_no_descendant_pruning_networkx(
         clean_graph: networkx.DiGraph, n1: str, n2: str
     ) -> List[str]:
         """Private function that does not check if DAG or do descendant pruning."""
+        global recursion
+        print(f'recursion: {recursion}')
+        recursion += 1
         # create a copy of the provided graph and prune the children of node 1 and node 2
-        final_graph = clean_graph.copy()
+        removed_edges = list()
+        final_graph = clean_graph
         for child in list(final_graph.successors(n1)):
+            removed_edges.append((n1, child))
             final_graph.remove_edge(n1, child)
         for child in list(final_graph.successors(n2)):
+            removed_edges.append((n2, child))
             final_graph.remove_edge(n2, child)
 
         # search the parents of node 1 and check whether any of them is an ancestor to node 2
         confounders = set()
-        for parent in final_graph.predecessors(n1):
+        for parent in list(final_graph.predecessors(n1)):
             # add the parent to the confounding set if a directed path exists
             if parent in ancestors(final_graph, n2):
                 confounders.add(parent)
@@ -118,7 +129,7 @@ def identify_confounders(graph: CausalGraph, node_1: NodeLike, node_2: NodeLike)
 
         # do the reverse of the above by searching through the parents of node 2
         confounders_reverse = set()
-        for parent in final_graph.predecessors(n2):
+        for parent in list(final_graph.predecessors(n2)):
             # add the parent to the confounding set if a directed path exists
             if parent in ancestors(final_graph, n1):
                 confounders_reverse.add(parent)
@@ -132,6 +143,9 @@ def identify_confounders(graph: CausalGraph, node_1: NodeLike, node_2: NodeLike)
         # parents of confounders may be identified as confounders if they have a directed path to the second node
         # only occurs in one configuration, i.e. either forward or reverse direction
         minimal_confounders = confounders.intersection(confounders_reverse)
+
+        for edge in removed_edges:
+            final_graph.add_edge(*edge)
 
         return list(minimal_confounders)
 
