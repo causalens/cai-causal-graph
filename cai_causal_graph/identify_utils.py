@@ -95,7 +95,12 @@ def identify_confounders(graph: CausalGraph, node_1: NodeLike, node_2: NodeLike)
     def _identify_confounders_no_checks_no_descendant_pruning_networkx(
         clean_graph: networkx.DiGraph, n1: str, n2: str
     ) -> Set[str]:
-        """Private function that does not check if DAG or do descendant pruning."""
+        """
+        Private function that does not check if DAG or do descendant pruning.
+
+        This function searches for confounders using the node `n1` as the starting point. Importantly, this
+        does not produce a set of minimal confounders
+        """
         # create a copy of the provided graph and prune the children of node 1 and node 2
         removed_edges = list()
         final_graph = clean_graph
@@ -142,7 +147,9 @@ def identify_confounders(graph: CausalGraph, node_1: NodeLike, node_2: NodeLike)
     confounders = _identify_confounders_no_checks_no_descendant_pruning_networkx(digraph, node_1_id, node_2_id)
     reverse_confounders = _identify_confounders_no_checks_no_descendant_pruning_networkx(digraph, node_2_id, node_1_id)
 
-    # identify a set of minimal confounders as the intesection between the two sets
+    # take the intersection of both sets to get the minimal confounder set
+    # parents of confounders may be identified as confounders if they have a directed path to the second node
+    # only occurs in one configuration, i.e. either forward or reverse direction
     minimal_confounders = confounders.intersection(reverse_confounders)
 
     return list(minimal_confounders)
