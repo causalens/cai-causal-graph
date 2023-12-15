@@ -145,10 +145,6 @@ class TestIdentifyConfounders(unittest.TestCase):
                 confounders_1b = identify_confounders(cg, node_1=v, node_2=u)
                 confounders_2a = identify_confounders(cg_rev, node_1=u, node_2=v)
                 confounders_2b = identify_confounders(cg_rev, node_1=v, node_2=u)
-
-                if len(confounders_1a) != len(confounders_1b):
-                    print()
-
                 self.assertEqual(len(confounders_1a), len(confounders_1b))
                 self.assertSetEqual(set(confounders_1a), set(confounders_1b))
                 self.assertEqual(len(confounders_2a), len(confounders_2b))
