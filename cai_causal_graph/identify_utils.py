@@ -13,7 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from itertools import permutations
 from typing import List, Optional, Set, Tuple, Union
 
 import networkx
@@ -59,9 +58,6 @@ def _verify_identify_inputs(
     return node_1_id, node_2_id
 
 
-global recursion
-
-
 def identify_confounders(graph: CausalGraph, node_1: NodeLike, node_2: NodeLike) -> List[str]:
     """
     Identify all confounders between `node_1` and `node_2` in the provided `graph`.
@@ -96,16 +92,11 @@ def identify_confounders(graph: CausalGraph, node_1: NodeLike, node_2: NodeLike)
     :param node_2: The second node or its identifier.
     :return: A list of all confounders between `node_1` and `node_2`.
     """
-    global recursion
-    recursion = 1
 
     def _identify_confounders_no_checks_no_descendant_pruning_networkx(
         clean_graph: networkx.DiGraph, n1: str, n2: str
     ) -> Set[str]:
         """Private function that does not check if DAG or do descendant pruning."""
-        global recursion
-        print(f'recursion: {recursion}')
-        recursion += 1
         # create a copy of the provided graph and prune the children of node 1 and node 2
         removed_edges = list()
         final_graph = clean_graph
@@ -128,28 +119,10 @@ def identify_confounders(graph: CausalGraph, node_1: NodeLike, node_2: NodeLike)
                     set(_identify_confounders_no_checks_no_descendant_pruning_networkx(final_graph, parent, n2))
                 )
 
-        # # do the reverse of the above by searching through the parents of node 2
-        # confounders_reverse = set()
-        # for parent in list(final_graph.predecessors(n2)):
-        #     # add the parent to the confounding set if a directed path exists
-        #     if parent in ancestors(final_graph, n1):
-        #         confounders_reverse.add(parent)
-        #     # otherwise, recursively call this function to identify confounders of the parent
-        #     else:
-        #         confounders_reverse = confounders_reverse.union(
-        #             set(_identify_confounders_no_checks_no_descendant_pruning_networkx(final_graph, parent, n1))
-        #         )
-        #
-        # # take the intersection of both sets to get the minimal confounder set
-        # # parents of confounders may be identified as confounders if they have a directed path to the second node
-        # # only occurs in one configuration, i.e. either forward or reverse direction
-        # minimal_confounders = confounders.intersection(confounders_reverse)
-
         for edge in removed_edges:
             final_graph.add_edge(*edge)
 
         return confounders
-        # return list(minimal_confounders)
 
     # verify inputs and obtain node identifiers
     node_1_id, node_2_id = _verify_identify_inputs(graph, node_1, node_2)
