@@ -16,7 +16,6 @@ limitations under the License.
 from typing import List, Optional, Set, Tuple, Union
 
 import networkx
-from networkx import ancestors
 
 from cai_causal_graph import CausalGraph, Skeleton
 from cai_causal_graph.exceptions import CausalGraphErrors
@@ -111,7 +110,7 @@ def identify_confounders(graph: CausalGraph, node_1: NodeLike, node_2: NodeLike)
         confounders = set()
         for parent in list(final_graph.predecessors(n1)):
             # add the parent to the confounding set if a directed path exists
-            if parent in ancestors(final_graph, n2):
+            if parent in networkx.ancestors(final_graph, n2):
                 confounders.add(parent)
             # otherwise, recursively call this function to identify confounders of the parent
             else:
