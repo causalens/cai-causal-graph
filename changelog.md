@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.3.12
 
 - Improved efficiency of `cai_causal_graph.identify_utils.identify_confounders` by performing all operations
   directly using `networkx`, removing the need to copy graphs and improving recursive logic, such that
