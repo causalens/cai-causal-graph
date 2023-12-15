@@ -99,7 +99,7 @@ def identify_confounders(graph: CausalGraph, node_1: NodeLike, node_2: NodeLike)
         Private function that does not check if DAG or do descendant pruning.
 
         This function searches for confounders using the node `n1` as the starting point. Importantly, this
-        does not produce a set of minimal confounders
+        does not produce a set of minimal confounders.
         """
         # create a copy of the provided graph and prune the children of node 1 and node 2
         removed_edges = list()
