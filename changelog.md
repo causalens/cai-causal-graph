@@ -1,5 +1,13 @@
 # Changelog
 
+## NEXT
+
+- Improved the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_topological_order` method in
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` to improve performance. Added a new keyword
+  argument `respect_time_ordering` to allow the user to specify whether the topological order should respect the
+  time ordering of the nodes. If `respect_time_ordering=True`, the topological order will respect the time ordering,
+  otherwise it will not. The default is `respect_time_ordering=True`, matching previous behavior.
+
 ## 0.3.12
 
 - Improved efficiency of `cai_causal_graph.identify_utils.identify_confounders` by performing all operations

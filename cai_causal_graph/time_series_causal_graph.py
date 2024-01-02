@@ -329,7 +329,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
                 return ordered_nodes
             else:
-                # check it is a dag
+                # check it is a dag. Not needed in the other cases as it is already checked in the super method
                 assert self.is_dag(), 'The graph is not a DAG. The topological order is not valid.'
                 return list(
                     networkx.lexicographical_topological_sort(

@@ -1121,6 +1121,35 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
             ['x lag(n=2)', 'x lag(n=1)', 'x', 'x future(n=1)', 'x future(n=2)'],
         )
 
+        # test with additional graphs
+        tsdag = TimeSeriesCausalGraph()
+        tsdag.add_edge('x', 'y')
+        tsdag.add_time_edge('y', -1, 'y', 0)
+        tsdag = tsdag.extend_graph(backward_steps=2)
+
+        order = tsdag.get_topological_order()
+        self.assertListEqual(order, ['x lag(n=2)', 'y lag(n=2)', 'x lag(n=1)', 'y lag(n=1)', 'x', 'y'])
+
+        # with return all and respect time ordering to false
+        order = tsdag.get_topological_order(return_all=True, respect_time_ordering=False)
+        self.assertIn(['x lag(n=2)', 'x lag(n=1)', 'y lag(n=2)', 'y lag(n=1)', 'x', 'y'], order)
+
+        tsdag = TimeSeriesCausalGraph()
+        tsdag.add_edge('z', 'y')
+        tsdag.add_edge('x', 'y')
+        tsdag.add_time_edge('y', -1, 'y', 0)
+        tsdag = tsdag.extend_graph(backward_steps=2)
+
+        order = tsdag.get_topological_order()
+
+        self.assertListEqual(
+            order, ['x lag(n=2)', 'z lag(n=2)', 'y lag(n=2)', 'x lag(n=1)', 'z lag(n=1)', 'y lag(n=1)', 'x', 'z', 'y']
+        )
+        order = tsdag.get_topological_order(return_all=True, respect_time_ordering=False)
+        self.assertIn(
+            ['z lag(n=2)', 'x lag(n=2)', 'y lag(n=2)', 'z lag(n=1)', 'x lag(n=1)', 'y lag(n=1)', 'z', 'x', 'y'], order
+        )
+
     def test_order_swapped(self):
         tscg = TimeSeriesCausalGraph()
         tscg.add_edge('x', 'y lag(n=1)', edge_type=EdgeType.UNDIRECTED_EDGE)
