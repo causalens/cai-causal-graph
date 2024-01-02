@@ -306,6 +306,10 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         Return the topological order of the graph that is ordered in time.
 
+        :param return_all: If `True`, return all the possible topological orders. Default is `False`.
+        :param respect_time_ordering: If `True`, return the topological order that is ordered in time. Default is
+            `True`.
+
         For more details, see `cai_causal_graph.causal_graph.CausalGraph.get_topological_order`.
         """
         if respect_time_ordering:
