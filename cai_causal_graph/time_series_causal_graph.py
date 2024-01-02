@@ -295,40 +295,46 @@ class TimeSeriesCausalGraph(CausalGraph):
                 continue
             assert isinstance(node, str)  # for linting
             # check if the time delta is correct
-            if self.get_node(ordered_nodes[j - 1]).time_lag > self.get_node(ordered_nodes[j]).time_lag:   # type: ignore
+            if self.get_node(ordered_nodes[j - 1]).time_lag > self.get_node(ordered_nodes[j]).time_lag:  # type: ignore
                 return []
 
         return ordered_nodes
 
-    def get_topological_order(self, return_all: bool = False) -> Union[List[str], List[List[str]]]:
+    def get_topological_order(
+        self, return_all: bool = False, respect_time_ordering: bool = True
+    ) -> Union[List[str], List[List[str]]]:
         """
         Return the topological order of the graph that is ordered in time.
 
         For more details, see `cai_causal_graph.causal_graph.CausalGraph.get_topological_order`.
         """
-        if return_all:
-            ordered_nodes_list = super().get_topological_order(return_all=return_all)
-            # ordered_nodes_list must be a list of lists of strings
-            assert isinstance(ordered_nodes_list, list)
-            assert all(isinstance(x, list) for x in ordered_nodes_list)
+        if respect_time_ordering:
+            if return_all:
+                ordered_nodes_list = super().get_topological_order(return_all=return_all)
+                # ordered_nodes_list must be a list of lists of strings
+                assert isinstance(ordered_nodes_list, list)
+                assert all(isinstance(x, list) for x in ordered_nodes_list)
 
-            ordered_nodes: List[List[str]] = []
+                ordered_nodes: List[List[str]] = []
 
-            for i in range(len(ordered_nodes_list)):
-                assert isinstance(ordered_nodes_list[i], list)
-                tmp = self._get_time_topological_order(ordered_nodes_list[i])   # type: ignore
-                if len(tmp) > 0:
-                    ordered_nodes.append(tmp)
+                for i in range(len(ordered_nodes_list)):
+                    assert isinstance(ordered_nodes_list[i], list)
+                    tmp = self._get_time_topological_order(ordered_nodes_list[i])  # type: ignore
+                    if len(tmp) > 0:
+                        ordered_nodes.append(tmp)
 
-            return ordered_nodes
-        else:
-            # check it is a dag
-            assert self.is_dag(), 'The graph is not a DAG. The topological order is not valid.'
-            return list(
-                networkx.lexicographical_topological_sort(
-                    self.to_networkx(), key=lambda x: self.get_node(x).time_lag  # type: ignore
+                return ordered_nodes
+            else:
+                # check it is a dag
+                assert self.is_dag(), 'The graph is not a DAG. The topological order is not valid.'
+                return list(
+                    networkx.lexicographical_topological_sort(
+                        self.to_networkx(), key=lambda x: self.get_node(x).time_lag  # type: ignore
+                    )
                 )
-            )
+
+        else:
+            return super().get_topological_order(return_all=return_all)
 
     def is_minimal_graph(self) -> bool:
         """
