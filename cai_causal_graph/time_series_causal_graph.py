@@ -324,7 +324,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                 for i in range(len(ordered_nodes_list)):
                     assert isinstance(ordered_nodes_list[i], list)
                     tmp = self._get_time_topological_order(ordered_nodes_list[i])  # type: ignore
-                    if len(tmp) > 0:
+                    if tmp not in ordered_nodes and len(tmp) > 0:
                         ordered_nodes.append(tmp)
 
                 return ordered_nodes
