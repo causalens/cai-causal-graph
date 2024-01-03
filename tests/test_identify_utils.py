@@ -190,6 +190,19 @@ class TestIdentifyConfounders(unittest.TestCase):
         self.assertEqual(len(confounders), 1)
         self.assertSetEqual(set(confounders), {'u'})
 
+    def test_all_paths_blocked_by_ancestors(self):
+        cg = CausalGraph()
+        cg.add_edge('x', 'm1')
+        cg.add_edge('m1', 'm2')
+        cg.add_edge('m2', 'y')
+        cg.add_edge('u', 'x')
+        cg.add_edge('u', 'm1')
+        cg.add_edge('u', 'm2')
+
+        confounders = identify_confounders(cg, 'x', 'y')
+        self.assertEqual(len(confounders), 1)
+        self.assertSetEqual(set(confounders), {'u'})
+
     def test_time_series_graph(self):
         # create a time-series causal graph
         ts_cg = TimeSeriesCausalGraph()
