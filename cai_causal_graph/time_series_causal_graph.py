@@ -304,13 +304,24 @@ class TimeSeriesCausalGraph(CausalGraph):
         self, return_all: bool = False, respect_time_ordering: bool = True
     ) -> Union[List[str], List[List[str]]]:
         """
-        Return the topological order of the graph that is ordered in time.
+        Return either a single or all topological orders of the graph.
+
+        A topological order is a non-unique permutation of the nodes such that an edge from `'A'` to `'B'` implies
+        that `'A'` appears before `'B'` in the topological sort order. Generating all possible topological orders may
+        be expensive for large graphs.
+
+        It is only possible to get topological order if the graph is a valid DAG.
+
+        For more details, see `cai_causal_graph.causal_graph.CausalGraph.get_topological_order`.
 
         :param return_all: If `True`, return all the possible topological orders. Default is `False`.
         :param respect_time_ordering: If `True`, return the topological order that is ordered in time. Default is
-            `True`.
-
-        For more details, see `cai_causal_graph.causal_graph.CausalGraph.get_topological_order`.
+            `True`. For example, if the graph is `'Y lag(n=1)' -> 'Y' <- 'X'`, then `['X', 'Y lag(n=1)', 'Y']` and
+            `['Y lag(n=1)', 'X', 'Y']` are both valid topological orders. However, only the second one would respect time
+            ordering. If both `return_all` and `respect_time_ordering` are `True`, then only all topological orders
+            that respect time are returned, not all valid topological orders.
+        :return: either a list of strings identifying a single topological order, or a list of lists identifying all
+            possible topological orders.
         """
         if respect_time_ordering:
             if return_all:
