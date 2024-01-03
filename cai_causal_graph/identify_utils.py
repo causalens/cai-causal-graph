@@ -57,50 +57,6 @@ def _verify_identify_inputs(
     return node_1_id, node_2_id
 
 
-from typing import List, Optional, Set, Tuple, Union
-
-import networkx
-
-from cai_causal_graph import CausalGraph, Skeleton
-from cai_causal_graph.exceptions import CausalGraphErrors
-from cai_causal_graph.graph_components import Node
-from cai_causal_graph.type_definitions import NodeLike
-
-
-def _verify_identify_inputs(
-    graph: Union[CausalGraph, Skeleton], node_1: NodeLike, node_2: Optional[NodeLike] = None
-) -> Tuple[str, str]:
-    """
-    Verify the inputs to the identify utilities.
-
-    :param graph: The graph given by a `cai_causal_graph.causal_graph.CausalGraph` or
-        `cai_causal_graph.causal_graph.Skeleton` instance. If a `cai_causal_graph.causal_graph.CausalGraph` is
-        provided, it must be a DAG, i.e. it must only contain directed edges and be acyclic, otherwise a `TypeError`
-        is raised.
-    :param node_1: The first node or its identifier.
-    :param node_2: The second (optional) node or its identifier.
-    :return: A tuple of the node identifiers. If node_2 was `None`, then `''` is returned for its identifier.
-    """
-    if isinstance(graph, CausalGraph) and not graph.is_dag():
-        raise TypeError(f'Expected a DAG, but got a mixed causal graph.')
-
-    # Confirm node_1 and node_2 are in the graph.
-    if not graph.node_exists(node_1):
-        raise CausalGraphErrors.NodeDoesNotExistError(f'Node not found: {node_1}')
-    if node_2 is not None and not graph.node_exists(node_2):
-        raise CausalGraphErrors.NodeDoesNotExistError(f'Node not found: {node_2}')
-
-    # Coerce NodeLike to identifier. We already know they are NodeLike as node_exists does this.
-    node_1_id = Node.identifier_from(node_1)
-    node_2_id = Node.identifier_from(node_2) if node_2 is not None else ''
-
-    # Ensure node_1 != node_2
-    if node_1_id == node_2_id or node_1 == node_2:
-        raise ValueError('node_1 and node_2 cannot be equal. Please provide different nodes / node identifiers.')
-
-    return node_1_id, node_2_id
-
-
 def identify_confounders(graph: CausalGraph, node_1: NodeLike, node_2: NodeLike) -> List[str]:
     """
     Identify all confounders between `node_1` and `node_2` in the provided `graph`.
