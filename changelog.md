@@ -1,5 +1,10 @@
 # Changelog
 
+## NEXT
+
+- Removed `**kwargs` from the `add_node` and `add_edge` methods of cai_causal_graph.causal_graph.CausalGraph\` and its
+  subclasses.
+
 ## 0.3.12
 
 - Improved efficiency of `cai_causal_graph.identify_utils.identify_confounders` by performing all operations

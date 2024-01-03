@@ -776,7 +776,6 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         variable_type: NodeVariableType = NodeVariableType.UNSPECIFIED,
         meta: Optional[dict] = None,
         node: Optional[Node] = None,
-        **kwargs,
     ) -> Node:
         """
         Add a node to the causal graph but do not connect it to anything.
@@ -791,15 +790,11 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             properties of the provided node will be deep copied to the constructed node, including metadata and
             variable type. If provided, then all other parameters to the method must not be specified. Default is
             `None`.
-        :param kwargs: kwargs
         :return: The created node.
         """
         if node is not None:
             assert (
-                identifier is None
-                and variable_type == NodeVariableType.UNSPECIFIED
-                and meta is None
-                and len(kwargs) == 0
+                identifier is None and variable_type == NodeVariableType.UNSPECIFIED and meta is None
             ), 'If specifying `node` argument, all other arguments should not be specified.'
             identifier = node.identifier
             variable_type = node.variable_type
@@ -1094,7 +1089,6 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         edge_type: EdgeType = EdgeType.DIRECTED_EDGE,
         meta: Optional[dict] = None,
         edge: Optional[Edge] = None,
-        **kwargs,
     ) -> Edge:
         """
         Add an edge from a source to a destination node with a specific edge type.
@@ -1120,11 +1114,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """
         if edge is not None:
             assert (
-                source is None
-                and destination is None
-                and edge_type == EdgeType.DIRECTED_EDGE
-                and meta is None
-                and len(kwargs) == 0
+                source is None and destination is None and edge_type == EdgeType.DIRECTED_EDGE and meta is None
             ), 'If specifying `edge` argument, all other arguments should not be specified.'
             source, destination = edge.source, edge.destination
 
@@ -1160,10 +1150,12 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             validate_pair_type(pair)
             self.add_edge(source=pair[0], destination=pair[1])
 
-    def add_edge_by_pair(self, pair: Tuple[NodeLike, NodeLike], edge_type: EdgeType = EdgeType.DIRECTED_EDGE, **kwargs):
+    def add_edge_by_pair(
+        self, pair: Tuple[NodeLike, NodeLike], edge_type: EdgeType = EdgeType.DIRECTED_EDGE, meta: Optional[dict] = None
+    ):
         """Add edge by pair identifier (source, destination)."""
         validate_pair_type(pair)
-        self.add_edge(pair[0], pair[1], edge_type=edge_type, **kwargs)
+        self.add_edge(pair[0], pair[1], edge_type=edge_type, meta=meta)
 
     def remove_edge_by_pair(self, pair: Tuple[NodeLike, NodeLike], edge_type: Optional[EdgeType] = None):
         """Remove edge by pair identifier (source, destination)."""
