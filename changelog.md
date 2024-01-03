@@ -2,8 +2,8 @@
 
 ## NEXT
 
-- Removed `**kwargs` from the `add_node` and `add_edge` methods of cai_causal_graph.causal_graph.CausalGraph\` and its
-  subclasses.
+- Removed `**kwargs` from the `add_node`, `add_edge`, and `add_edge_by_pair` methods of
+  `cai_causal_graph.causal_graph.CausalGraph` and its subclasses.
 
 ## 0.3.12
 
