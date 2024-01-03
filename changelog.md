@@ -1,5 +1,11 @@
 # Changelog
 
+## NEXT
+
+- Fixed a bug in `cai_causal_graph.identify_utils.identify_confounders` where an empty confounding set would be
+  returned in the edge case where all causal paths from the true confounders to `node_1` were blocked by
+  ancestors of `node_2`, or vice versa. This comes at a slight performance cost.
+
 ## 0.3.13
 
 - Improved the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_topological_order` method in

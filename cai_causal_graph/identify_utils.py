@@ -132,16 +132,8 @@ def identify_confounders(graph: CausalGraph, node_1: NodeLike, node_2: NodeLike)
     # verify inputs and obtain node identifiers
     node_1_id, node_2_id = _verify_identify_inputs(graph, node_1, node_2)
 
-    # Remove all descendants of node 1 and node 2 as they will not be necessary in the search for confounders
-    # This is to reduce memory overhead as we pass the graph throughout recursive calls
-    pruned_graph = graph.copy()
-    all_descendants = pruned_graph.get_descendants(node_1_id).union(pruned_graph.get_descendants(node_2_id))
-    all_descendants -= {node_1_id, node_2_id}  # do not want to remove the nodes themselves
-    for descendant in all_descendants:
-        pruned_graph.remove_node(descendant)
-
     # convert to networkx for optimized performance
-    digraph: networkx.DiGraph = pruned_graph.to_networkx()
+    digraph: networkx.DiGraph = graph.to_networkx()
 
     # identify confounders starting the search from each node
     confounders = _identify_confounders_no_checks_no_descendant_pruning_networkx(digraph, node_1_id, node_2_id)
