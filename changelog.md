@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.3.13
 
 - Improved the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_topological_order` method in
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` to improve performance. Added a new keyword
