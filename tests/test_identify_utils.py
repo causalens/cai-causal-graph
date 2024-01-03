@@ -250,8 +250,9 @@ class TestIdentifyInstruments(unittest.TestCase):
 
         # identify instrumental variables
         instruments = identify_instruments(cg, source='x', destination='y')
-        self.assertEqual(len(instruments), 3)
-        self.assertSetEqual(set(instruments), {'z_1', 'z_2', 'z_3'})
+        # only z_3 is a valid instrument, since z_2 -> y and z_1 -> y are both confounded by z_3
+        self.assertEqual(len(instruments), 1)
+        self.assertSetEqual(set(instruments), {'z_3'})
 
     def test_no_instruments(self):
         # graph 1: directed edge between instrument and destination
