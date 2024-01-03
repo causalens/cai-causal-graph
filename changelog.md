@@ -9,7 +9,7 @@
   otherwise it may not. For example, if the graph is `'Y lag(n=1)' -> 'Y' <- 'X'`, then `['X', 'Y lag(n=1)', 'Y']` and
   `['Y lag(n=1)', 'X', 'Y']` are both valid topological orders. However, only the second one would respect time
   ordering. If both `return_all` and `respect_time_ordering` are `True`, then only all topological orders
-  that respect time are returned, not all valid topological orders. The default is `respect_time_ordering=True`, 
+  that respect time are returned, not all valid topological orders. The default is `respect_time_ordering=True`,
   matching previous behavior.
 
 ## 0.3.12
