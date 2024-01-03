@@ -1583,11 +1583,11 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
     def get_topological_order(self, return_all: bool = False) -> Union[List[str], List[List[str]]]:
         """
-        Get either a single or all topological orders of the graph.
+        Return either a single or all topological orders of the graph.
 
-        A topological order is a non-unique permutation of the nodes such that an edge from `A` to `B` implies that `A`
-        appears before `B` in the topological sort order. Generating all possible topological orders may be expensive
-        for large graphs.
+        A topological order is a non-unique permutation of the nodes such that an edge from `'A'` to `'B'` implies
+        that `'A'` appears before `'B'` in the topological sort order. Generating all possible topological orders may
+        be expensive for large graphs.
 
         It is only possible to get topological order if the graph is a valid DAG.
 

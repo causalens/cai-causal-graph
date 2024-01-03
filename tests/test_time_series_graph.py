@@ -1047,7 +1047,11 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         g.add_time_edge('t', -1, 't', 0)
 
         top_order = g.get_topological_order()
-        self.assertListEqual(top_order, ['x lag(n=1)', 't lag(n=1)', 'x', 't', 'y'])
+        self.assertListEqual(top_order, ['t lag(n=1)', 'x lag(n=1)', 'x', 't', 'y'])
+
+        # test with respect time ordering to false
+        top_order = g.get_topological_order(respect_time_ordering=False)
+        self.assertListEqual(top_order, ['t lag(n=1)', 'x', 'x lag(n=1)', 't', 'y'])
 
         top_order = g.get_topological_order(return_all=True)
         self.assertListEqual(
@@ -1092,13 +1096,13 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         cg.add_node('y')
         ts_cg = TimeSeriesCausalGraph.from_causal_graph(cg)
 
-        self.assertListEqual(ts_cg.get_topological_order(), ['y', 'x'])
+        self.assertListEqual(ts_cg.get_topological_order(), ['x', 'y'])
         self.assertListEqual(ts_cg.get_topological_order(return_all=True), [['y', 'x'], ['x', 'y']])
 
         extended_graph = ts_cg.extend_graph(1, 1)
         self.assertListEqual(
             extended_graph.get_topological_order(),
-            ['y lag(n=1)', 'x lag(n=1)', 'x', 'y', 'x future(n=1)', 'y future(n=1)'],
+            ['x lag(n=1)', 'y lag(n=1)', 'x', 'y', 'x future(n=1)', 'y future(n=1)'],
         )
 
         # Test with no contemporaneous nodes.
@@ -1116,6 +1120,50 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
             ts_cg.extend_graph(2, 2).get_topological_order(),
             ['x lag(n=2)', 'x lag(n=1)', 'x', 'x future(n=1)', 'x future(n=2)'],
         )
+
+        # test with additional graphs
+        tsdag = TimeSeriesCausalGraph()
+        tsdag.add_edge('x', 'y')
+        tsdag.add_time_edge('y', -1, 'y', 0)
+        tsdag = tsdag.extend_graph(backward_steps=2)
+
+        order = tsdag.get_topological_order()
+        self.assertListEqual(order, ['x lag(n=2)', 'y lag(n=2)', 'x lag(n=1)', 'y lag(n=1)', 'x', 'y'])
+
+        # with return all and respect time ordering to false
+        order = tsdag.get_topological_order(return_all=True, respect_time_ordering=False)
+        self.assertIn(['x lag(n=2)', 'x lag(n=1)', 'y lag(n=2)', 'y lag(n=1)', 'x', 'y'], order)
+
+        tsdag = TimeSeriesCausalGraph()
+        tsdag.add_edge('z', 'y')
+        tsdag.add_edge('x', 'y')
+        tsdag.add_time_edge('y', -1, 'y', 0)
+        tsdag = tsdag.extend_graph(backward_steps=2)
+
+        order = tsdag.get_topological_order()
+
+        self.assertListEqual(
+            order, ['x lag(n=2)', 'z lag(n=2)', 'y lag(n=2)', 'x lag(n=1)', 'z lag(n=1)', 'y lag(n=1)', 'x', 'z', 'y']
+        )
+        order = tsdag.get_topological_order(return_all=True, respect_time_ordering=False)
+        self.assertIn(
+            ['z lag(n=2)', 'x lag(n=2)', 'y lag(n=2)', 'z lag(n=1)', 'x lag(n=1)', 'y lag(n=1)', 'z', 'x', 'y'], order
+        )
+
+        tscg = TimeSeriesCausalGraph()
+        # y-1 -> y <- x
+        tscg.add_edge('x', 'y')
+        tscg.add_time_edge('y', -1, 'y', 0)
+
+        order = tscg.get_topological_order(return_all=True)
+        # check there's no duplicates
+        self.assertEqual(len(order), 1)
+        self.assertListEqual(order[0], ['y lag(n=1)', 'x', 'y'])
+
+        order = tscg.get_topological_order(return_all=True, respect_time_ordering=False)
+        self.assertEqual(len(order), 2)
+        self.assertListEqual(order[0], ['y lag(n=1)', 'x', 'y'])
+        self.assertListEqual(order[1], ['x', 'y lag(n=1)', 'y'])
 
     def test_order_swapped(self):
         tscg = TimeSeriesCausalGraph()

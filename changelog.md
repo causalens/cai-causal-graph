@@ -5,6 +5,18 @@
 - Removed `**kwargs` from the `add_node`, `add_edge`, and `add_edge_by_pair` methods of
   `cai_causal_graph.causal_graph.CausalGraph` and its subclasses.
 
+## 0.3.13
+
+- Improved the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_topological_order` method in
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` to improve performance. Added a new keyword
+  argument `respect_time_ordering` to allow the user to specify whether the topological order must respect the
+  time ordering of the nodes. If `respect_time_ordering=True`, the topological order will respect the time ordering,
+  otherwise it may not. For example, if the graph is `'Y lag(n=1)' -> 'Y' <- 'X'`, then `['X', 'Y lag(n=1)', 'Y']` and
+  `['Y lag(n=1)', 'X', 'Y']` are both valid topological orders. However, only the second one would respect time
+  ordering. If both `return_all` and `respect_time_ordering` are `True`, then only all topological orders
+  that respect time are returned, not all valid topological orders. The default is `respect_time_ordering=True`,
+  matching previous behavior.
+
 ## 0.3.12
 
 - Improved efficiency of `cai_causal_graph.identify_utils.identify_confounders` by performing all operations

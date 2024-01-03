@@ -289,36 +289,67 @@ class TimeSeriesCausalGraph(CausalGraph):
 
     def _get_time_topological_order(self, ordered_nodes: List[str]) -> List[str]:
         """Return the provided list if it is ordered in time; otherwise, an empty list is returned."""
-
         # Iterate through the list to ensure it respects the time ordering.
         for j, node in enumerate(ordered_nodes):
             if j == 0:
                 continue
             assert isinstance(node, str)  # for linting
             # check if the time delta is correct
-            if self.get_node(ordered_nodes[j - 1]).time_lag > self.get_node(ordered_nodes[j]).time_lag:   # type: ignore
+            if self.get_node(ordered_nodes[j - 1]).time_lag > self.get_node(ordered_nodes[j]).time_lag:  # type: ignore
                 return []
 
         return ordered_nodes
 
-    def get_topological_order(self, return_all: bool = False) -> Union[List[str], List[List[str]]]:
+    def get_topological_order(
+        self, return_all: bool = False, respect_time_ordering: bool = True
+    ) -> Union[List[str], List[List[str]]]:
         """
-        Return the topological order of the graph that is ordered in time.
+        Return either a single or all topological orders of the graph.
+
+        A topological order is a non-unique permutation of the nodes such that an edge from `'A'` to `'B'` implies
+        that `'A'` appears before `'B'` in the topological sort order. Generating all possible topological orders may
+        be expensive for large graphs.
+
+        It is only possible to get topological order if the graph is a valid DAG.
 
         For more details, see `cai_causal_graph.causal_graph.CausalGraph.get_topological_order`.
+
+        :param return_all: If `True`, return all the possible topological orders. Default is `False`.
+        :param respect_time_ordering: If `True`, return the topological order that is ordered in time. Default is
+            `True`. For example, if the graph is `'Y lag(n=1)' -> 'Y' <- 'X'`, then `['X', 'Y lag(n=1)', 'Y']` and
+            `['Y lag(n=1)', 'X', 'Y']` are both valid topological orders. However, only the second one would respect time
+            ordering. If both `return_all` and `respect_time_ordering` are `True`, then only all topological orders
+            that respect time are returned, not all valid topological orders.
+        :return: either a list of strings identifying a single topological order, or a list of lists identifying all
+            possible topological orders.
         """
-        ordered_nodes = super().get_topological_order(return_all=True)
-        top_order_list: List[List[str]] = []
-        for current_top_order in ordered_nodes:
-            assert isinstance(current_top_order, list)  # for linting
-            new_order = self._get_time_topological_order(current_top_order)
-            if new_order not in top_order_list and len(new_order) > 0:
-                top_order_list.append(new_order)
+        if respect_time_ordering:
+            if return_all:
+                ordered_nodes_list = super().get_topological_order(return_all=return_all)
+                # ordered_nodes_list must be a list of lists of strings
+                assert isinstance(ordered_nodes_list, list)
+                assert all(isinstance(x, list) for x in ordered_nodes_list)
 
-        if not return_all:
-            top_order_list = top_order_list[0]  # type: ignore
+                ordered_nodes: List[List[str]] = []
 
-        return top_order_list
+                for i in range(len(ordered_nodes_list)):
+                    assert isinstance(ordered_nodes_list[i], list)
+                    tmp = self._get_time_topological_order(ordered_nodes_list[i])  # type: ignore
+                    if len(tmp) > 0:
+                        ordered_nodes.append(tmp)
+
+                return ordered_nodes
+            else:
+                # check it is a dag. Not needed in the other cases as it is already checked in the super method
+                assert self.is_dag(), 'The graph is not a DAG. The topological order is not valid.'
+                return list(
+                    networkx.lexicographical_topological_sort(
+                        self.to_networkx(), key=lambda x: self.get_node(x).time_lag  # type: ignore
+                    )
+                )
+
+        else:
+            return super().get_topological_order(return_all=return_all)
 
     def is_minimal_graph(self) -> bool:
         """
