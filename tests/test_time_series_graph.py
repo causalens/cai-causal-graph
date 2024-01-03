@@ -1150,6 +1150,16 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
             ['z lag(n=2)', 'x lag(n=2)', 'y lag(n=2)', 'z lag(n=1)', 'x lag(n=1)', 'y lag(n=1)', 'z', 'x', 'y'], order
         )
 
+        tscg = TimeSeriesCausalGraph()
+        # y-1 -> y <- x
+        tscg.add_edge('x', 'y')
+        tscg.add_time_edge('y', -1, 'y', 0)
+
+        order = tscg.get_topological_order(return_all=True)
+        # check there's no duplicates
+        self.assertEqual(len(order), 1)
+        self.assertListEqual(order[0], ['y lag(n=1)', 'x', 'y'])
+
     def test_order_swapped(self):
         tscg = TimeSeriesCausalGraph()
         tscg.add_edge('x', 'y lag(n=1)', edge_type=EdgeType.UNDIRECTED_EDGE)
