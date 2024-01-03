@@ -1160,6 +1160,11 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         self.assertEqual(len(order), 1)
         self.assertListEqual(order[0], ['y lag(n=1)', 'x', 'y'])
 
+        order = tscg.get_topological_order(return_all=True, respect_time_ordering=False)
+        self.assertEqual(len(order), 2)
+        self.assertListEqual(order[0], ['y lag(n=1)', 'x', 'y'])
+        self.assertListEqual(order[1], ['x', 'y lag(n=1)', 'y'])
+
     def test_order_swapped(self):
         tscg = TimeSeriesCausalGraph()
         tscg.add_edge('x', 'y lag(n=1)', edge_type=EdgeType.UNDIRECTED_EDGE)
