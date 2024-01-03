@@ -3,8 +3,8 @@
 ## NEXT
 
 - Fixed a bug in `cai_causal_graph.identify_utils.identify_confounders` where an empty confounding set would be
-  returned in the edge case where all causal paths from the true confounders to the destination node were blocked by
-  ancestors of the source node. This comes at a slight performance cost.
+  returned in the edge case where all causal paths from the true confounders to `node_1` were blocked by
+  ancestors of `node_2`, or vice versa. This comes at a slight performance cost.
 
 ## 0.3.13
 
