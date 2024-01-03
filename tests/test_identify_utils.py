@@ -16,6 +16,8 @@ limitations under the License.
 import unittest
 from itertools import combinations
 
+import networkx
+
 from cai_causal_graph import CausalGraph, TimeSeriesCausalGraph
 from cai_causal_graph.exceptions import CausalGraphErrors
 from cai_causal_graph.identify_utils import (
@@ -191,6 +193,9 @@ class TestIdentifyConfounders(unittest.TestCase):
         self.assertSetEqual(set(confounders), {'u'})
 
     def test_all_paths_blocked_by_ancestors(self):
+        # Regression test for Issue #43
+        # https://github.com/causalens/cai-causal-graph/issues/43
+
         cg = CausalGraph()
         cg.add_edge('x', 'm1')
         cg.add_edge('m1', 'm2')
@@ -202,6 +207,32 @@ class TestIdentifyConfounders(unittest.TestCase):
         confounders = identify_confounders(cg, 'x', 'y')
         self.assertEqual(len(confounders), 1)
         self.assertSetEqual(set(confounders), {'u'})
+
+        # Recreate error case from the issue.
+        dag_edges = [
+            ('T', 'm'),
+            ('m', 'e'),
+            ('T', 'tt'),
+            ('tt', 'treatment'),
+            ('I', 'treatment'),
+            ('I', 'ic'),
+            ('treatment', 'ic'),
+            ('ic', 'p'),
+            ('I', 'p'),
+            ('p', 'e'),
+            ('p', 'ce'),
+            ('I', 'soc'),
+            ('soc', 'c'),
+            ('c', 'ce'),
+            ('ce', 'outcome'),
+            ('e', 'outcome'),
+        ]
+
+        g = networkx.from_edgelist(dag_edges, create_using=networkx.DiGraph)
+        cg = CausalGraph.from_networkx(g)
+        confounders = identify_confounders(cg, 'treatment', 'outcome')
+        self.assertEqual(len(confounders), 2)
+        self.assertSetEqual(set(confounders), {'T', 'I'})
 
     def test_time_series_graph(self):
         # create a time-series causal graph
