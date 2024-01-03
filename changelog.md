@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.3.14
 
 - Fixed a bug in `cai_causal_graph.identify_utils.identify_confounders` where an empty confounding set would be
   returned in the edge case where all causal paths from the true confounders to `node_1` were blocked by
