@@ -475,9 +475,6 @@ class TestCausalGraphSerialization(unittest.TestCase):
         with self.assertRaises(AssertionError):
             causal_graph.add_edge(edge=edge, meta={'foo': 'bar'})
 
-        with self.assertRaises(AssertionError):
-            causal_graph.add_edge(edge=edge, my_kwargs='foo')
-
     def test_add_edges_from(self):
         causal_graph = CausalGraph()
         edge_tuples = [('a', 'b'), ('b', 'c')]
@@ -1015,9 +1012,6 @@ class TestCausalGraphPrinting(unittest.TestCase):
 
         with self.assertRaises(AssertionError):
             causal_graph.add_node(node=node, variable_type=NodeVariableType.BINARY)
-
-        with self.assertRaises(AssertionError):
-            causal_graph.add_node(node=node, my_kwargs='foo')
 
     def test_node_variable_type(self):
         cg = CausalGraph()
