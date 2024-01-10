@@ -693,6 +693,9 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         self.assertTrue(min_tsgraph.edge_exists('b lag(n=1)', 'c'))
         self.assertEqual(len(min_tsgraph.nodes), 2)
 
+        # test it does not fail with a very big graph due to recursion
+        self.tsdag_1.extend_graph(forward_steps=200, backward_steps=200).get_minimal_graph()
+
     def test_extend_backward(self):
         # with 1 steps
         # dag

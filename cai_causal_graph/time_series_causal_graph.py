@@ -209,9 +209,12 @@ class TimeSeriesCausalGraph(CausalGraph):
         minimal_cg = TimeSeriesCausalGraph()
 
         for edge in self.get_edges():
+            # copy edge
+            edge = Edge.from_dict(edge.to_dict(include_meta=True))
+
             # get the relative time delta; asserts are needed for linting
-            source = deepcopy(edge.source)
-            destination = deepcopy(edge.destination)
+            source = edge.source
+            destination = edge.destination
             assert isinstance(source, TimeSeriesNode)
             assert isinstance(destination, TimeSeriesNode)
             assert isinstance(source.time_lag, int)
@@ -220,9 +223,6 @@ class TimeSeriesCausalGraph(CausalGraph):
             assert destination.variable_name is not None
 
             time_delta = destination.time_lag - source.time_lag
-
-            # copy edge
-            edge = Edge.from_dict(edge.to_dict())
 
             # add the edge if the time delta is 0 (no need to extract the new names)
             # copy the edge type to the minimal graph

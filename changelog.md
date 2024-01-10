@@ -2,6 +2,8 @@
 
 ## NEXT
 
+- Improved the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph` method in
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` to avoid a recursion issue.
 - Removed `**kwargs` from the `cai_causal_graph.causal_graph.CausalGraph.add_node`,
   `cai_causal_graph.causal_graph.CausalGraph.add_edge`, and `cai_causal_graph.causal_graph.CausalGraph.add_edge_by_pair`
   methods in `cai_causal_graph.causal_graph.CausalGraph` and its subclasses, as none of them use it.
