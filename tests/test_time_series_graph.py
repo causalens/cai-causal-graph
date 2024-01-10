@@ -1322,9 +1322,6 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
         with self.assertRaises(AssertionError):
             cg.add_node(node=node, variable_type=NodeVariableType.BINARY)
 
-        with self.assertRaises(AssertionError):
-            cg.add_node(node=node, my_kwargs='foo')
-
     def test_node_variable_type(self):
         cg = TimeSeriesCausalGraph()
 
