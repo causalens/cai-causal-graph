@@ -211,7 +211,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         for edge in self.get_edges():
 
             # copy edge
-            edge = Edge.from_dict(edge.to_dict())
+            edge = Edge.from_dict(edge.to_dict(include_meta=True))
 
             # get the relative time delta; asserts are needed for linting
             source = edge.source

@@ -1,5 +1,11 @@
 # Changelog
 
+## NEXT
+
+- Improved the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph` method in
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` to avoid recursion
+  issue.
+
 ## 0.3.14
 
 - Fixed a bug in `cai_causal_graph.identify_utils.identify_confounders` where an empty confounding set would be
