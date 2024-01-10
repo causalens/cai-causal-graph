@@ -209,7 +209,6 @@ class TimeSeriesCausalGraph(CausalGraph):
         minimal_cg = TimeSeriesCausalGraph()
 
         for edge in self.get_edges():
-
             # copy edge
             edge = Edge.from_dict(edge.to_dict(include_meta=True))
 

@@ -694,7 +694,7 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         self.assertEqual(len(min_tsgraph.nodes), 2)
 
         # test it does not fail with a very big graph due to recursion
-        self.tsdag_1.extend_graph(forward_steps=100, backward_steps=100).get_minimal_graph()
+        self.tsdag_1.extend_graph(forward_steps=200, backward_steps=200).get_minimal_graph()
 
     def test_extend_backward(self):
         # with 1 steps

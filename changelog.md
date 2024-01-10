@@ -3,8 +3,7 @@
 ## NEXT
 
 - Improved the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph` method in
-  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` to avoid recursion
-  issue.
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` to avoid a recursion issue.
 
 ## 0.3.14
 
