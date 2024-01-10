@@ -650,7 +650,6 @@ class TimeSeriesCausalGraph(CausalGraph):
         variable_type: NodeVariableType = NodeVariableType.UNSPECIFIED,
         meta: Optional[dict] = None,
         node: Optional[TimeSeriesNode] = None,
-        **kwargs,
     ) -> TimeSeriesNode:
         """
         Add a node to the time series graph. See `cai_causal_graph.causal_graph.CausalGraph.add_node` for more details.
@@ -664,7 +663,6 @@ class TimeSeriesCausalGraph(CausalGraph):
         :param variable_type: The type of the variable.
         :param meta: The metadata of the time series node.
         :param node: The node to add.
-        :param kwargs: Additional keyword arguments.
         :return: The added node.
         """
         if node is not None:
@@ -674,7 +672,6 @@ class TimeSeriesCausalGraph(CausalGraph):
                 and time_lag is None
                 and variable_type == NodeVariableType.UNSPECIFIED
                 and meta is None
-                and len(kwargs) == 0
             ), 'If specifying `node` argument, all other arguments should not be specified.'
             identifier = node.identifier
             variable_type = node.variable_type
@@ -820,7 +817,6 @@ class TimeSeriesCausalGraph(CausalGraph):
         edge_type: EdgeType = EdgeType.DIRECTED_EDGE,
         meta: Optional[dict] = None,
         edge: Optional[Edge] = None,
-        **kwargs,
     ) -> Edge:
         """
         Add an edge from a source to a destination node with a specific edge type.
@@ -894,9 +890,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                     source, destination = destination, source
 
         self._check_nodes_and_edge(source=source, destination=destination, edge_type=edge_type, edge=edge)
-        edge = super().add_edge(
-            source=source, destination=destination, edge_type=edge_type, meta=meta, edge=edge, **kwargs
-        )
+        edge = super().add_edge(source=source, destination=destination, edge_type=edge_type, meta=meta, edge=edge)
 
         return edge
 
@@ -910,7 +904,6 @@ class TimeSeriesCausalGraph(CausalGraph):
         destination_time: int,
         *,
         meta: Optional[dict] = None,
-        **kwargs,
     ) -> Edge:
         """
         Add a time edge to the graph from the variable at the source time to the variable at the destination time.
@@ -920,8 +913,6 @@ class TimeSeriesCausalGraph(CausalGraph):
         :param destination_variable: The name of the destination variable.
         :param destination_time: The time of the destination variable.
         :param meta: The metadata for the edge.
-        :param kwargs: Additional keyword arguments to pass to the `cai_causal_graph.causal_graph.CausalGraph.add_edge`
-            method.
         :return: The edge that was added.
 
         Example:
@@ -937,7 +928,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         source = get_name_with_lag(source_variable, source_time)
         destination = get_name_with_lag(destination_variable, destination_time)
 
-        return self.add_edge(source, destination, meta=meta, **kwargs)
+        return self.add_edge(source, destination, meta=meta)
 
     @classmethod
     def from_causal_graph(cls, causal_graph: CausalGraph) -> TimeSeriesCausalGraph:
