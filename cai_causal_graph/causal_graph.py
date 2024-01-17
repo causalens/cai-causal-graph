@@ -1160,7 +1160,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         :param paths: A list of paths or a single path. A path is defined as a list of node identifiers, defining the
             causal path in a causal graph.
         """
-        assert len(paths) == 0, 'The `paths` parameter must not be an empty list.'
+        assert len(paths) != 0, 'The `paths` parameter must not be an empty list.'
         if isinstance(paths[0], list):
             if not all(isinstance(path, list) for path in paths):
                 raise TypeError(f'Expects `paths` to be either a list of paths or a single path. Got {paths}')
@@ -1169,7 +1169,10 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
                 self.add_edges_from_paths(paths=path)
         else:
             # `paths` is guaranteed to be a single path by this point
-            self.add_nodes_from(list(itertools.pairwise(paths)))
+            for pair in itertools.pairwise(paths):
+                if not self.edge_exists(source=pair[0], destination=pair[1]):
+                    validate_pair_type(pair)
+                    self.add_edge(source=pair[0], destination=pair[1])
 
     def add_edge_by_pair(
         self, pair: Tuple[NodeLike, NodeLike], edge_type: EdgeType = EdgeType.DIRECTED_EDGE, meta: Optional[dict] = None
