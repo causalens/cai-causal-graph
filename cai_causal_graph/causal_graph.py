@@ -16,10 +16,9 @@ limitations under the License.
 from __future__ import annotations
 
 import itertools
-import typing
 from collections import defaultdict
 from copy import deepcopy
-from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Type, Union
+from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Type, Union, cast
 
 import networkx
 import numpy
@@ -1175,11 +1174,11 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
                 raise TypeError(f'Expects `paths` to be either a list of paths or a single path. Got {paths}')
 
             for path in paths:
-                self.add_edges_from_paths(paths=typing.cast(list, path))
+                self.add_edges_from_paths(paths=cast(list, path))
         else:
             # `paths` is guaranteed to be a single path by this point
             for source, destination in itertools.pairwise(paths):
-                source, destination = typing.cast(NodeLike, source), typing.cast(NodeLike, destination)
+                source, destination = cast(NodeLike, source), cast(NodeLike, destination)
                 if not self.edge_exists(source=source, destination=destination):
                     validate_pair_type((source, destination))
                     self.add_edge(source=source, destination=destination)
