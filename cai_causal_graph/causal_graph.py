@@ -1154,6 +1154,14 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """
         A convenience method to add multiple edges by specifying a single or a list of paths.
 
+        Importantly, the path can overlap with each other, or with existing causal graph structure. Meaning, if an
+        edge specified on the path already exists, an error is not raised. For example, the following two
+        `paths` parameters will add the same edges: `[['a','b','c'],['b','c','d']]` and `[['a','b','c'],['c','d']]`.
+
+        However, conflicting paths will produce an error. For example, it is not possible to add the following two
+        paths: `[['a','b','c'],['c','b','y']]`, because the first path defines an edge `('b','c')`, while the second
+        defines the edge `('c','b')`.
+
         Only allows to set up edges with default setup. For more details on how edges are being set, refer to
         `cai_causal_graph.causal_graph.CausalGraph.add_edge` method.
 
