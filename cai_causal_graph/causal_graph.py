@@ -18,7 +18,7 @@ from __future__ import annotations
 import itertools
 from collections import defaultdict
 from copy import deepcopy
-from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Type, Union
+from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Type, Union, cast
 
 import networkx
 import numpy
@@ -1149,6 +1149,39 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         for pair in pairs:
             validate_pair_type(pair)
             self.add_edge(source=pair[0], destination=pair[1])
+
+    def add_edges_from_paths(self, paths: Union[List[NodeLike], List[List[NodeLike]]]):
+        """
+        A convenience method to add multiple edges by specifying a single or a list of paths.
+
+        Importantly, the path can overlap with each other, or with existing causal graph structure. Meaning, if an
+        edge specified on the path already exists, an error is not raised. For example, the following two
+        `paths` parameters will add the same edges: `[['a','b','c'],['b','c','d']]` and `[['a','b','c'],['c','d']]`.
+
+        However, conflicting paths will produce an error. For example, it is not possible to add the following two
+        paths: `[['a','b','c'],['c','b','y']]`, because the first path defines an edge `('b','c')`, while the second
+        defines the edge `('c','b')`.
+
+        Only allows to set up edges with default setup. For more details on how edges are being set, refer to
+        `cai_causal_graph.causal_graph.CausalGraph.add_edge` method.
+
+        :param paths: A list of paths or a single path. A path is defined as a list of node identifiers, defining the
+            causal path in a causal graph.
+        """
+        assert len(paths) != 0, 'The `paths` parameter must not be an empty list.'
+        if isinstance(paths[0], list):
+            if not all(isinstance(path, list) for path in paths):
+                raise TypeError(f'Expects `paths` to be either a list of paths or a single path. Got {paths}')
+
+            for path in paths:
+                self.add_edges_from_paths(paths=cast(list, path))
+        else:
+            # `paths` is guaranteed to be a single path by this point
+            for source, destination in itertools.pairwise(paths):
+                source, destination = cast(NodeLike, source), cast(NodeLike, destination)
+                if not self.edge_exists(source=source, destination=destination):
+                    validate_pair_type((source, destination))
+                    self.add_edge(source=source, destination=destination)
 
     def add_edge_by_pair(
         self, pair: Tuple[NodeLike, NodeLike], edge_type: EdgeType = EdgeType.DIRECTED_EDGE, meta: Optional[dict] = None

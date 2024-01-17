@@ -475,6 +475,44 @@ class TestCausalGraphSerialization(unittest.TestCase):
         with self.assertRaises(AssertionError):
             causal_graph.add_edge(edge=edge, meta={'foo': 'bar'})
 
+    def test_add_edges_from_single_path(self):
+        causal_graph = CausalGraph()
+
+        # check where paths overlap
+        causal_graph.add_edges_from_paths(['a1', 'b', 'c', 'd'])
+        causal_graph.add_edges_from_paths(['a2', 'b', 'c', 'e'])
+
+        self.assertSetEqual(
+            set(causal_graph.get_edge_pairs()), set([('a1', 'b'), ('a2', 'b'), ('b', 'c'), ('c', 'd'), ('c', 'e')])
+        )
+
+        # check conflicting paths raises
+        causal_graph.add_edges_from_paths(['a3', 'b', 'c'])
+        with self.assertRaises(CausalGraphErrors.CyclicConnectionError):
+            causal_graph.add_edges_from_paths(['c', 'b', 'z'])
+
+    def test_add_edges_from_multiple_paths(self):
+        causal_graph = CausalGraph()
+
+        # check where paths overlap
+        causal_graph.add_edges_from_paths([['a1', 'b', 'c', 'd'], ['a2', 'b', 'c', 'e']])
+
+        self.assertSetEqual(
+            set(causal_graph.get_edge_pairs()), set([('a1', 'b'), ('a2', 'b'), ('b', 'c'), ('c', 'd'), ('c', 'e')])
+        )
+
+        # check conflicting paths raises
+        with self.assertRaises(CausalGraphErrors.CyclicConnectionError):
+            causal_graph.add_edges_from_paths([['a3', 'b', 'c'], ['c', 'b', 'z']])
+
+        # check that invalid paths raises (mix of paths and strings)
+        with self.assertRaises(TypeError):
+            causal_graph.add_edges_from_paths([['q', 'z'], ['q', 'e', 'r'], 't', 'yyy'])
+
+        # check that empty list raises
+        with self.assertRaises(AssertionError):
+            causal_graph.add_edges_from_paths([])
+
     def test_add_edges_from(self):
         causal_graph = CausalGraph()
         edge_tuples = [('a', 'b'), ('b', 'c')]

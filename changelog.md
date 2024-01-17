@@ -7,6 +7,8 @@
   methods in `cai_causal_graph.causal_graph.CausalGraph` and its subclasses, as none of them use it.
 - Improved the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph` method in
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` to avoid a recursion issue.
+- Added `cai_causal_graph.causal_graph.CausalGraph.add_edges_from_paths` convenience method to the `cai_causal_graph.causal_graph.CausalGraph` class,
+  in order to add edges from paths.
 
 ## 0.3.14
 

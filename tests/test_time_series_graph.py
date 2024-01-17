@@ -245,6 +245,25 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         with self.assertRaises(ValueError):
             ts_cg.add_edge('X1 future(n=1)', 'X3')
 
+    def test_add_edges_from_paths(self):
+        # try adding a single path
+        ts_cg = TimeSeriesCausalGraph()
+        ts_cg.add_edges_from_paths(['X1 lag(n=1)', 'X2 lag(n=1)', 'X2'])
+        self.assertSetEqual(set([('X1 lag(n=1)', 'X2 lag(n=1)'), ('X2 lag(n=1)', 'X2')]), set(ts_cg.get_edge_pairs()))
+
+        # try adding multiple paths
+        ts_cg = TimeSeriesCausalGraph()
+        ts_cg.add_edges_from_paths([['X1 lag(n=1)', 'X2 lag(n=1)', 'X2'], ['X2 lag(n=2)', 'X2', 'X3']])
+        self.assertSetEqual(
+            set([('X1 lag(n=1)', 'X2 lag(n=1)'), ('X2', 'X3'), ('X2 lag(n=1)', 'X2'), ('X2 lag(n=2)', 'X2')]),
+            set(ts_cg.get_edge_pairs()),
+        )
+
+        # try adding an edge which does not respect time
+        ts_cg = TimeSeriesCausalGraph()
+        with self.assertRaises(ValueError):
+            ts_cg.add_edges_from_paths(['X1 lag(n=1)', 'X2 lag(n=1)', 'X2 lag(n=2)'])
+
     def test_replace_node(self):
         ts_cg = TimeSeriesCausalGraph()
         ts_cg.add_edge('X1 lag(n=1)', 'X2 lag(n=1)', edge_type=EdgeType.DIRECTED_EDGE)
