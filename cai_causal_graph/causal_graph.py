@@ -1150,6 +1150,27 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             validate_pair_type(pair)
             self.add_edge(source=pair[0], destination=pair[1])
 
+    def add_edges_from_paths(self, paths: Union[List[NodeLike], List[List[NodeLike]]]):
+        """
+        A convenience method to add multiple edges by specifying a single or a list of paths.
+
+        Only allows to set up edges with default setup. For more details on how edges are being set, refer to
+        `cai_causal_graph.causal_graph.CausalGraph.add_edge` method.
+
+        :param paths: A list of paths or a single path. A path is defined as a list of node identifiers, defining the
+            causal path in a causal graph.
+        """
+        assert len(paths) == 0, 'The `paths` parameter must not be an empty list.'
+        if isinstance(paths[0], list):
+            if not all(isinstance(path, list) for path in paths):
+                raise TypeError(f'Expects `paths` to be either a list of paths or a single path. Got {paths}')
+
+            for path in paths:
+                self.add_edges_from_paths(paths=path)
+        else:
+            # `paths` is guaranteed to be a single path by this point
+            self.add_nodes_from(list(itertools.pairwise(paths)))
+
     def add_edge_by_pair(
         self, pair: Tuple[NodeLike, NodeLike], edge_type: EdgeType = EdgeType.DIRECTED_EDGE, meta: Optional[dict] = None
     ):
