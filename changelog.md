@@ -9,7 +9,7 @@
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` to avoid a recursion issue.
 - Added `cai_causal_graph.causal_graph.CausalGraph.add_edges_from_paths` convenience method to the `cai_causal_graph.causal_graph.CausalGraph` class,
   in order to add edges from paths.
-- Fixed bug where use of `itertools.pairwise` would result in errors for Python < 3.10.
+- Fixed bug where use of `itertools.pairwise` would result in errors for Python \< 3.10.
 
 ## 0.3.14
 
