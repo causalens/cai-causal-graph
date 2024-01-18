@@ -14,7 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import re
-from typing import Dict, List, Tuple
+from itertools import tee
+from typing import Dict, Iterable, List, Tuple, TypeVar
 
 from cai_causal_graph.type_definitions import HasIdentifier, NodeLike
 
@@ -124,3 +125,17 @@ def extract_names_and_lags(
         names_and_lags.append({variable_name: lag})
 
     return names_and_lags, max_lag
+
+
+T = TypeVar('T')
+
+
+def pairwise(iterable: Iterable[T]) -> Iterable[Tuple[T, T]]:
+    """
+    Equivalent to `itertools.pairwise`.
+
+    This is used because `itertools.pairwise` method is not evailable for Python 3.8 and 3.9.
+    """
+    a, b = tee(iterable)
+    next(b, None)
+    return zip(a, b)

@@ -28,6 +28,7 @@ from cai_causal_graph.exceptions import CausalGraphErrors
 from cai_causal_graph.graph_components import Edge, Node
 from cai_causal_graph.interfaces import CanDictDeserialize, CanDictSerialize, HasIdentifier, HasMetadata
 from cai_causal_graph.type_definitions import PAIR_T, EdgeType, NodeLike, NodeVariableType, validate_pair_type
+from cai_causal_graph.utils import pairwise
 
 
 def to_list(var: Any) -> List[Any]:
@@ -1177,7 +1178,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
                 self.add_edges_from_paths(paths=cast(list, path))
         else:
             # `paths` is guaranteed to be a single path by this point
-            for source, destination in itertools.pairwise(paths):
+            for source, destination in pairwise(paths):
                 source, destination = cast(NodeLike, source), cast(NodeLike, destination)
                 if not self.edge_exists(source=source, destination=destination):
                     validate_pair_type((source, destination))
