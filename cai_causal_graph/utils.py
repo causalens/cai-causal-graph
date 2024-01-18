@@ -136,6 +136,6 @@ def pairwise(iterable: Iterable[T]) -> Iterable[Tuple[T, T]]:
 
     This is used because `itertools.pairwise` method is not evailable for Python 3.8 and 3.9.
     """
-    a, b = tee(iterable)
+    a, b = tee(iterable, 2)
     next(b, None)
     return zip(a, b)
