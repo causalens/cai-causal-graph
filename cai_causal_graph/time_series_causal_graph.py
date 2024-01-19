@@ -724,13 +724,13 @@ class TimeSeriesCausalGraph(CausalGraph):
             new_node_id = Node.identifier_from(new_node_id)
             variable_name, time_lag = get_variable_name_and_lag(Node.identifier_from(new_node_id))
 
-        current_node_meta = self.get_node(node_id).metadata.copy()
         if meta is not None:
             meta = meta.copy()
-            current_node_meta.update(meta)
-        current_node_meta.update({VARIABLE_NAME: variable_name, TIME_LAG: time_lag})
+            meta.update({VARIABLE_NAME: variable_name, TIME_LAG: time_lag})
+        else:
+            meta = {VARIABLE_NAME: variable_name, TIME_LAG: time_lag}
 
-        super().replace_node(node_id, new_node_id, variable_type=variable_type, meta=current_node_meta)
+        super().replace_node(node_id, new_node_id, variable_type=variable_type, meta=meta)
 
     @_reset_ts_graph_attributes
     def delete_node(self, identifier: NodeLike):

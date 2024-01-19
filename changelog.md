@@ -9,6 +9,12 @@
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` to avoid a recursion issue.
 - Added `cai_causal_graph.causal_graph.CausalGraph.add_edges_from_paths` convenience method to the `cai_causal_graph.causal_graph.CausalGraph` class,
   in order to add edges from paths.
+- `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph` will now always return a graph of the
+  same class type as the current graph instance.
+- The returned graph type from `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_summary_graph` can
+  now be specified in subclasses of `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` using the
+  `_SummaryGraphCls` attribute.
+- In `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.replace_node`,
 
 ## 0.3.14
 
