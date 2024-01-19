@@ -66,6 +66,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
     _NodeCls: Type[TimeSeriesNode] = TimeSeriesNode
     _EdgeCls: Type[Edge] = Edge
+    _SummaryGraphCls: Type[CausalGraph] = CausalGraph
 
     def __init__(
         self,
@@ -206,11 +207,11 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         :return: The minimal graph as a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` object.
         """
-        minimal_cg = TimeSeriesCausalGraph()
+        minimal_cg = self.__class__()
 
         for edge in self.get_edges():
             # copy edge
-            edge = Edge.from_dict(edge.to_dict(include_meta=True))
+            edge = self._EdgeCls.from_dict(edge.to_dict(include_meta=True))
 
             # get the relative time delta; asserts are needed for linting
             source = edge.source
@@ -376,7 +377,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         :return: The summary graph as a `cai_causal_graph.causal_graph.CausalGraph` object.
         """
         if self._summary_graph is None:
-            summary_graph = CausalGraph()
+            summary_graph = self._SummaryGraphCls()
             # now check as described above (assume edges are already directed)
             edges = self.get_edges()
 
@@ -942,7 +943,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         :param causal_graph: The causal graph as a `cai_causal_graph.causal_graph.CausalGraph` object.
         :return: A `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` object.
         """
-        if isinstance(causal_graph, TimeSeriesCausalGraph):
+        if isinstance(causal_graph, cls):
             return causal_graph
 
         sepsets = deepcopy(causal_graph._sepsets)
