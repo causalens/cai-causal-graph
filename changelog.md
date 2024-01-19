@@ -13,8 +13,7 @@
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` will now always return a graph of the same class type
   as the current graph instance.
 - The returned graph type from the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_summary_graph` method
-  in ``cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` can now be specified in subclasses of
-  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` using the `_SummaryGraphCls` attribute.
+  in \`\`cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`can now be specified in subclasses of`cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`using the`\_SummaryGraphCls\` attribute.
 
 ## 0.3.14
 
