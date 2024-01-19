@@ -66,6 +66,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
     _NodeCls: Type[TimeSeriesNode] = TimeSeriesNode
     _EdgeCls: Type[Edge] = Edge
+    _SummaryGraphCls: Type[CausalGraph] = CausalGraph
 
     def __init__(
         self,
@@ -206,7 +207,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         :return: The minimal graph as a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` object.
         """
-        minimal_cg = TimeSeriesCausalGraph()
+        minimal_cg = self.__class__()
 
         for edge in self.get_edges():
             # copy edge
@@ -376,7 +377,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         :return: The summary graph as a `cai_causal_graph.causal_graph.CausalGraph` object.
         """
         if self._summary_graph is None:
-            summary_graph = CausalGraph()
+            summary_graph = self._SummaryGraphCls()
             # now check as described above (assume edges are already directed)
             edges = self.get_edges()
 
@@ -723,13 +724,13 @@ class TimeSeriesCausalGraph(CausalGraph):
             new_node_id = Node.identifier_from(new_node_id)
             variable_name, time_lag = get_variable_name_and_lag(Node.identifier_from(new_node_id))
 
+        current_node_meta = self.get_node(node_id).metadata.copy()
         if meta is not None:
             meta = meta.copy()
-            meta.update({VARIABLE_NAME: variable_name, TIME_LAG: time_lag})
-        else:
-            meta = {VARIABLE_NAME: variable_name, TIME_LAG: time_lag}
+            current_node_meta.update(meta)
+        current_node_meta.update({VARIABLE_NAME: variable_name, TIME_LAG: time_lag})
 
-        super().replace_node(node_id, new_node_id, variable_type=variable_type, meta=meta)
+        super().replace_node(node_id, new_node_id, variable_type=variable_type, meta=current_node_meta)
 
     @_reset_ts_graph_attributes
     def delete_node(self, identifier: NodeLike):
@@ -942,7 +943,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         :param causal_graph: The causal graph as a `cai_causal_graph.causal_graph.CausalGraph` object.
         :return: A `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` object.
         """
-        if isinstance(causal_graph, TimeSeriesCausalGraph):
+        if isinstance(causal_graph, cls):
             return causal_graph
 
         sepsets = deepcopy(causal_graph._sepsets)
