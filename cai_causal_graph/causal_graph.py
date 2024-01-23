@@ -424,6 +424,11 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         if not isinstance(item, tuple):
             return self.get_node(item)
         else:
+            if len(item) != 2:
+                raise TypeError(
+                    f'The provided item must either be `NodeLike` (i.e. to return a single node) or a tuple of two '
+                    f'`NodeLike` objects (i.e. to return an edge), got {item}.'
+                )
             return self.get_edge(item[0], item[1])
 
     def __iter__(self) -> Iterator:

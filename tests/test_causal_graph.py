@@ -24,7 +24,7 @@ import pandas
 from cai_causal_graph import CausalGraph, EdgeType, NodeVariableType
 from cai_causal_graph import __version__ as VERSION
 from cai_causal_graph.exceptions import CausalGraphErrors
-from cai_causal_graph.graph_components import Node
+from cai_causal_graph.graph_components import Edge, Node
 
 
 class TestCausalGraphSerialization(unittest.TestCase):
@@ -129,6 +129,30 @@ class TestCausalGraphSerialization(unittest.TestCase):
         # Also confirm that equality method works.
         self.assertEqual(graph, reconstruction)
         self.assertTrue(graph.__eq__(reconstruction, True))
+
+    def test_get_item(self):
+        causal_graph = CausalGraph()
+        x = Node('x')
+        y = Node('y')
+        causal_graph.add_edge(x, y)
+
+        # test getting node
+        node = causal_graph['x']
+        self.assertIsInstance(node, Node)
+        self.assertEqual(node, causal_graph.get_node('x'))
+
+        # test getting edge
+        edge = causal_graph['x', 'y']
+        self.assertIsInstance(edge, Edge)
+        self.assertEqual(edge, causal_graph.get_edge('x', 'y'))
+
+        # test getting edge which does not exist
+        with self.assertRaises(CausalGraphErrors.EdgeDoesNotExistError):
+            causal_graph['y', 'x']
+
+        # test inappropriate edges
+        with self.assertRaises(TypeError):
+            causal_graph['y', 'x', 'z']
 
     def test_graph_serializes(self):
         """This test ensures different serialization types and JSON serialization as well."""
