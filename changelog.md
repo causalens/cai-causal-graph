@@ -17,6 +17,9 @@
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` using the `_SummaryGraphCls` attribute.
 - Fixed a bug where `__getitem__` method of `cai_causal_graph.causal_graph.CausalGraph` would work when specifying invalid
   node or edge query, for example a whole path. Instead, a `TypeError` is now raised.
+- Fixed a bug where `cai_causal_graph.causal_graph.CausalGraph.delete_edge` would not support passing source and destination
+  as `cai_causal_graph.graph_components.Node`.
+- Added support for passing source and destination as `cai_causal_graph.graph_components.Node` to `cai_causal_graph.causal_graph.CausalGraph.remove_edge`.
 
 ## 0.3.14
 

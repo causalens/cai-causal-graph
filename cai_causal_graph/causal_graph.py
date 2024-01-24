@@ -1211,6 +1211,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         :param destination: Identifier of the node at which the edge terminates.
         :param edge_type: The edge type of the edge to be deleted. Default is None, in which case the type is ignored.
         """
+        source, destination = Node.identifier_from(source), Node.identifier_from(destination)
         assert isinstance(source, str), 'Source identifier must be a string'
         assert isinstance(destination, str), 'Destination identifier must be a string'
 
@@ -1242,7 +1243,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         self._clean_empty_edge_dictionaries()
         edge.invalidate()
 
-    def remove_edge(self, /, source: str, destination: str, *, edge_type: Optional[EdgeType] = None):
+    def remove_edge(self, /, source: NodeLike, destination: NodeLike, *, edge_type: Optional[EdgeType] = None):
         """Remove a specific edge by source and destination node identifiers, as well as edge type."""
         self.delete_edge(source=source, destination=destination, edge_type=edge_type)
 

@@ -328,6 +328,15 @@ class TestCausalGraphSerialization(unittest.TestCase):
         with self.assertRaises(CausalGraphErrors.EdgeDoesNotExistError):
             self.fully_connected_graph.delete_edge('x', 'z1')
 
+    def test_delete_edge_by_node(self):
+        # Test that deleting edges works fine
+        self.fully_connected_graph.delete_edge(self.fully_connected_graph['x'], self.fully_connected_graph['z1'])
+        self.assertEqual(3, len(self.fully_connected_graph.get_edges()))
+
+        # check that the appropriate error is raised when deleting the same edge again
+        with self.assertRaises(CausalGraphErrors.EdgeDoesNotExistError):
+            self.fully_connected_graph.delete_edge(self.fully_connected_graph['x'], self.fully_connected_graph['z1'])
+
     def test_replace_node_raises_error(self):
         causal_graph = CausalGraph()
         causal_graph.add_edge('x1', 'x2')
