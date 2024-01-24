@@ -200,6 +200,20 @@ class TestCausalGraphEdgeTypes(unittest.TestCase):
         self.assertEqual(len(self.dag.get_nodes()), 8)
         self.assertEqual(len(self.dag.get_edges()), 8)
 
+    def test_add_and_remove_edges_with_nodes(self):
+        # add edge and check that it is correctly added
+        self.dag.add_nodes_from(['x', 'y'])
+
+        self.dag.add_edge(self.dag['x'], self.dag['a'], edge_type=EdgeType.DIRECTED_EDGE)
+        self.dag.add_edge(self.dag['x'], self.dag['y'], edge_type=EdgeType.DIRECTED_EDGE)
+        self.assertEqual(len(self.dag.get_nodes()), 8)
+        self.assertEqual(len(self.dag.get_edges()), 9)
+
+        # remove edge
+        self.dag.remove_edge(self.dag['x'], self.dag['y'], edge_type=EdgeType.DIRECTED_EDGE)
+        self.assertEqual(len(self.dag.get_nodes()), 8)
+        self.assertEqual(len(self.dag.get_edges()), 8)
+
     def test_get_parent_graph(self):
         # get a parent graph for the DAG
         pa_dag = self.dag.get_parents_graph('d')
