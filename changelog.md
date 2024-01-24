@@ -15,6 +15,8 @@
 - The returned graph type from the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_summary_graph` method
   in `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` can now be specified in subclasses of
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` using the `_SummaryGraphCls` attribute.
+- Fixed a bug where `__getitem__` method of `cai_causal_graph.causal_graph.CausalGraph` would work when specifying invalid
+  node or edge query, for example a whole path. Instead, a `TypeError` is now raised.
 
 ## 0.3.14
 
