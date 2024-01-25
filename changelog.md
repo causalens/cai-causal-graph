@@ -20,6 +20,9 @@
 - Fixed a bug where `cai_causal_graph.causal_graph.CausalGraph.delete_edge` would not support passing source and destination
   as `cai_causal_graph.graph_components.Node`.
 - Added support for passing source and destination as `cai_causal_graph.graph_components.Node` to `cai_causal_graph.causal_graph.CausalGraph.remove_edge`.
+- The `cai_causal_graph.causal_graph.CausalGraph.from_adjacency_matrix` is now a class method (rather than being a static method)
+  which has been generalized to return an instance of the class on which it has been called (e.g. enabling returning instances of
+  classes inheriting from `cai_causal_graph.causal_graph.CausalGraph`.
 
 ## 0.3.14
 
