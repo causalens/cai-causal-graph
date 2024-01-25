@@ -1884,9 +1884,9 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         g = networkx.parse_gml(gml)
         return CausalGraph.from_networkx(g)
 
-    @staticmethod
+    @classmethod
     def from_adjacency_matrix(
-        adjacency: numpy.ndarray, node_names: Optional[List[Union[NodeLike, int]]] = None
+        cls, adjacency: numpy.ndarray, node_names: Optional[List[Union[NodeLike, int]]] = None
     ) -> CausalGraph:
         """
         Construct a `cai_causal_graph.causal_graph.CausalGraph` instance from an adjacency matrix and optionally a list
@@ -1927,7 +1927,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         nodes = [CausalGraph.coerce_to_nodelike(node) for node in node_names]  # type: ignore
 
         # Add edges. Any conversion from BasicFeature or BasicTarget is handled by the add_edge method.
-        graph = CausalGraph()
+        graph = cls()
         graph.add_nodes_from(nodes)
         for i, j in itertools.combinations(range(len(nodes)), 2):
             if adjacency[i, j] != 0 and adjacency[j, i] == 0:
