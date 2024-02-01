@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.4.0
 
 - Removed `**kwargs` from the `cai_causal_graph.causal_graph.CausalGraph.add_node`,
   `cai_causal_graph.causal_graph.CausalGraph.add_edge`, and `cai_causal_graph.causal_graph.CausalGraph.add_edge_by_pair`
