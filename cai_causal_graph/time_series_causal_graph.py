@@ -977,7 +977,9 @@ class TimeSeriesCausalGraph(CausalGraph):
             assert isinstance(source, TimeSeriesNode)  # for linting
             assert isinstance(destination, TimeSeriesNode)  # for linting
 
-            ts_cg.add_edge(source, destination, meta=edge.meta, edge_type=edge.get_edge_type())
+            ts_cg.add_edge(
+                source, destination, meta=edge.meta, edge_type=edge.get_edge_type(), check_for_acyclicity=False
+            )
 
         ts_cg._sepsets = sepsets
 
