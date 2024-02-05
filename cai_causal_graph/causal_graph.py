@@ -647,7 +647,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             self._nodes_by_identifier[source]._add_outbound_edge(edge)
 
         # check that there are no cycles of directed edges
-        if check_for_acyclicity and False:
+        if check_for_acyclicity:
             try:
                 self._assert_node_does_not_depend_on_itself(destination)
             except AssertionError:
