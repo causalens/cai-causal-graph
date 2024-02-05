@@ -632,7 +632,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             )
         return source_nodes[0], destination_nodes[0]
 
-    def _set_edge(self, source: NodeLike, destination: NodeLike, edge: Edge):
+    def _set_edge(self, source: NodeLike, destination: NodeLike, edge: Edge, check_for_acyclicity: bool = True):
         """Set the edge in the graph."""
         if isinstance(source, HasIdentifier):
             source = source.identifier
@@ -647,13 +647,14 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             self._nodes_by_identifier[source]._add_outbound_edge(edge)
 
         # check that there are no cycles of directed edges
-        try:
-            self._assert_node_does_not_depend_on_itself(destination)
-        except AssertionError:
-            self.delete_edge(source, destination)
-            raise CausalGraphErrors.CyclicConnectionError(
-                f'Adding an edge from {source} to {destination} would create a cyclic connection.'
-            )
+        if check_for_acyclicity and False:
+            try:
+                self._assert_node_does_not_depend_on_itself(destination)
+            except AssertionError:
+                self.delete_edge(source, destination)
+                raise CausalGraphErrors.CyclicConnectionError(
+                    f'Adding an edge from {source} to {destination} would create a cyclic connection.'
+                )
 
     def _is_fully_directed(self) -> bool:
         """
@@ -1095,6 +1096,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         edge_type: EdgeType = EdgeType.DIRECTED_EDGE,
         meta: Optional[dict] = None,
         edge: Optional[Edge] = None,
+        check_for_acyclicity: bool = True,
     ) -> Edge:
         """
         Add an edge from a source to a destination node with a specific edge type.
@@ -1140,7 +1142,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         if meta is not None:
             edge.meta = meta
 
-        self._set_edge(source, destination, edge)
+        self._set_edge(source, destination, edge, check_for_acyclicity=check_for_acyclicity)
         return edge
 
     def add_edges_from(self, pairs: List[Tuple[NodeLike, NodeLike]]):
@@ -1839,7 +1841,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         return '\n'.join(networkx.generate_gml(self.to_networkx()))
 
     @classmethod
-    def from_dict(cls, d: dict) -> CausalGraph:
+    def from_dict(cls, d: dict, check_for_acyclicity: bool = True) -> CausalGraph:
         """Construct a `cai_causal_graph.causal_graph.CausalGraph` instance from a Python dictionary."""
         graph = cls()
 
@@ -1850,7 +1852,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         for source, destinations in d['edges'].items():
             for destination, edge_dict in destinations.items():
                 edge = cls._EdgeCls.from_dict(edge_dict)
-                graph.add_edge(edge=edge)
+                graph.add_edge(edge=edge, check_for_acyclicity=check_for_acyclicity)
 
         return graph
 
@@ -1947,7 +1949,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         :return: A copy of the `cai_causal_graph.causal_graph.CausalGraph` instance.
         """
         graph_dict = self.to_dict(include_meta=include_meta)
-        new_graph = self.__class__.from_dict(graph_dict)
+        new_graph = self.__class__.from_dict(graph_dict, check_for_acyclicity=False)   # TODO Do in subclasses
         assert isinstance(new_graph, self.__class__)  # for linting and sanity check
         return new_graph
 
