@@ -501,6 +501,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                     if not extended_graph.edge_exists(
                         lagged_source_node.identifier, lagged_destination_node.identifier
                     ):
+                        # No need to validate as edge will be as valid as in the minimal graph
                         extended_graph.add_edge(
                             source=lagged_source_node,
                             destination=lagged_destination_node,
@@ -551,7 +552,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
                     if not extended_graph.node_exists(lagged_dest.identifier):
                         extended_graph.add_node(node=lagged_dest)
-
+                    # No need to validate as edge will be as valid as in the minimal graph
                     extended_graph.add_edge(
                         source=extended_graph.get_node(lagged_source.identifier),
                         destination=extended_graph.get_node(lagged_dest.identifier),
