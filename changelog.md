@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.1
+## NEXT
 
 - Added the `validate` flag to `cai_causal_graph.causal_graph.CausalGraph.add_edge`,
   `cai_causal_graph.causal_graph.CausalGraph.add_edges_from`,
