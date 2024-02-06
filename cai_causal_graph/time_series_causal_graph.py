@@ -844,6 +844,8 @@ class TimeSeriesCausalGraph(CausalGraph):
         :param edge: A `cai_causal_graph.graph_components.Edge` edge to be used to construct a new edge. All the
             properties of the provided edge will be deep copied to the constructed edge, including metadata. If
             provided, then all other parameters to the method must not be specified. Default is `None`.
+        :param validate: Whether to perform validation checks. The validation checks will raise if
+            any cycles are introduced to the graph by adding the edge. Default is `True`.
         :return: The created edge object.
         """
         if edge is not None:
@@ -925,6 +927,8 @@ class TimeSeriesCausalGraph(CausalGraph):
         :param destination_variable: The name of the destination variable.
         :param destination_time: The time of the destination variable.
         :param meta: The metadata for the edge.
+        :param validate: Whether to perform validation checks. The validation checks will raise if
+            any cycles are introduced to the graph by adding the edge. Default is `True`.
         :return: The edge that was added.
 
         Example:

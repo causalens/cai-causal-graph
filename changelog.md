@@ -1,5 +1,14 @@
 # Changelog
 
+## NEXT
+
+- Added the `validate` flag to `cai_causal_graph.causal_graph.CausalGraph.add_edge`,
+  `cai_causal_graph.causal_graph.CausalGraph.add_edges_from`,
+  `cai_causal_graph.causal_graph.CausalGraph.add_edges_from_paths`,
+  `cai_causal_graph.causal_graph.CausalGraph.add_edge_by_pair`, and
+  `cai_causal_graph.causal_graph.CausalGraph.from_dict`, which if set to `False` will disable validation checks.
+  Currently, this disables cyclicity checks when adding edges.
+
 ## 0.4.0
 
 - Removed `**kwargs` from the `cai_causal_graph.causal_graph.CausalGraph.add_node`,
