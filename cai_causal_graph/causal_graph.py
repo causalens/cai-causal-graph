@@ -1973,6 +1973,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         :return: A copy of the `cai_causal_graph.causal_graph.CausalGraph` instance.
         """
         graph_dict = self.to_dict(include_meta=include_meta)
+        # validate=False as we know it will be an exact copy
         new_graph = self.__class__.from_dict(graph_dict, validate=False)
         assert isinstance(new_graph, self.__class__)  # for linting and sanity check
         return new_graph
