@@ -245,7 +245,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
                 edge = self._EdgeCls(source=source, destination=destination, edge_type=edge.edge_type, meta=edge.meta)
 
-                # Do not check for acyclicity as we know the original graph was a DAG, so this will be a DAG
+                # Do not check for acyclicity as an acyclic minimal graph will always produce an acyclic extended graph
                 minimal_cg.add_edge(edge=edge, validate=False)
 
             # otherwise if the time delta is not 0, we may have X[t-2]->X[t-1] and
@@ -276,7 +276,8 @@ class TimeSeriesCausalGraph(CausalGraph):
                     edge = self._EdgeCls(
                         source=source, destination=destination, edge_type=edge.edge_type, meta=edge.meta
                     )
-                    # Do not check for acyclicity as we know the original graph was a DAG, so this will be a DAG
+                    # Do not check for acyclicity as an acyclic minimal graph will always produce an acyclic extended
+                    # graph
                     minimal_cg.add_edge(edge=edge, validate=False)
 
         # check for floating nodes

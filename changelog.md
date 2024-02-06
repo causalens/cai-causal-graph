@@ -7,7 +7,8 @@
   `cai_causal_graph.causal_graph.CausalGraph.add_edges_from_paths`,
   `cai_causal_graph.causal_graph.CausalGraph.add_edge_by_pair`, and
   `cai_causal_graph.causal_graph.CausalGraph.from_dict`, which if set to `False` will disable validation checks.
-  Currently, this disables cyclicity checks when adding edges.
+  Currently, this disables cyclicity checks when adding edges. Default is `True`, making the change backwards
+  compatible.
 
 ## 0.4.0
 
