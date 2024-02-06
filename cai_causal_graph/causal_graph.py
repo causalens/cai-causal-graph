@@ -1118,6 +1118,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         :param edge: A `cai_causal_graph.graph_components.Edge` edge to be used to construct a new edge. All the
             properties of the provided edge will be deep copied to the constructed edge, including metadata. If
             provided, then all other parameters to the method must not be specified. Default is `None`.
+        :param validate: Whether to perform validation checks. The validation checks will raise if
+            any cycles are introduced to the graph by adding the edge. Default is `True`.
         :return: The created edge object.
         """
         if edge is not None:
@@ -1145,7 +1147,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         self._set_edge(source, destination, edge, validate=validate)
         return edge
 
-    def add_edges_from(self, pairs: List[Tuple[NodeLike, NodeLike]]):
+    def add_edges_from(self, pairs: List[Tuple[NodeLike, NodeLike]], validate: bool = True):
         """
         A convenience method to add multiple edges by specifying tuples of source and destination node identifiers.
 
@@ -1153,12 +1155,14 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         `cai_causal_graph.causal_graph.CausalGraph.add_edge` method.
 
         :param pairs: List of valid edge pairs, defined as tuples of `(source_identifier, destination_identifier)`.
+        :param validate: Whether to perform validation checks. The validation checks will raise if
+            any cycles are introduced to the graph by adding the edge. Default is `True`.
         """
         for pair in pairs:
             validate_pair_type(pair)
-            self.add_edge(source=pair[0], destination=pair[1])
+            self.add_edge(source=pair[0], destination=pair[1], validate=validate)
 
-    def add_edges_from_paths(self, paths: Union[List[NodeLike], List[List[NodeLike]]]):
+    def add_edges_from_paths(self, paths: Union[List[NodeLike], List[List[NodeLike]]], validate: bool = True):
         """
         A convenience method to add multiple edges by specifying a single or a list of paths.
 
@@ -1175,6 +1179,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
         :param paths: A list of paths or a single path. A path is defined as a list of node identifiers, defining the
             causal path in a causal graph.
+        :param validate: Whether to perform validation checks. The validation checks will raise if
+            any cycles are introduced to the graph by adding the edge. Default is `True`.
         """
         assert len(paths) != 0, 'The `paths` parameter must not be an empty list.'
         if isinstance(paths[0], list):
@@ -1189,14 +1195,26 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
                 source, destination = cast(NodeLike, source), cast(NodeLike, destination)
                 if not self.edge_exists(source=source, destination=destination):
                     validate_pair_type((source, destination))
-                    self.add_edge(source=source, destination=destination)
+                    self.add_edge(source=source, destination=destination, validate=validate)
 
     def add_edge_by_pair(
-        self, pair: Tuple[NodeLike, NodeLike], edge_type: EdgeType = EdgeType.DIRECTED_EDGE, meta: Optional[dict] = None
+        self,
+        pair: Tuple[NodeLike, NodeLike],
+        edge_type: EdgeType = EdgeType.DIRECTED_EDGE,
+        meta: Optional[dict] = None,
+        validate: bool = True,
     ):
-        """Add edge by pair identifier (source, destination)."""
+        """
+        Add edge by pair identifier (source, destination).
+
+        :param pair: Tuple to identify the source and destination of the edge.
+        :param edge_type: The type of edge to add. Default is a directed edge
+        :param meta: Any metadata to add to the edge. Default is `None` (no metadata).
+        :param validate: Whether to perform validation checks. The validation checks will raise if
+            any cycles are introduced to the graph by adding the edge. Default is `True`.
+        """
         validate_pair_type(pair)
-        self.add_edge(pair[0], pair[1], edge_type=edge_type, meta=meta)
+        self.add_edge(pair[0], pair[1], edge_type=edge_type, meta=meta, validate=validate)
 
     def remove_edge_by_pair(self, pair: Tuple[NodeLike, NodeLike], edge_type: Optional[EdgeType] = None):
         """Remove edge by pair identifier (source, destination)."""
@@ -1842,7 +1860,13 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
     @classmethod
     def from_dict(cls, d: dict, validate: bool = True) -> CausalGraph:
-        """Construct a `cai_causal_graph.causal_graph.CausalGraph` instance from a Python dictionary."""
+        """
+        Construct a `cai_causal_graph.causal_graph.CausalGraph` instance from a Python dictionary.
+
+        :param d: Dictionary to build a graph from.
+        :param validate: Whether to perform validation checks. The validation checks will raise if
+            any cycles are contained within the dictionary graph. Default is `True`.
+        """
         graph = cls()
 
         for identifier, node_dict in d['nodes'].items():
@@ -1949,7 +1973,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         :return: A copy of the `cai_causal_graph.causal_graph.CausalGraph` instance.
         """
         graph_dict = self.to_dict(include_meta=include_meta)
-        new_graph = self.__class__.from_dict(graph_dict, validate=False)   # TODO Do in subclasses
+        new_graph = self.__class__.from_dict(graph_dict, validate=False)
         assert isinstance(new_graph, self.__class__)  # for linting and sanity check
         return new_graph
 
