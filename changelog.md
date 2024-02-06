@@ -5,12 +5,14 @@
 - Added the `validate` flag to `cai_causal_graph.causal_graph.CausalGraph.add_edge`,
   `cai_causal_graph.causal_graph.CausalGraph.add_edges_from`,
   `cai_causal_graph.causal_graph.CausalGraph.add_edges_from_paths`,
-  `cai_causal_graph.causal_graph.CausalGraph.add_edge_by_pair`, and
-  `cai_causal_graph.causal_graph.CausalGraph.from_dict`, which if set to `False` will disable validation checks.
-  Currently, this disables cyclicity checks when adding edges. Default is `True`, making the change backwards
-  compatible. There is no guarantees about the behavior of the resulting graph if this is disabled specifically
-  to introduce cycles. This should only be used to speed up this method in situations where it is known the resulting
-  graph is still valid, for example when copying a graph.
+  `cai_causal_graph.causal_graph.CausalGraph.add_edge_by_pair`,
+  `cai_causal_graph.causal_graph.CausalGraph.from_dict`,
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.add_edge`, and
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.add_time_edge` which, if set to `False`, will disable
+  validation checks. Currently, this disables cyclicity checks when adding edges. Default is `True`, making the change
+  backwards compatible. There is no guarantees about the behavior of the resulting graph if this is disabled
+  specifically to introduce cycles. This should only be used to speed up this method in situations where it is known
+  the resulting graph is still valid, for example when copying a graph.
 
 ## 0.4.0
 

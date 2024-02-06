@@ -1878,7 +1878,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         :param d: Dictionary to build a graph from.
         :param validate: Whether to perform validation checks. The validation checks will raise if
             any cycles are introduced to the graph by adding the edge. This should only be disabled to speed up
-            this method in situations where it is known that the serialized graph is acyclic. Default is `True`.
+            this method in situations where it is known that the serialized graph is valid. Default is `True`.
         """
         graph = cls()
 
