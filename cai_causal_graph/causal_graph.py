@@ -1119,7 +1119,10 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             properties of the provided edge will be deep copied to the constructed edge, including metadata. If
             provided, then all other parameters to the method must not be specified. Default is `None`.
         :param validate: Whether to perform validation checks. The validation checks will raise if
-            any cycles are introduced to the graph by adding the edge. Default is `True`.
+            any cycles are introduced to the graph by adding the edge. There is no guarantees about the behavior of the
+            resulting graph if this is disabled specifically to introduce cycles. This should only be used to speed up
+            this method in situations where it is known the new edge will not add cycles, for example when copying a
+            graph. Default is `True`.
         :return: The created edge object.
         """
         if edge is not None:
@@ -1156,7 +1159,10 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
         :param pairs: List of valid edge pairs, defined as tuples of `(source_identifier, destination_identifier)`.
         :param validate: Whether to perform validation checks. The validation checks will raise if
-            any cycles are introduced to the graph by adding the edge. Default is `True`.
+            any cycles are introduced to the graph by adding the edge. There is no guarantees about the behavior of the
+            resulting graph if this is disabled specifically to introduce cycles. This should only be used to speed up
+            this method in situations where it is known the new edge will not add cycles, for example when copying a
+            graph. Default is `True`.
         """
         for pair in pairs:
             validate_pair_type(pair)
@@ -1180,7 +1186,10 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         :param paths: A list of paths or a single path. A path is defined as a list of node identifiers, defining the
             causal path in a causal graph.
         :param validate: Whether to perform validation checks. The validation checks will raise if
-            any cycles are introduced to the graph by adding the edge. Default is `True`.
+            any cycles are introduced to the graph by adding the edge. There is no guarantees about the behavior of the
+            resulting graph if this is disabled specifically to introduce cycles. This should only be used to speed up
+            this method in situations where it is known the new edge will not add cycles, for example when copying a
+            graph. Default is `True`.
         """
         assert len(paths) != 0, 'The `paths` parameter must not be an empty list.'
         if isinstance(paths[0], list):
@@ -1211,7 +1220,10 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         :param edge_type: The type of edge to add. Default is a directed edge
         :param meta: Any metadata to add to the edge. Default is `None` (no metadata).
         :param validate: Whether to perform validation checks. The validation checks will raise if
-            any cycles are introduced to the graph by adding the edge. Default is `True`.
+            any cycles are introduced to the graph by adding the edge. There is no guarantees about the behavior of the
+            resulting graph if this is disabled specifically to introduce cycles. This should only be used to speed up
+            this method in situations where it is known the new edge will not add cycles, for example when copying a
+            graph. Default is `True`.
         """
         validate_pair_type(pair)
         self.add_edge(pair[0], pair[1], edge_type=edge_type, meta=meta, validate=validate)
@@ -1865,7 +1877,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
         :param d: Dictionary to build a graph from.
         :param validate: Whether to perform validation checks. The validation checks will raise if
-            any cycles are contained within the dictionary graph. Default is `True`.
+            any cycles are introduced to the graph by adding the edge. This should only be disabled to speed up
+            this method in situations where it is known that the serialized graph is acyclic. Default is `True`.
         """
         graph = cls()
 
