@@ -208,7 +208,6 @@ class TimeSeriesCausalGraph(CausalGraph):
         :return: The minimal graph as a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` object.
         """
         minimal_cg = self.__class__()
-        assert self.is_dag()   # TODO Message
 
         for edge in self.get_edges():
             # copy edge
@@ -247,7 +246,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                 edge = self._EdgeCls(source=source, destination=destination, edge_type=edge.edge_type, meta=edge.meta)
 
                 # Do not check for acyclicity as we know the original graph was a DAG, so this will be a DAG
-                minimal_cg.add_edge(edge=edge, check_for_acyclicity=False)
+                minimal_cg.add_edge(edge=edge, validate=False)
 
             # otherwise if the time delta is not 0, we may have X[t-2]->X[t-1] and
             # we must add X[t-1]->X[t]
@@ -278,7 +277,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                         source=source, destination=destination, edge_type=edge.edge_type, meta=edge.meta
                     )
                     # Do not check for acyclicity as we know the original graph was a DAG, so this will be a DAG
-                    minimal_cg.add_edge(edge=edge, check_for_acyclicity=False)
+                    minimal_cg.add_edge(edge=edge, validate=False)
 
         # check for floating nodes
         if self.variables is not None and len(self.variables) > 0:
@@ -506,7 +505,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                             destination=lagged_destination_node,
                             edge_type=edge.get_edge_type(),
                             meta=edge.meta,
-                            check_for_acyclicity=False,
+                            validate=False,
                         )
 
             # Log a warning if the backward_steps is smaller than the maximum lag in the graph.
@@ -557,7 +556,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                         destination=extended_graph.get_node(lagged_dest.identifier),
                         edge_type=edge.get_edge_type(),
                         meta=edge.meta,
-                        check_for_acyclicity=False,
+                        validate=False,
                     )
 
         return extended_graph
@@ -821,7 +820,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         edge_type: EdgeType = EdgeType.DIRECTED_EDGE,
         meta: Optional[dict] = None,
         edge: Optional[Edge] = None,
-        check_for_acyclicity: bool = True,
+        validate: bool = True,
     ) -> Edge:
         """
         Add an edge from a source to a destination node with a specific edge type.
@@ -901,7 +900,7 @@ class TimeSeriesCausalGraph(CausalGraph):
             edge_type=edge_type,
             meta=meta,
             edge=edge,
-            check_for_acyclicity=check_for_acyclicity,
+            validate=validate,
         )
 
         return edge
@@ -916,7 +915,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         destination_time: int,
         *,
         meta: Optional[dict] = None,
-        check_for_acyclicity: bool = True,
+        validate: bool = True,
     ) -> Edge:
         """
         Add a time edge to the graph from the variable at the source time to the variable at the destination time.
@@ -941,7 +940,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         source = get_name_with_lag(source_variable, source_time)
         destination = get_name_with_lag(destination_variable, destination_time)
 
-        return self.add_edge(source, destination, meta=meta, check_for_acyclicity=check_for_acyclicity)
+        return self.add_edge(source, destination, meta=meta, validate=validate)
 
     @classmethod
     def from_causal_graph(cls, causal_graph: CausalGraph) -> TimeSeriesCausalGraph:
@@ -977,9 +976,7 @@ class TimeSeriesCausalGraph(CausalGraph):
             assert isinstance(source, TimeSeriesNode)  # for linting
             assert isinstance(destination, TimeSeriesNode)  # for linting
 
-            ts_cg.add_edge(
-                source, destination, meta=edge.meta, edge_type=edge.get_edge_type(), check_for_acyclicity=False
-            )
+            ts_cg.add_edge(source, destination, meta=edge.meta, edge_type=edge.get_edge_type(), validate=False)
 
         ts_cg._sepsets = sepsets
 

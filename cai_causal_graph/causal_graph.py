@@ -632,7 +632,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             )
         return source_nodes[0], destination_nodes[0]
 
-    def _set_edge(self, source: NodeLike, destination: NodeLike, edge: Edge, check_for_acyclicity: bool = True):
+    def _set_edge(self, source: NodeLike, destination: NodeLike, edge: Edge, validate: bool = True):
         """Set the edge in the graph."""
         if isinstance(source, HasIdentifier):
             source = source.identifier
@@ -647,7 +647,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             self._nodes_by_identifier[source]._add_outbound_edge(edge)
 
         # check that there are no cycles of directed edges
-        if check_for_acyclicity:
+        if validate:
             try:
                 self._assert_node_does_not_depend_on_itself(destination)
             except AssertionError:
@@ -1096,7 +1096,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         edge_type: EdgeType = EdgeType.DIRECTED_EDGE,
         meta: Optional[dict] = None,
         edge: Optional[Edge] = None,
-        check_for_acyclicity: bool = True,
+        validate: bool = True,
     ) -> Edge:
         """
         Add an edge from a source to a destination node with a specific edge type.
@@ -1142,7 +1142,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         if meta is not None:
             edge.meta = meta
 
-        self._set_edge(source, destination, edge, check_for_acyclicity=check_for_acyclicity)
+        self._set_edge(source, destination, edge, validate=validate)
         return edge
 
     def add_edges_from(self, pairs: List[Tuple[NodeLike, NodeLike]]):
@@ -1841,7 +1841,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         return '\n'.join(networkx.generate_gml(self.to_networkx()))
 
     @classmethod
-    def from_dict(cls, d: dict, check_for_acyclicity: bool = True) -> CausalGraph:
+    def from_dict(cls, d: dict, validate: bool = True) -> CausalGraph:
         """Construct a `cai_causal_graph.causal_graph.CausalGraph` instance from a Python dictionary."""
         graph = cls()
 
@@ -1852,7 +1852,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         for source, destinations in d['edges'].items():
             for destination, edge_dict in destinations.items():
                 edge = cls._EdgeCls.from_dict(edge_dict)
-                graph.add_edge(edge=edge, check_for_acyclicity=check_for_acyclicity)
+                graph.add_edge(edge=edge, validate=validate)
 
         return graph
 
@@ -1949,7 +1949,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         :return: A copy of the `cai_causal_graph.causal_graph.CausalGraph` instance.
         """
         graph_dict = self.to_dict(include_meta=include_meta)
-        new_graph = self.__class__.from_dict(graph_dict, check_for_acyclicity=False)   # TODO Do in subclasses
+        new_graph = self.__class__.from_dict(graph_dict, validate=False)   # TODO Do in subclasses
         assert isinstance(new_graph, self.__class__)  # for linting and sanity check
         return new_graph
 
