@@ -1309,12 +1309,14 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             will be used.
         """
         # ensure the new edge does not exist and the original one does
-        assert self.edge_exists(
-            source=source, destination=destination
-        ), f'The provided edge ({source}, {destination}) to be replaced does not exist'
-        assert not self.edge_exists(
-            source=new_source, destination=new_destination
-        ), f'Cannot create a new edge ({source}, {destination}) as it already exists'
+        if not self.edge_exists(source=source, destination=destination):
+            raise CausalGraphErrors.EdgeDoesNotExistError(
+                f'The provided edge ({source}, {destination}) to be replaced does not exist.'
+            )
+        if self.edge_exists(source=new_source, destination=new_destination):
+            raise CausalGraphErrors.EdgeExistsError(
+                f'Cannot create a new edge ({source}, {destination}) as it already exists.'
+            )
 
         # get the existing edge and information
         source, destination = self._NodeCls.identifier_from(source), self._NodeCls.identifier_from(destination)

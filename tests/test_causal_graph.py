@@ -433,11 +433,11 @@ class TestCausalGraphSerialization(unittest.TestCase):
         causal_graph.add_edge('x4', 'x5')
 
         # replacing an edge that does not exist raises an error
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(CausalGraphErrors.EdgeDoesNotExistError):
             causal_graph.replace_edge(source='x5', destination='x1', new_source='x1', new_destination='x5')
 
         # replacing an edge with a new edge that already exists raises an error
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(CausalGraphErrors.EdgeExistsError):
             causal_graph.replace_edge(source='x2', destination='x3', new_source='x1', new_destination='x3')
 
     def test_replace_edge_with_new(self):
