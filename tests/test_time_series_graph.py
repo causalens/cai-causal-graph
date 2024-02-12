@@ -273,6 +273,22 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         # check 'X1 lag(n=1)' does not exist
         self.assertFalse(ts_cg.node_exists('X1 lag(n=1)'))
 
+    def test_replace_edge(self):
+        ts_cg = TimeSeriesCausalGraph()
+        ts_cg.add_nodes_from(['X1', 'X2', 'X1 lag(n=1)', 'X2 lag(n=1)'])
+        ts_cg.add_edge('X1', 'X2', edge_type=EdgeType.DIRECTED_EDGE)
+        ts_cg.add_edge('X1 lag(n=1)', 'X2', edge_type=EdgeType.DIRECTED_EDGE)
+
+        # check swapping of direction
+        ts_cg.replace_edge(source='X1', destination='X2', new_source='X2', new_destination='X1')
+        self.assertTrue(ts_cg.edge_exists('X2', 'X1'))
+        self.assertFalse(ts_cg.edge_exists('X1', 'X2'))
+
+        # check adding another edge
+        ts_cg.replace_edge(source='X1 lag(n=1)', destination='X2', new_source='X2 lag(n=1)', new_destination='X2')
+        self.assertTrue(ts_cg.edge_exists('X2 lag(n=1)', 'X2'))
+        self.assertFalse(ts_cg.edge_exists('X1 lag(n=1)', 'X2'))
+
     def test_extract_names_and_lags(self):
         nodes, maxlag = extract_names_and_lags(self.nodes)
         # sort the nodes by value
