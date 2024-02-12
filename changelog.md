@@ -1,5 +1,10 @@
 # Changelog
 
+## NEXT
+
+- Added the `cai_causal_graph.causal_graph.CausalGraph.replace_edge` method to the
+  `cai_causal_graph.causal_graph.CausalGraph` class, which allows you to replace an existing edge with a new one.
+
 ## 0.4.2
 
 - Added the `validate` flag to `cai_causal_graph.causal_graph.CausalGraph.add_edge`,
