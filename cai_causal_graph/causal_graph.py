@@ -1279,6 +1279,57 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """Remove a specific edge by source and destination node identifiers, as well as edge type."""
         self.delete_edge(source=source, destination=destination, edge_type=edge_type)
 
+    def replace_edge(
+        self,
+        /,
+        source: NodeLike,
+        destination: NodeLike,
+        new_source: NodeLike,
+        new_destination: NodeLike,
+        *,
+        edge_type: Optional[EdgeType] = None,
+        meta: Optional[dict] = None,
+    ):
+        """
+        Replace an existing edge by a new one.
+
+        If any additional information, such as edge type or meta is specified, it is used for the new edge.
+        Otherwise, these are copied from the original edge.
+
+        Note that if you simply wish to change the type of an existing edge, you should use the
+        `cai_causal_graph.causal_graph.CausalGraph.change_edge_type` method instead.
+
+        :param source: Source of the edge to be replaced.
+        :param destination: Destination of the edge to be replaced.
+        :param new_source: Source of the new edge.
+        :param new_destination: Destination of the new edge.
+        :param edge_type: The edge type of the new edge. If `None` (default), the same edge type as the original edge
+            will be used.
+        :param meta: Optional meta to be used for the new edge. If `None` (default)`, the meta of the original edge
+            will be used.
+        """
+        # ensure the new edge does not exist and the original one does
+        if not self.edge_exists(source=source, destination=destination):
+            raise CausalGraphErrors.EdgeDoesNotExistError(
+                f'The provided edge ({source}, {destination}) to be replaced does not exist.'
+            )
+        if self.edge_exists(source=new_source, destination=new_destination):
+            raise CausalGraphErrors.EdgeExistsError(
+                f'Cannot create a new edge ({source}, {destination}) as it already exists.'
+            )
+
+        # get the existing edge and information
+        source, destination = self._NodeCls.identifier_from(source), self._NodeCls.identifier_from(destination)
+        edge = self.get_edge(source=source, destination=destination)
+        edge_type = edge_type if edge_type is not None else edge.get_edge_type()
+        meta = meta if meta is not None else edge.get_metadata()
+
+        # remove the original edge first to avoid potential acyclicity errors with respect to the original edge
+        self.delete_edge(source=source, destination=destination)
+
+        # add a new edge
+        self.add_edge(source=new_source, destination=new_destination, edge_type=edge_type, meta=meta)
+
     def get_neighbors(self, node: NodeLike) -> List[str]:
         """
         Get node identifiers for all neighbor nodes for a specific node.

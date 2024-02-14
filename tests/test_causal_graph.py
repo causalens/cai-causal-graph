@@ -423,6 +423,77 @@ class TestCausalGraphSerialization(unittest.TestCase):
         self.assertEqual(causal_graph.get_node('y2').meta, meta)
         self.assertEqual(causal_graph.get_node('y2').variable_type, variable_type)
 
+    def test_replace_edge_raises_error(self):
+        causal_graph = CausalGraph()
+        causal_graph.add_edge('x1', 'x2')
+        causal_graph.add_edge('x1', 'x3')
+        causal_graph.add_edge('x2', 'x3')
+        causal_graph.add_edge('x2', 'x4')
+        causal_graph.add_edge('x3', 'x4')
+        causal_graph.add_edge('x4', 'x5')
+
+        # replacing an edge that does not exist raises an error
+        with self.assertRaises(CausalGraphErrors.EdgeDoesNotExistError):
+            causal_graph.replace_edge(source='x5', destination='x1', new_source='x1', new_destination='x5')
+
+        # replacing an edge with a new edge that already exists raises an error
+        with self.assertRaises(CausalGraphErrors.EdgeExistsError):
+            causal_graph.replace_edge(source='x2', destination='x3', new_source='x1', new_destination='x3')
+
+    def test_replace_edge_with_new(self):
+        causal_graph = CausalGraph()
+        causal_graph.add_edge('x1', 'x2')
+        causal_graph.add_edge('x1', 'x3')
+        causal_graph.add_edge('x2', 'x3')
+        causal_graph.add_edge('x2', 'x4')
+        causal_graph.add_edge('x3', 'x4')
+        causal_graph.add_edge('x4', 'x5')
+
+        # replace an edge by swapping its direction
+        cg = causal_graph.copy()
+        cg.replace_edge(source='x1', destination='x2', new_source='x2', new_destination='x1')
+        self.assertTrue(cg.edge_exists('x2', 'x1'))
+        self.assertFalse(cg.edge_exists('x1', 'x2'))
+
+        # replace an edge with a different set of nodes
+        cg = causal_graph.copy()
+        cg.replace_edge(source='x1', destination='x2', new_source='x1', new_destination='x5')
+        self.assertTrue(cg.edge_exists('x1', 'x5'))
+        self.assertFalse(cg.edge_exists('x1', 'x2'))
+
+    def test_replace_edge_with_extras(self):
+        causal_graph = CausalGraph()
+        causal_graph.add_edge('x1', 'x2')
+        causal_graph.add_edge('x1', 'x3')
+        causal_graph.add_edge('x2', 'x3')
+        causal_graph.add_edge('x2', 'x4')
+        causal_graph.add_edge('x3', 'x4')
+        causal_graph.add_edge('x4', 'x5')
+
+        causal_graph.get_edge('x1', 'x2').meta = {'color': 'blue'}
+
+        # replace an edge without passing specific meta
+        cg = causal_graph.copy()
+        cg.replace_edge(source='x1', destination='x2', new_source='x2', new_destination='x1')
+        self.assertDictEqual(cg.get_edge('x2', 'x1').get_metadata(), {'color': 'blue'})
+
+        # replace an edge with passing specific meta
+        cg = causal_graph.copy()
+        cg.replace_edge(source='x1', destination='x2', new_source='x2', new_destination='x1', meta={'foo': 'bar'})
+        self.assertDictEqual(cg.get_edge('x2', 'x1').get_metadata(), {'foo': 'bar'})
+
+        # replace an edge without passing an edge type
+        cg = causal_graph.copy()
+        cg.replace_edge(source='x1', destination='x2', new_source='x2', new_destination='x1')
+        self.assertEqual(cg.get_edge('x2', 'x1').get_edge_type(), EdgeType.DIRECTED_EDGE)
+
+        # replace an edge with passing a specific edge type
+        cg = causal_graph.copy()
+        cg.replace_edge(
+            source='x1', destination='x2', new_source='x2', new_destination='x1', edge_type=EdgeType.BIDIRECTED_EDGE
+        )
+        self.assertEqual(cg.get_edge('x2', 'x1').get_edge_type(), EdgeType.BIDIRECTED_EDGE)
+
     def test_graph_with_metadata(self):
         causal_graph = CausalGraph()
         causal_graph.add_node('x', meta={'color': 'blue'})
