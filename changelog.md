@@ -4,7 +4,7 @@
 
 - Added the `cai_causal_graph.causal_graph.CausalGraph.replace_edge` method to the
   `cai_causal_graph.causal_graph.CausalGraph` class, which allows you to replace an existing edge with a new one.
-- Repository updated to use `poetry` `1.7.1` in the GitHub actions. 
+- Repository updated to use `poetry` `1.7.1` in the GitHub actions.
 
 ## 0.4.2
 
