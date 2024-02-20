@@ -8,7 +8,7 @@ jobs:
     runs-on: ${{ matrix.os }}  # This is defined by the strategy below
     strategy:
       # The strategy allows to automatically test different os and python version combinations
-      fail-fast: true  # The PR checks should fail fast not to waste GitHub minutes
+      fail-fast: false  # The PR checks should fail fast not to waste GitHub minutes
       matrix:
         # For reproducibility, we define ubuntu-20.04 rather than ubuntu-latest. PR-CHECKS should only test default.
         os: [ ubuntu-20.04 ]
