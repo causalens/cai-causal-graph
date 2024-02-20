@@ -8,6 +8,7 @@
   `poetry.lock` for `python` `3.8`, `3.9` - `3.11`, and `3.12`. This is to allow specific versions for `3.8` and
   `3.12` as there is no version of `numpy` that supports both.
 - Upgraded `poetry` version from `1.4.2` to `1.7.1` in the GitHub workflows.
+- Updated actions in GitHub workflows to transition from `Node` `16` to `Node` `20`.
 
 ## 0.4.2
 

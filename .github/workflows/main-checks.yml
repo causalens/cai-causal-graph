@@ -22,18 +22,18 @@ jobs:
         python-version: [ '3.11' ]   # This should be the default supported python distribution.
     steps:
       - name: Checkout current branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0  # 0 fetches all history, apparently needed for push:
       - name: Set up python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           architecture: x64  # Default architecture most systems operate on
           python-version: ${{ matrix.python-version }}  # This is defined by the strategy above
       - name: Load cached venv
         # Cache local .venv, the packages downloaded by poetry into custom cache .pypoetry and ~/.local (poetry itself)
         if: contains(matrix.python-version, '3.11')  # only load cache when doing 3.11
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             .venv
