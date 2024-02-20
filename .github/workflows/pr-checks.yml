@@ -13,7 +13,7 @@ jobs:
         # For reproducibility, we define ubuntu-20.04 rather than ubuntu-latest. PR-CHECKS should only test default.
         os: [ ubuntu-20.04 ]
         # PR-CHECKS should only test default python distribution.
-        python-version: [ '3.11', '3.12' ]
+        python-version: [ '3.8', '3.9', '3.10', '3.11', '3.12' ]  # TODO: Undo this. Just checking everything as part of PR.
     steps:
       - name: Checkout current branch
         # Required to fetch all changes in the current PR
