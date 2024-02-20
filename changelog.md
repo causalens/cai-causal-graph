@@ -4,7 +4,10 @@
 
 - Added the `cai_causal_graph.causal_graph.CausalGraph.replace_edge` method to the
   `cai_causal_graph.causal_graph.CausalGraph` class, which allows you to replace an existing edge with a new one.
-- Repository updated to use `poetry` `1.7.1` in the GitHub actions.
+- Updated `numpy` dependency from `"^1.18.0"` to `"^1.20.0"` and allow different `numpy` versions in the
+  `poetry.lock` for `python` `3.8`, `3.9` - `3.11`, and `3.12`. This is to allow specific versions for `3.8` and
+  `3.12` as there is no version of `numpy` that supports both.
+- Upgraded `poetry` version from `1.4.2` to `1.7.1` in the GitHub workflows.
 
 ## 0.4.2
 
