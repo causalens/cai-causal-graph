@@ -8,12 +8,12 @@ jobs:
     runs-on: ${{ matrix.os }}  # This is defined by the strategy below
     strategy:
       # The strategy allows to automatically test different os and python version combinations
-      fail-fast: false  # The PR checks should fail fast not to waste GitHub minutes
+      fail-fast: true  # The PR checks should fail fast not to waste GitHub minutes
       matrix:
         # For reproducibility, we define ubuntu-20.04 rather than ubuntu-latest. PR-CHECKS should only test default.
         os: [ ubuntu-20.04 ]
         # PR-CHECKS should only test default python distribution.
-        python-version: [ '3.8', '3.9', '3.10', '3.11', '3.12' ]  # TODO: Undo this. Just checking everything as part of PR.
+        python-version: [ '3.11' ]
     steps:
       - name: Checkout current branch
         # Required to fetch all changes in the current PR
@@ -25,17 +25,17 @@ jobs:
         with:
           architecture: x64  # Default architecture most systems operate on
           python-version: ${{ matrix.python-version }}  # This is defined by the strategy above
-#      - name: Load cached venv
-#        # Cache local .venv, the packages downloaded by poetry into custom cache .pypoetry and ~/.local (poetry itself)
-#        uses: actions/cache@v4
-#        with:
-#          path: |
-#            .venv
-#            .pypoetry
-#            ~/.local
-#          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
-#          restore-keys: |
-#            venv-${{ runner.os }}-
+      - name: Load cached venv
+        # Cache local .venv, the packages downloaded by poetry into custom cache .pypoetry and ~/.local (poetry itself)
+        uses: actions/cache@v4
+        with:
+          path: |
+            .venv
+            .pypoetry
+            ~/.local
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            venv-${{ runner.os }}-
       - name: Install and configure poetry
         uses: snok/install-poetry@v1
         with:
