@@ -1944,8 +1944,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
         return graph
 
-    @staticmethod
-    def from_networkx(g: networkx.Graph) -> CausalGraph:
+    @classmethod
+    def from_networkx(cls, g: networkx.Graph) -> CausalGraph:
         """Construct a `cai_causal_graph.causal_graph.CausalGraph` instance from a `networkx.Graph` instance."""
         # Check graph type.
         if isinstance(g, networkx.MultiGraph) or isinstance(g, networkx.MultiDiGraph):
@@ -1954,25 +1954,25 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
                 f'provided graph is of type: {type(g)}.'
             )
         # Convert node names to strings.
-        node_names: List[str] = [Node.identifier_from(CausalGraph.coerce_to_nodelike(node)) for node in g.nodes()]
-        return CausalGraph.from_adjacency_matrix(networkx.to_numpy_array(g), node_names)  # type: ignore
+        node_names: List[str] = [Node.identifier_from(cls.coerce_to_nodelike(node)) for node in g.nodes()]
+        return cls.from_adjacency_matrix(networkx.to_numpy_array(g), node_names)  # type: ignore
 
-    @staticmethod
-    def from_skeleton(skeleton: Skeleton) -> CausalGraph:
+    @classmethod
+    def from_skeleton(cls, skeleton: Skeleton) -> CausalGraph:
         """
         Construct a `cai_causal_graph.causal_graph.CausalGraph` instance from a
         `cai_causal_graph.causal_graph.Skeleton` instance.
         """
-        return CausalGraph.from_networkx(skeleton.to_networkx())
+        return cls.from_networkx(skeleton.to_networkx())
 
-    @staticmethod
-    def from_gml_string(gml: str) -> CausalGraph:
+    @classmethod
+    def from_gml_string(cls, gml: str) -> CausalGraph:
         """
         Return an instance of `cai_causal_graph.causal_graph.CausalGraph` constructed from the provided Graph Modelling
         Language (GML) string.
         """
         g = networkx.parse_gml(gml)
-        return CausalGraph.from_networkx(g)
+        return cls.from_networkx(g)
 
     @classmethod
     def from_adjacency_matrix(
