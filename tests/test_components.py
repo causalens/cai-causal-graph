@@ -155,22 +155,22 @@ class TestGraphComponents(unittest.TestCase):
         self.assertFalse(edge_reversed.__eq__(edge_recovered, deep=True))
         self.assertFalse(edge_reversed.__eq__(edge_different_direction, deep=True))
 
-    def test_is_input(self):
+    def test_is_source_node(self):
 
         cg = CausalGraph()
         cg.add_edge('a', 'b')
         cg.add_edge('b', 'c')
 
-        self.assertTrue(cg.get_node('a').is_input())
-        self.assertFalse(cg.get_node('b').is_input())
-        self.assertFalse(cg.get_node('c').is_input())
+        self.assertTrue(cg.get_node('a').is_source_node())
+        self.assertFalse(cg.get_node('b').is_source_node())
+        self.assertFalse(cg.get_node('c').is_source_node())
 
-    def test_is_output(self):
+    def test_is_sink_node(self):
 
         cg = CausalGraph()
         cg.add_edge('a', 'b')
         cg.add_edge('b', 'c')
 
-        self.assertFalse(cg.get_node('a').is_output())
-        self.assertFalse(cg.get_node('b').is_output())
-        self.assertTrue(cg.get_node('c').is_output())
+        self.assertFalse(cg.get_node('a').is_sink_node())
+        self.assertFalse(cg.get_node('b').is_sink_node())
+        self.assertTrue(cg.get_node('c').is_sink_node())

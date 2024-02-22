@@ -157,12 +157,12 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         """Count the number of outbound (directed) edges to the node."""
         return len(self._outbound_edges)
 
-    def is_input(self) -> bool:
-        """Return whether the node is an input node (no incoming edges)."""
+    def is_source_node(self) -> bool:
+        """Return whether the node is a source node (no incoming edges)."""
         return len(self._inbound_edges) == 0
 
-    def is_output(self) -> bool:
-        """Return whether the node is an output node (no outgoing edges)."""
+    def is_sink_node(self) -> bool:
+        """Return whether the node is a sink node (no outgoing edges)."""
         return len(self._outbound_edges) == 0
 
     def _add_inbound_edge(self, edge: Edge):
