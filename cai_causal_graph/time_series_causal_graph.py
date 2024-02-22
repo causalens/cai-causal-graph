@@ -552,6 +552,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
                     if not extended_graph.node_exists(lagged_dest.identifier):
                         extended_graph.add_node(node=lagged_dest)
+
                     # No need to validate as edge will be as valid as in the minimal graph
                     extended_graph.add_edge(
                         source=extended_graph.get_node(lagged_source.identifier),
@@ -1277,8 +1278,22 @@ class TimeSeriesCausalGraph(CausalGraph):
         return adjacency_matrices, self.variables
 
     def get_nodes_at_lag(self, time_lag: int = 0) -> List[TimeSeriesNode]:
-        """Return all nodes at time delta `time_lag`."""
+        """
+        Return all nodes at time delta `time_lag`.
+
+        :param time_lag: Tie lag to return nodes for. Default is `0`.
+        """
+        # TODO Efficiency: don't loop through all nodes, by caching a lag -> node mapping: CAUSALAI-4384
         return [node for node in self.get_nodes() if node.time_lag == time_lag]
+
+    def get_nodes_for_variable(self, variable_name: str) -> List[TimeSeriesNode]:
+        """
+        Return all nodes for the variable `variable_name`.
+
+        :param variable_name: Variable name to return nodes for.
+        """
+        # TODO Efficiency: don't loop through all nodes, by caching a variable -> node mapping: CAUSALAI-4384
+        return [node for node in self.get_nodes() if node.variable_name == variable_name]
 
     def get_contemporaneous_nodes(self, node: NodeLike) -> List[TimeSeriesNode]:
         """Return all nodes that are contemporaneous (i.e. have the same time_lag) to the provided node."""
