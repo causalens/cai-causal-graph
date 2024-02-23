@@ -4,6 +4,11 @@
 
 - Added the `cai_causal_graph.causal_graph.CausalGraph.replace_edge` method to the
   `cai_causal_graph.causal_graph.CausalGraph` class, which allows you to replace an existing edge with a new one.
+- Added the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_nodes_for_variable_name` method to the
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class.
+- Added the `cai_causal_graph.graph_components.Node.is_source_node` and
+  `cai_causal_graph.graph_components.Node.is_sink_node` methods to the `cai_causal_graph.graph_components.Node`,
+  indicating whether the node is a source node or sink node respectively.
 - Updated `numpy` dependency from `"^1.18.0"` to `"^1.20.0"` and allow different `numpy` versions in the
   `poetry.lock` for `python` `3.8` and `3.9` - `3.12`. This is to allow specific versions for `3.8` and the others
   as there is no version of `numpy` that supports them all.
