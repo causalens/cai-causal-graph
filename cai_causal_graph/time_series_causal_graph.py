@@ -1281,12 +1281,12 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         Return all nodes at time delta `time_lag`.
 
-        :param time_lag: Tie lag to return nodes for. Default is `0`.
+        :param time_lag: Time lag to return nodes for. Default is `0`.
         """
         # TODO Efficiency: don't loop through all nodes, by caching a lag -> node mapping: CAUSALAI-4384
         return [node for node in self.get_nodes() if node.time_lag == time_lag]
 
-    def get_nodes_for_variable(self, variable_name: str) -> List[TimeSeriesNode]:
+    def get_nodes_for_variable_name(self, variable_name: str) -> List[TimeSeriesNode]:
         """
         Return all nodes for the variable `variable_name`.
 

@@ -1413,7 +1413,7 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
         self.assertEqual(repr(cg['carrot lag(n=3)']), 'TimeSeriesNode("carrot lag(n=3)")')
         self.assertEqual(repr(cg['donut future(n=2)']), 'TimeSeriesNode("donut future(n=2)")')
 
-    def test_get_nodes_for_variable(self):
+    def test_get_nodes_for_variable_name(self):
 
         cg = TimeSeriesCausalGraph()
         cg.add_time_edge('a', -1, 'a', 0)
@@ -1427,9 +1427,9 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
         cg.add_time_edge('a', 0, 'c', 1)
 
         self.assertSetEqual(
-            set(cg.get_nodes_for_variable('a')), set(cg.get_nodes(['a lag(n=3)', 'a lag(n=2)', 'a lag(n=1)', 'a']))
+            set(cg.get_nodes_for_variable_name('a')), set(cg.get_nodes(['a lag(n=3)', 'a lag(n=2)', 'a lag(n=1)', 'a']))
         )
         self.assertSetEqual(
-            set(cg.get_nodes_for_variable('b')), set(cg.get_nodes(['b lag(n=1)', 'b', 'b future(n=1)']))
+            set(cg.get_nodes_for_variable_name('b')), set(cg.get_nodes(['b lag(n=1)', 'b', 'b future(n=1)']))
         )
-        self.assertSetEqual(set(cg.get_nodes_for_variable('c')), set(cg.get_nodes(['c future(n=1)'])))
+        self.assertSetEqual(set(cg.get_nodes_for_variable_name('c')), set(cg.get_nodes(['c future(n=1)'])))
