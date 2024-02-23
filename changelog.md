@@ -4,7 +4,7 @@
 
 - Added the `cai_causal_graph.causal_graph.CausalGraph.replace_edge` method to the
   `cai_causal_graph.causal_graph.CausalGraph` class, which allows you to replace an existing edge with a new one.
-- Added the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_nodes_for_variable` method to the
+- Added the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_nodes_for_variable_name` method to the
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class.
 - Added the `cai_causal_graph.graph_components.Node.is_source_node` and
   `cai_causal_graph.graph_components.Node.is_sink_node` methods to the `cai_causal_graph.graph_components.Node`,
