@@ -4,6 +4,11 @@
 
 - Added the `cai_causal_graph.causal_graph.CausalGraph.replace_edge` method to the
   `cai_causal_graph.causal_graph.CausalGraph` class, which allows you to replace an existing edge with a new one.
+- Added the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_nodes_for_variable_name` method to the
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class.
+- Added the `cai_causal_graph.graph_components.Node.is_source_node` and
+  `cai_causal_graph.graph_components.Node.is_sink_node` methods to the `cai_causal_graph.graph_components.Node`,
+  indicating whether the node is a source node or sink node respectively.
 - Updated `cai_causal_graph.causal_graph.Skeleton` such that its nodes match the class type of its graph.
 - Fixed a bug where the `cai_causal_graph.type_definitions.NodeVariableType` was not synced between the
   `cai_causal_graph.causal_graph.CausalGraph` and `cai_causal_graph.causal_graph.Skeleton`.
