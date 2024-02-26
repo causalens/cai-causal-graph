@@ -23,6 +23,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
 
 import networkx
 import numpy
+from mypy_extensions import Arg, DefaultArg
 
 from cai_causal_graph import CausalGraph, Skeleton
 from cai_causal_graph.graph_components import Edge, Node, TimeSeriesNode
@@ -117,6 +118,15 @@ class TimeSeriesCausalGraph(CausalGraph):
         self._summary_graph: Optional[CausalGraph] = None
         self._stationary_graph: Optional[TimeSeriesCausalGraph] = None
         self._minimal_graph: Optional[TimeSeriesCausalGraph] = None
+
+    # Overwrite type annotations for linting and code completion.
+    # from_adjacency_matrix: Callable[
+    #     [Arg(numpy.ndarray, 'adjacency'), DefaultArg(Optional[List[Union[NodeLike, int]]], 'node_names')],
+    #     TimeSeriesCausalGraph,
+    # ]
+    # from_skeleton: Callable[[Arg(Skeleton, 'skeleton')], TimeSeriesCausalGraph]
+    # from_networkx: Callable[[Arg(networkx.Graph, 'g')], TimeSeriesCausalGraph]
+    # from_gml_string: Callable[[Arg(str, 'gml')], TimeSeriesCausalGraph]
 
     def __eq__(self, other: object, deep: bool = False) -> bool:
         """
@@ -996,25 +1006,9 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         return ts_cg
 
-    @staticmethod
-    def from_adjacency_matrix(
-        adjacency: numpy.ndarray,
-        node_names: Optional[List[Union[NodeLike, int]]] = None,
-    ) -> TimeSeriesCausalGraph:
-        """
-        Construct a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` instance from an adjacency matrix
-        and optionally a list of node names.
-
-        :param adjacency: A square binary numpy adjacency array.
-        :param node_names: A list of strings, `cai_causal_graph.interfaces.HasIdentifier`, and/or integers which can be
-            coerced to `cai_causal_graph.graph_components.TimeSeriesNode`.
-        :return: A `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` object.
-        """
-        graph = CausalGraph.from_adjacency_matrix(adjacency, node_names=node_names)
-        return TimeSeriesCausalGraph.from_causal_graph(graph)
-
-    @staticmethod
+    @classmethod
     def from_adjacency_matrices(
+        cls,
         adjacency_matrices: Dict[int, numpy.ndarray],
         variable_names: Optional[List[Union[NodeLike, int]]] = None,
     ) -> TimeSeriesCausalGraph:
@@ -1092,7 +1086,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         # adding the edges one by one for each time delta.
 
         # create the empty graph
-        tsgraph = TimeSeriesCausalGraph()
+        tsgraph = cls()
 
         # first add all the contemporaneous nodes (there could be floating nodes)
         for variable_name in variable_names_str:
@@ -1113,31 +1107,6 @@ class TimeSeriesCausalGraph(CausalGraph):
             tsgraph.add_edges_from(edges)  # type: ignore
 
         return tsgraph
-
-    @staticmethod
-    def from_skeleton(skeleton: Skeleton) -> TimeSeriesCausalGraph:
-        """
-        Construct a `cai_causal_graph.causal_graph.TimeSeriesCausalGraph` instance from a
-        `cai_causal_graph.causal_graph.Skeleton` instance.
-        """
-        return TimeSeriesCausalGraph.from_causal_graph(CausalGraph.from_skeleton(skeleton))
-
-    @staticmethod
-    def from_networkx(g: networkx.Graph) -> TimeSeriesCausalGraph:
-        """
-        Construct a `cai_causal_graph.causal_graph.TimeSeriesCausalGraph` instance from a
-        `networkx.Graph` instance.
-        """
-        return TimeSeriesCausalGraph.from_causal_graph(CausalGraph.from_networkx(g))
-
-    @staticmethod
-    def from_gml_string(gml: str) -> TimeSeriesCausalGraph:
-        """
-        Return an instance of `cai_causal_graph.causal_graph.TimeSeriesCausalGraph` constructed from the provided Graph Modelling
-        Language (GML) string.
-        """
-        g = networkx.parse_gml(gml)
-        return TimeSeriesCausalGraph.from_networkx(g)
 
     @property
     def adjacency_matrices(self) -> Dict[int, numpy.ndarray]:

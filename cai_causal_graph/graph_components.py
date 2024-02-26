@@ -48,7 +48,7 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         self._identifier = identifier
 
         self.variable_type: NodeVariableType = variable_type
-        self.meta = dict() if meta is None else deepcopy(meta)
+        self.meta = dict() if meta is None else meta
         assert isinstance(self.meta, dict) and all(
             isinstance(k, str) for k in self.meta
         ), 'Metadata must be provided as a dictionary with strings as keys.'
@@ -220,7 +220,7 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
             'node_class': self.__class__.__name__,
         }
         if include_meta:
-            node_dict['meta'] = deepcopy(self.meta)   # type: ignore
+            node_dict['meta'] = self.meta  # type: ignore
 
         return node_dict
 
@@ -294,6 +294,7 @@ class TimeSeriesNode(Node):
 
         # populate the metadata for each node
         if meta is not None:
+            # need to copy it as we update it below; don't want to change dict outside scope of this constructor
             meta = deepcopy(meta)
             meta_time_lag = meta.get(TIME_LAG)
             meta_variable_name = meta.get(VARIABLE_NAME)
@@ -665,6 +666,6 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         }
 
         if include_meta:
-            edge_dict['meta'] = deepcopy(self.meta)
+            edge_dict['meta'] = self.meta
 
         return edge_dict
