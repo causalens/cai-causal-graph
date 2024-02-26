@@ -229,7 +229,7 @@ class TimeSeriesCausalGraph(CausalGraph):
             # copy the edge type to the minimal graph
             if time_delta == 0 and not minimal_cg.edge_exists(source.variable_name, destination.variable_name):
                 # create the time series nodes
-                # update the node meta data to make sure the time lag is correct
+                # update the node metadata to make sure the time lag is correct
                 source.meta[TIME_LAG] = 0
                 destination.meta[TIME_LAG] = 0
 
@@ -255,7 +255,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                 destination_name = get_name_with_lag(destination.identifier, 0)
                 source_name = get_name_with_lag(source.identifier, -time_delta)
                 if not minimal_cg.edge_exists(source_name, destination_name):
-                    # update the node meta data to make sure the time lag is correct
+                    # update the node metadata to make sure the time lag is correct
                     source.meta[TIME_LAG] = -time_delta
                     destination.meta[TIME_LAG] = 0
 

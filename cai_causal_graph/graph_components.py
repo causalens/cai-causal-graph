@@ -48,7 +48,7 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         self._identifier = identifier
 
         self.variable_type: NodeVariableType = variable_type
-        self.meta = dict() if meta is None else meta
+        self.meta = dict() if meta is None else deepcopy(meta)
         assert isinstance(self.meta, dict) and all(
             isinstance(k, str) for k in self.meta
         ), 'Metadata must be provided as a dictionary with strings as keys.'
@@ -263,7 +263,8 @@ class TimeSeriesNode(Node):
             `cai_causal_graph.type_definitions.NodeVariableType` enum. Default is `NodeVariableType.UNSPECIFIED`.
         """
         if time_lag is not None and variable_name is not None:
-            # if identifier is not None and both time_lag and variable_name are provided, check that the identifier is correct
+            # if identifier is not None and both time_lag and variable_name are provided,
+            # check that the identifier is correct.
             rec_identifier = get_name_with_lag(variable_name, time_lag)
             assert identifier is None or identifier == rec_identifier, (
                 'The provided identifier does not match the provided time lag and variable name. Either provide a '
@@ -285,7 +286,7 @@ class TimeSeriesNode(Node):
 
         # populate the metadata for each node
         if meta is not None:
-            meta = meta.copy()
+            meta = deepcopy(meta)
             meta_time_lag = meta.get(TIME_LAG)
             meta_variable_name = meta.get(VARIABLE_NAME)
             if meta_time_lag is not None and meta_time_lag != time_lag:

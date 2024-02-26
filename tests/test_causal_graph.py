@@ -27,7 +27,7 @@ from cai_causal_graph.exceptions import CausalGraphErrors
 from cai_causal_graph.graph_components import Edge, Node
 
 
-class TestCausalGraphSerialization(unittest.TestCase):
+class TestCausalGraph(unittest.TestCase):
     def setUp(self):
         self.empty_graph = CausalGraph()
 
@@ -134,17 +134,19 @@ class TestCausalGraphSerialization(unittest.TestCase):
         causal_graph = CausalGraph()
         x = Node('x')
         y = Node('y')
-        causal_graph.add_edge(x, y)
+        xy = causal_graph.add_edge(x, y)
 
         # test getting node
         node = causal_graph['x']
         self.assertIsInstance(node, Node)
         self.assertEqual(node, causal_graph.get_node('x'))
+        self.assertEqual(node, x)
 
         # test getting edge
         edge = causal_graph['x', 'y']
         self.assertIsInstance(edge, Edge)
         self.assertEqual(edge, causal_graph.get_edge('x', 'y'))
+        self.assertEqual(edge, xy)
 
         # test getting edge which does not exist
         with self.assertRaises(CausalGraphErrors.EdgeDoesNotExistError):
@@ -161,12 +163,23 @@ class TestCausalGraphSerialization(unittest.TestCase):
             graph_as_dict_2 = dict(graph)
             self.assertDictEqual(graph_as_dict, graph_as_dict_2)
             self.assertIsInstance(json.dumps(graph_as_dict), str)
+            self.assertEqual(graph, CausalGraph.from_dict(graph_as_dict))
+            self.assertEqual(graph, CausalGraph.from_dict(graph_as_dict_2))
+            self.assertTrue(graph.__eq__(CausalGraph.from_dict(graph_as_dict), deep=True))
+            self.assertTrue(graph.__eq__(CausalGraph.from_dict(graph_as_dict_2), deep=True))
 
-        # test with include_metadata=False
+        # test with include_meta=False
         graph_as_dict_nometa = self.fully_connected_graph.to_dict(include_meta=False)
         self.assertNotIn('meta', graph_as_dict_nometa['nodes']['x'].keys())
+        self.assertEqual(CausalGraph.from_dict(graph_as_dict_nometa), self.fully_connected_graph)
+        # will be True as current no metadata exists
+        self.assertTrue(CausalGraph.from_dict(graph_as_dict_nometa).__eq__(self.fully_connected_graph, deep=True))
+
+        # test with include_meta=True
         graph_as_dict_withmeta = self.fully_connected_graph.to_dict(include_meta=True)
         self.assertIn('meta', graph_as_dict_withmeta['nodes']['x'].keys())
+        self.assertEqual(CausalGraph.from_dict(graph_as_dict_withmeta), self.fully_connected_graph)
+        self.assertTrue(CausalGraph.from_dict(graph_as_dict_withmeta).__eq__(self.fully_connected_graph, deep=True))
 
         # test with a custom metadata
         newg = self.fully_connected_graph.copy()
@@ -174,23 +187,41 @@ class TestCausalGraphSerialization(unittest.TestCase):
         graph_as_dict_withmeta = newg.to_dict(include_meta=True)
         # test that the metadata is in the dict
         self.assertIn('test', graph_as_dict_withmeta['nodes']['xm']['meta'].keys())
+        self.assertEqual(CausalGraph.from_dict(graph_as_dict_withmeta), newg)
+        self.assertTrue(CausalGraph.from_dict(graph_as_dict_withmeta).__eq__(newg, deep=True))
 
         graph_as_dict_nometa = newg.to_dict(include_meta=False)
         # test that the metadata is not in the dict
         self.assertNotIn('meta', graph_as_dict_nometa['nodes']['xm'].keys())
+        self.assertEqual(CausalGraph.from_dict(graph_as_dict_nometa), newg)
+        # will be False as metadata is missing
+        self.assertFalse(CausalGraph.from_dict(graph_as_dict_nometa).__eq__(newg, deep=True))
 
     def test_graph_is_json_serializable(self):
         cg = CausalGraph()
         cg.add_edge('a', 'b')
         cg.add_edge('b', 'c')
-        cg.add_node('d', variable_type=NodeVariableType.CONTINUOUS)
+        cg.add_node('d', variable_type=NodeVariableType.CONTINUOUS, meta={'info': 'info'})
 
+        # with metadata
         cg_dict = cg.to_dict()
 
         cg_json = json.dumps(cg_dict)
         cg2 = CausalGraph.from_dict(json.loads(cg_json))
 
-        self.assertEqual(cg2.to_dict(), cg_dict)
+        self.assertDictEqual(cg2.to_dict(), cg_dict)
+        self.assertEqual(cg2, cg)
+        self.assertTrue(cg2.__eq__(cg, deep=True))
+
+        # without metadata
+        cg_dict = cg.to_dict(include_meta=False)
+
+        cg_json = json.dumps(cg_dict)
+        cg2 = CausalGraph.from_dict(json.loads(cg_json))
+
+        self.assertDictEqual(cg2.to_dict(include_meta=False), cg_dict)  # Ignore metadata so meta key is not provided.
+        self.assertEqual(cg2, cg)
+        self.assertFalse(cg2.__eq__(cg, deep=True))  # as it is missing metadata
 
     def test_graph_identifier(self):
         self.assertEqual(self.fully_connected_graph.identifier, '<x>_<y>_<z1>_<z2>')

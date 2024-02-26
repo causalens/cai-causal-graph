@@ -13,17 +13,18 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import json
 import unittest
 
 import networkx
 import numpy
 
-from cai_causal_graph import CausalGraph, Skeleton
+from cai_causal_graph import CausalGraph, NodeVariableType, Skeleton
 from cai_causal_graph.exceptions import CausalGraphErrors
-from cai_causal_graph.graph_components import Node
+from cai_causal_graph.graph_components import Edge, Node
 
 
-class TestCausalGraphSkeletonSerialization(unittest.TestCase):
+class TestSkeleton(unittest.TestCase):
     def setUp(self):
         self.empty_graph = CausalGraph()
 
@@ -118,6 +119,37 @@ class TestCausalGraphSkeletonSerialization(unittest.TestCase):
         self.assert_graph_skeleton_serialization_is_correct(self.graph_with_latent_node)
         self.assert_graph_networkx_conversion_is_correct(self.graph_with_latent_node)
         self.assert_graph_gml_conversion_is_correct(self.graph_with_latent_node)
+
+    def test_get_item(self):
+        causal_graph = CausalGraph()
+        causal_graph.add_node('x', variable_type=NodeVariableType.CONTINUOUS, meta={'info': 'info'})
+        causal_graph.add_edge('x', 'y')
+        skeleton = causal_graph.skeleton
+
+        # test getting node from graph
+        node = causal_graph['x']
+        self.assertIsInstance(node, Node)
+        self.assertEqual(node, skeleton.get_node('x'))
+
+        # test getting edge from graph
+        edge = causal_graph['x', 'y']
+        self.assertIsInstance(edge, Edge)
+        self.assertNotEqual(edge, skeleton.get_edge('x', 'y'))  # not equal as CG edge is directed
+
+    def test_skeleton_is_json_serializable(self):
+        cg = CausalGraph()
+        cg.add_edge('a', 'b')
+        cg.add_edge('b', 'c')
+        cg.add_node('d', variable_type=NodeVariableType.CONTINUOUS, meta={'info': 'info'})
+
+        skeleton_dict = cg.skeleton.to_dict()
+
+        skeleton_json = json.dumps(skeleton_dict)
+        skeleton = Skeleton.from_dict(json.loads(skeleton_json))
+
+        self.assertDictEqual(skeleton.to_dict(), skeleton_dict)
+        self.assertEqual(skeleton, cg.skeleton)
+        self.assertTrue(skeleton.__eq__(cg.skeleton, deep=True))
 
     def test_get_nodes_empty(self):
         self.assertEqual(len(self.empty_graph.skeleton.nodes), 0)
