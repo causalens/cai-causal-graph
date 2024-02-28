@@ -550,10 +550,36 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         matrices[-1][0, 1] = 1
         # there should be 3+1 nodes
         variables = ['X1', 'X2', 'X3']
-        tsdag = TimeSeriesCausalGraph.from_adjacency_matrices(matrices, variables)
-        nodes = sorted(['X1', 'X2', 'X3', 'X1 lag(n=1)'])
-        self.assertEqual(sorted([n.identifier for n in tsdag.nodes]), nodes)
+        # we need to do`get_minimal_graph` to remove the floating nodes
+        tsdag = TimeSeriesCausalGraph.from_adjacency_matrices(matrices, variables).get_minimal_graph()
+        nodes = ['X2', 'X3', 'X1 lag(n=1)']  # Only ones that should be in minimal graph.
+        self.assertSetEqual(set(n.identifier for n in tsdag.nodes), set(nodes))
         self.assertEqual(len(tsdag.edges), 1)
+
+        full_insta = numpy.ones((3, 3))
+        numpy.fill_diagonal(full_insta, 0)
+        matrices = {0: full_insta, -1: numpy.zeros((3, 3))}
+        matrices[-1][0, 1] = 1
+
+        tsdag = TimeSeriesCausalGraph.from_adjacency_matrices(matrices, variables)
+
+        # This should be the only non-contemporaneous edge. See check below that that is true.
+        self.assertTrue(('X1 lag(n=1)', 'X2') in tsdag.get_edge_pairs())
+
+        # check that contemporaneous are undirected edges and others are directed
+        for edge in tsdag.edges:
+            source, destination = edge.source, edge.destination
+            self.assertIsInstance(source, TimeSeriesNode)
+            self.assertIsInstance(destination, TimeSeriesNode)
+            if source.time_lag == destination.time_lag == 0:
+                self.assertEqual(edge.get_edge_type(), EdgeType.UNDIRECTED_EDGE)
+            else:
+                self.assertEqual(source.variable_name, 'X1')
+                self.assertEqual(source.time_lag, -1)
+                self.assertEqual(destination.variable_name, 'X2')
+                self.assertEqual(destination.time_lag, 0)
+                self.assertLess(source.time_lag, destination.time_lag)
+                self.assertEqual(edge.get_edge_type(), EdgeType.DIRECTED_EDGE)
 
     def test_summary_graph(self):
         summary_graph = self.tsdag.get_summary_graph()
