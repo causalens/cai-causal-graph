@@ -563,16 +563,21 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
         tsdag = TimeSeriesCausalGraph.from_adjacency_matrices(matrices, variables)
 
+        # This should be the only non-contemporaneous edge. See check below that that is true.
         self.assertTrue(('X1 lag(n=1)', 'X2') in tsdag.get_edge_pairs())
 
         # check that contemporaneous are undirected edges and others are directed
         for edge in tsdag.edges:
-            if edge.source.time_lag == edge.destination.time_lag == 0:
+            source, destination = edge.source, edge.destination
+            self.assertIsInstance(source, TimeSeriesNode)
+            self.assertIsInstance(destination, TimeSeriesNode)
+            if source.time_lag == destination.time_lag == 0:
                 self.assertEqual(edge.get_edge_type(), EdgeType.UNDIRECTED_EDGE)
             else:
-                source, destination = edge.source, edge.destination
-                self.assertIsInstance(source, TimeSeriesNode)
-                self.assertIsInstance(destination, TimeSeriesNode)
+                self.assertEqual(source.variable_name, 'X1')
+                self.assertEqual(source.time_lag, -1)
+                self.assertEqual(destination.variable_name, 'X2')
+                self.assertEqual(destination.time_lag, 0)
                 self.assertLess(source.time_lag, destination.time_lag)
                 self.assertEqual(edge.get_edge_type(), EdgeType.DIRECTED_EDGE)
 
