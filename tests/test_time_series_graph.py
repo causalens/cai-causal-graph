@@ -550,9 +550,10 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         matrices[-1][0, 1] = 1
         # there should be 3+1 nodes
         variables = ['X1', 'X2', 'X3']
+        # we need to do`get_minimal_graph` to remove the floating nodes
         tsdag = TimeSeriesCausalGraph.from_adjacency_matrices(matrices, variables).get_minimal_graph()
         nodes = sorted(['X2', 'X3', 'X1 lag(n=1)'])
-        self.assertEqual(set([n.identifier for n in tsdag.nodes]), set(nodes))
+        self.assertSetEqual(set(n.identifier for n in tsdag.nodes), set(nodes))
         self.assertEqual(len(tsdag.edges), 1)
 
         full_insta = numpy.ones((3, 3))
@@ -561,6 +562,8 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         matrices[-1][0, 1] = 1
 
         tsdag = TimeSeriesCausalGraph.from_adjacency_matrices(matrices, variables)
+
+        self.assertTrue(('X1 lag(n=1)', 'X2') in tsdag.get_edge_pairs())
 
         # check that contemporaneous are undirected edges
         for edge in tsdag.edges:

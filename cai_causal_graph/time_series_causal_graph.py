@@ -1094,9 +1094,8 @@ class TimeSeriesCausalGraph(CausalGraph):
         # adding the edges one by one for each time delta.
 
         # create the full matrix from the dictionary of adjacency matrices
-        # get the nodes first
-        # the full adjacency matrix has the shape NT x NT, where N is the number of nodes and T is the number of time
-        # steps.
+        # get the nodes first the full adjacency matrix has the shape NT x NT, where N is the number of nodes and T
+        # is the number of time steps.
 
         adjacency_matrix_full = numpy.zeros((shape[0] * len(adjacency_matrices), shape[0] * len(adjacency_matrices)))
 
