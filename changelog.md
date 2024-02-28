@@ -1,5 +1,9 @@
 # Changelog
 
+## NEXT
+
+- Relaxed `mypy` dependency to `"*"`.
+
 ## 0.4.3
 
 - Added the `cai_causal_graph.causal_graph.CausalGraph.replace_edge` method to the
