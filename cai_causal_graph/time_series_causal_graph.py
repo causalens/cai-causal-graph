@@ -120,17 +120,16 @@ class TimeSeriesCausalGraph(CausalGraph):
         self._minimal_graph: Optional[TimeSeriesCausalGraph] = None
 
     # Overwrite type annotations for linting and code completion.
-    from_adjacency_matrix: Callable[
+    from_adjacency_matrix: Callable[  # type: ignore
         [
-            Arg(Type[TimeSeriesCausalGraph], 'cls'),
             Arg(numpy.ndarray, 'adjacency'),
             DefaultArg(Optional[List[Union[NodeLike, int]]], 'node_names'),
         ],
         TimeSeriesCausalGraph,
     ]
-    from_skeleton: Callable[[Arg(Type[TimeSeriesCausalGraph], 'cls'), Arg(Skeleton, 'skeleton')], TimeSeriesCausalGraph]
-    from_networkx: Callable[[Arg(Type[TimeSeriesCausalGraph], 'cls'), Arg(networkx.Graph, 'g')], TimeSeriesCausalGraph]
-    from_gml_string: Callable[[Arg(Type[TimeSeriesCausalGraph], 'cls'), Arg(str, 'gml')], TimeSeriesCausalGraph]
+    from_skeleton: Callable[[Arg(Skeleton, 'skeleton')], TimeSeriesCausalGraph]  # type: ignore
+    from_networkx: Callable[[Arg(networkx.Graph, 'g')], TimeSeriesCausalGraph]  # type: ignore
+    from_gml_string: Callable[[Arg(str, 'gml')], TimeSeriesCausalGraph]  # type: ignore
 
     def __eq__(self, other: object, deep: bool = False) -> bool:
         """
@@ -1118,7 +1117,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                     time_delta_to_index[0] + ((shape[0] - 1) * column),
                 ] = 1
 
-        return cls.from_adjacency_matrix(adjacency_matrix_full, node_names)
+        return cls.from_adjacency_matrix(adjacency_matrix_full, node_names)  # type: ignore
 
     @property
     def adjacency_matrices(self) -> Dict[int, numpy.ndarray]:
