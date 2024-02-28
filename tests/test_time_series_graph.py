@@ -552,7 +552,7 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         variables = ['X1', 'X2', 'X3']
         # we need to do`get_minimal_graph` to remove the floating nodes
         tsdag = TimeSeriesCausalGraph.from_adjacency_matrices(matrices, variables).get_minimal_graph()
-        nodes = sorted(['X2', 'X3', 'X1 lag(n=1)'])
+        nodes = ['X2', 'X3', 'X1 lag(n=1)']  # Only ones that should be in minimal graph.
         self.assertSetEqual(set(n.identifier for n in tsdag.nodes), set(nodes))
         self.assertEqual(len(tsdag.edges), 1)
 
