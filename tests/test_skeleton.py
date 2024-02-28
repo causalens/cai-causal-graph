@@ -19,9 +19,9 @@ import unittest
 import networkx
 import numpy
 
-from cai_causal_graph import CausalGraph, NodeVariableType, Skeleton
+from cai_causal_graph import CausalGraph, NodeVariableType, Skeleton, TimeSeriesCausalGraph
 from cai_causal_graph.exceptions import CausalGraphErrors
-from cai_causal_graph.graph_components import Edge, Node
+from cai_causal_graph.graph_components import Edge, Node, TimeSeriesNode
 
 
 class TestSkeleton(unittest.TestCase):
@@ -69,6 +69,28 @@ class TestSkeleton(unittest.TestCase):
         self.assertEqual(graph.skeleton, reconstruction)
         self.assertTrue(graph.skeleton.__eq__(reconstruction, True))
 
+        # Test with TimeSeriesCausalGraph so node type is different
+        ts_cg = TimeSeriesCausalGraph.from_causal_graph(graph)
+        reconstruction = Skeleton.from_dict(ts_cg.skeleton.to_dict(), graph_class=TimeSeriesCausalGraph)
+
+        # Check that their dict representations are the same.
+        self.assertDictEqual(ts_cg.skeleton.to_dict(), reconstruction.to_dict())
+
+        # Also confirm that equality method works.
+        self.assertEqual(ts_cg.skeleton, reconstruction)
+        self.assertTrue(ts_cg.skeleton.__eq__(reconstruction, True))
+        if len(reconstruction.get_node_names()) > 0:
+            self.assertIsInstance(reconstruction.get_node(reconstruction.get_node_names()[0]), TimeSeriesNode)
+            self.assertIsInstance(ts_cg.skeleton.get_node(reconstruction.get_node_names()[0]), TimeSeriesNode)
+            self.assertIsInstance(graph.skeleton.get_node(reconstruction.get_node_names()[0]), Node)
+            # node types are different but will be seen as equal due to no time info, so shallow is True but deep False
+            self.assertEqual(graph.skeleton, reconstruction)
+            self.assertTrue(graph.skeleton.__eq__(reconstruction, False))
+        else:
+            # Will be same for empty graphs
+            self.assertEqual(graph.skeleton, reconstruction)
+            self.assertTrue(graph.skeleton.__eq__(reconstruction, True))
+
     def assert_graph_networkx_conversion_is_correct(self, graph: CausalGraph):
         reconstruction = Skeleton.from_networkx(graph.skeleton.to_networkx())
 
@@ -83,6 +105,28 @@ class TestSkeleton(unittest.TestCase):
         self.assertEqual(graph.skeleton, reconstruction)
         self.assertTrue(graph.skeleton.__eq__(reconstruction, True))
 
+        # Test with TimeSeriesCausalGraph so node type is different
+        ts_cg = TimeSeriesCausalGraph.from_causal_graph(graph)
+        reconstruction = Skeleton.from_networkx(ts_cg.skeleton.to_networkx(), graph_class=TimeSeriesCausalGraph)
+
+        # Check that their dict representations are the same.
+        self.assertDictEqual(ts_cg.skeleton.to_dict(), reconstruction.to_dict())
+
+        # Also confirm that equality method works.
+        self.assertEqual(ts_cg.skeleton, reconstruction)
+        self.assertTrue(ts_cg.skeleton.__eq__(reconstruction, True))
+        if len(reconstruction.get_node_names()) > 0:
+            self.assertIsInstance(reconstruction.get_node(reconstruction.get_node_names()[0]), TimeSeriesNode)
+            self.assertIsInstance(ts_cg.skeleton.get_node(reconstruction.get_node_names()[0]), TimeSeriesNode)
+            self.assertIsInstance(graph.skeleton.get_node(reconstruction.get_node_names()[0]), Node)
+            # node types are different but will be seen as equal due to no time info, so shallow is True but deep False
+            self.assertEqual(graph.skeleton, reconstruction)
+            self.assertTrue(graph.skeleton.__eq__(reconstruction, False))
+        else:
+            # Will be same for empty graphs
+            self.assertEqual(graph.skeleton, reconstruction)
+            self.assertTrue(graph.skeleton.__eq__(reconstruction, True))
+
     def assert_graph_gml_conversion_is_correct(self, graph: CausalGraph):
         reconstruction = Skeleton.from_gml_string(graph.skeleton.to_gml_string())
 
@@ -94,6 +138,28 @@ class TestSkeleton(unittest.TestCase):
         # Also confirm that equality method works.
         self.assertEqual(graph.skeleton, reconstruction)
         self.assertTrue(graph.skeleton.__eq__(reconstruction, True))
+
+        # Test with TimeSeriesCausalGraph so node type is different
+        ts_cg = TimeSeriesCausalGraph.from_causal_graph(graph)
+        reconstruction = Skeleton.from_gml_string(ts_cg.skeleton.to_gml_string(), graph_class=TimeSeriesCausalGraph)
+
+        # Check that their dict representations are the same.
+        self.assertDictEqual(ts_cg.skeleton.to_dict(), reconstruction.to_dict())
+
+        # Also confirm that equality method works.
+        self.assertEqual(ts_cg.skeleton, reconstruction)
+        self.assertTrue(ts_cg.skeleton.__eq__(reconstruction, True))
+        if len(reconstruction.get_node_names()) > 0:
+            self.assertIsInstance(reconstruction.get_node(reconstruction.get_node_names()[0]), TimeSeriesNode)
+            self.assertIsInstance(ts_cg.skeleton.get_node(reconstruction.get_node_names()[0]), TimeSeriesNode)
+            self.assertIsInstance(graph.skeleton.get_node(reconstruction.get_node_names()[0]), Node)
+            # node types are different but will be seen as equal due to no time info, so shallow is True but deep False
+            self.assertEqual(graph.skeleton, reconstruction)
+            self.assertTrue(graph.skeleton.__eq__(reconstruction, False))
+        else:
+            # Will be same for empty graphs
+            self.assertEqual(graph.skeleton, reconstruction)
+            self.assertTrue(graph.skeleton.__eq__(reconstruction, True))
 
     def test_fully_connected_graph(self):
         skeleton = self.fully_connected_graph.skeleton
