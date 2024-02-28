@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.4.5
 
 - Fixed a bug in `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_adjacency_matrices` for
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` where the method was not handling properly
