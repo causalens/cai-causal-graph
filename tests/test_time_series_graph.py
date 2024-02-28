@@ -550,10 +550,22 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         matrices[-1][0, 1] = 1
         # there should be 3+1 nodes
         variables = ['X1', 'X2', 'X3']
-        tsdag = TimeSeriesCausalGraph.from_adjacency_matrices(matrices, variables)
-        nodes = sorted(['X1', 'X2', 'X3', 'X1 lag(n=1)'])
-        self.assertEqual(sorted([n.identifier for n in tsdag.nodes]), nodes)
+        tsdag = TimeSeriesCausalGraph.from_adjacency_matrices(matrices, variables).get_minimal_graph()
+        nodes = sorted(['X2', 'X3', 'X1 lag(n=1)'])
+        self.assertEqual(set([n.identifier for n in tsdag.nodes]), set(nodes))
         self.assertEqual(len(tsdag.edges), 1)
+
+        full_insta = numpy.ones((3, 3))
+        numpy.fill_diagonal(full_insta, 0)
+        matrices = {0: full_insta, -1: numpy.zeros((3, 3))}
+        matrices[-1][0, 1] = 1
+
+        tsdag = TimeSeriesCausalGraph.from_adjacency_matrices(matrices, variables)
+
+        # check that contemporaneous are undirected edges
+        for edge in tsdag.edges:
+            if edge.source.time_lag == edge.destination.time_lag == 0:
+                self.assertEqual(edge.get_edge_type(), EdgeType.UNDIRECTED_EDGE)
 
     def test_summary_graph(self):
         summary_graph = self.tsdag.get_summary_graph()

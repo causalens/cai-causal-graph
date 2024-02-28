@@ -1069,6 +1069,11 @@ class TimeSeriesCausalGraph(CausalGraph):
         ), f'The shape of all the adjacency matrices must be the same. Got the following shapes: {list(set(shapes))}.'
         shape = shapes[0]
 
+        # if 0 in adjacency_matrices keys, then we need to add the contemporaneous nodes
+        if 0 not in adjacency_matrices:
+            adjacency_matrices = adjacency_matrices.copy()
+            adjacency_matrices[0] = numpy.zeros((shape[0], shape[0]))
+
         if variable_names is not None:
             variable_names_str: List[Union[str, int]] = []
             assert len(variable_names) == shape[0], (
@@ -1092,25 +1097,32 @@ class TimeSeriesCausalGraph(CausalGraph):
         # create the empty graph
         tsgraph = cls()
 
-        # first add all the contemporaneous nodes (there could be floating nodes)
+        # create the full matrix from the dictionary of adjacency matrices
+        # get the nodes first
+        # the full adjacency matrix has the shapx NT x NT, where N is the number of nodes and T is the number of time
+        # steps.
+        # time
+
+        adiacency_matrix_full = numpy.zeros((shape[0] * len(adjacency_matrices), shape[0] * len(adjacency_matrices)))
+
+        # create the node names list to match the variable names
+        node_names = []
         for variable_name in variable_names_str:
-            tsgraph.add_node(variable_name=variable_name, time_lag=0)
+            for time_delta in adjacency_matrices:
+                node_names.append(get_name_with_lag(str(variable_name), time_delta))
+
+        # create a map between time delta and the index in the full adjacency matrix
+        time_delta_to_index = {time_delta: i for i, time_delta in enumerate(adjacency_matrices)}
 
         for time_delta, adjacency_matrix in adjacency_matrices.items():
-            # create the edges
-            edges: List[Tuple[str, str]] = []
-            # get the edges from the adjacency matrix by getting the indices of the non-zero elements
             for row, column in zip(*numpy.where(adjacency_matrix)):
-                edges.append(
-                    (
-                        get_name_with_lag(variable_names_str[row], time_delta),
-                        variable_names_str[column],
-                    )
-                )
-            # add the edges to the graph
-            tsgraph.add_edges_from(edges)  # type: ignore
+                # add 1 to the row and column to account for the time delta
+                adiacency_matrix_full[
+                    time_delta_to_index[time_delta] + ((shape[0] - 1) * row),
+                    time_delta_to_index[0] + ((shape[0] - 1) * column),
+                ] = 1
 
-        return tsgraph
+        return cls.from_adjacency_matrix(adiacency_matrix_full, node_names)
 
     @property
     def adjacency_matrices(self) -> Dict[int, numpy.ndarray]:
