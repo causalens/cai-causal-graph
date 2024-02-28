@@ -120,13 +120,17 @@ class TimeSeriesCausalGraph(CausalGraph):
         self._minimal_graph: Optional[TimeSeriesCausalGraph] = None
 
     # Overwrite type annotations for linting and code completion.
-    # from_adjacency_matrix: Callable[
-    #     [Arg(numpy.ndarray, 'adjacency'), DefaultArg(Optional[List[Union[NodeLike, int]]], 'node_names')],
-    #     TimeSeriesCausalGraph,
-    # ]
-    # from_skeleton: Callable[[Arg(Skeleton, 'skeleton')], TimeSeriesCausalGraph]
-    # from_networkx: Callable[[Arg(networkx.Graph, 'g')], TimeSeriesCausalGraph]
-    # from_gml_string: Callable[[Arg(str, 'gml')], TimeSeriesCausalGraph]
+    from_adjacency_matrix: Callable[
+        [
+            Arg(Type[CausalGraph], 'cls'),
+            Arg(numpy.ndarray, 'adjacency'),
+            DefaultArg(Optional[List[Union[NodeLike, int]]], 'node_names'),
+        ],
+        TimeSeriesCausalGraph,
+    ]
+    from_skeleton: Callable[[Arg(Type[CausalGraph], 'cls'), Arg(Skeleton, 'skeleton')], TimeSeriesCausalGraph]
+    from_networkx: Callable[[Arg(Type[CausalGraph], 'cls'), Arg(networkx.Graph, 'g')], TimeSeriesCausalGraph]
+    from_gml_string: Callable[[Arg(Type[CausalGraph], 'cls'), Arg(str, 'gml')], TimeSeriesCausalGraph]
 
     def __eq__(self, other: object, deep: bool = False) -> bool:
         """
