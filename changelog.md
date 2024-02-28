@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.4.4
 
 - Relaxed `mypy` dependency to `"*"`.
 
