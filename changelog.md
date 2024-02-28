@@ -9,7 +9,24 @@
 - Added the `cai_causal_graph.graph_components.Node.is_source_node` and
   `cai_causal_graph.graph_components.Node.is_sink_node` methods to the `cai_causal_graph.graph_components.Node`,
   indicating whether the node is a source node or sink node respectively.
+- Changed the following methods in `cai_causal_graph.causal_graph.CausalGraph` from static to class methods:
+  - `cai_causal_graph.causal_graph.CausalGraph.from_skeleton`
+  - `cai_causal_graph.causal_graph.CausalGraph.from_networkx`
+  - `cai_causal_graph.causal_graph.CausalGraph.from_gml_string`
+  - Note that `cai_causal_graph.causal_graph.CausalGraph.from_dict` and
+    `cai_causal_graph.causal_graph.CausalGraph.from_adjacency_matrix` were already class methods. Now all the `from_`
+    methods are consistent. This change is transparent to the user.
+  - This allowed us to remove them from `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`. This change
+    is transparent to the user.
 - Updated `cai_causal_graph.causal_graph.Skeleton` such that its nodes match the class type of its graph.
+  - Added ability to pass `graph_class` to the following methods in `cai_causal_graph.causal_graph.Skeleton` such that
+    the node classes will match accordingly when the new `cai_causal_graph.causal_graph.Skeleton` is constructed:
+    - `cai_causal_graph.causal_graph.Skeleton.from_dict`
+    - `cai_causal_graph.causal_graph.Skeleton.from_adjacency_matrix`
+    - `cai_causal_graph.causal_graph.Skeleton.from_networkx`
+    - `cai_causal_graph.causal_graph.Skeleton.from_gml_string`
+    - Note that `cai_causal_graph.causal_graph.Skeleton.from_dict` was already a class method but the other three
+      were also changed to class methods for consistency. This change is transparent to the user.
 - Fixed a bug where the `cai_causal_graph.type_definitions.NodeVariableType` was not synced between the
   `cai_causal_graph.causal_graph.CausalGraph` and `cai_causal_graph.causal_graph.Skeleton`.
 - Updated `numpy` dependency from `"^1.18.0"` to `"^1.20.0"` and allow different `numpy` versions in the
