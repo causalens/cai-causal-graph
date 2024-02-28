@@ -565,10 +565,16 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
         self.assertTrue(('X1 lag(n=1)', 'X2') in tsdag.get_edge_pairs())
 
-        # check that contemporaneous are undirected edges
+        # check that contemporaneous are undirected edges and others are directed
         for edge in tsdag.edges:
             if edge.source.time_lag == edge.destination.time_lag == 0:
                 self.assertEqual(edge.get_edge_type(), EdgeType.UNDIRECTED_EDGE)
+            else:
+                source, destination = edge.source, edge.destination
+                self.assertIsInstance(source, TimeSeriesNode)
+                self.assertIsInstance(destination, TimeSeriesNode)
+                self.assertLess(source.time_lag, destination.time_lag)
+                self.assertEqual(edge.get_edge_type(), EdgeType.DIRECTED_EDGE)
 
     def test_summary_graph(self):
         summary_graph = self.tsdag.get_summary_graph()
