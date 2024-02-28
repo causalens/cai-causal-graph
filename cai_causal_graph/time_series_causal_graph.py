@@ -122,15 +122,15 @@ class TimeSeriesCausalGraph(CausalGraph):
     # Overwrite type annotations for linting and code completion.
     from_adjacency_matrix: Callable[
         [
-            Arg(Type[CausalGraph], 'cls'),
+            Arg(Type[TimeSeriesCausalGraph], 'cls'),
             Arg(numpy.ndarray, 'adjacency'),
             DefaultArg(Optional[List[Union[NodeLike, int]]], 'node_names'),
         ],
         TimeSeriesCausalGraph,
     ]
-    from_skeleton: Callable[[Arg(Type[CausalGraph], 'cls'), Arg(Skeleton, 'skeleton')], TimeSeriesCausalGraph]
-    from_networkx: Callable[[Arg(Type[CausalGraph], 'cls'), Arg(networkx.Graph, 'g')], TimeSeriesCausalGraph]
-    from_gml_string: Callable[[Arg(Type[CausalGraph], 'cls'), Arg(str, 'gml')], TimeSeriesCausalGraph]
+    from_skeleton: Callable[[Arg(Type[TimeSeriesCausalGraph], 'cls'), Arg(Skeleton, 'skeleton')], TimeSeriesCausalGraph]
+    from_networkx: Callable[[Arg(Type[TimeSeriesCausalGraph], 'cls'), Arg(networkx.Graph, 'g')], TimeSeriesCausalGraph]
+    from_gml_string: Callable[[Arg(Type[TimeSeriesCausalGraph], 'cls'), Arg(str, 'gml')], TimeSeriesCausalGraph]
 
     def __eq__(self, other: object, deep: bool = False) -> bool:
         """
@@ -1094,16 +1094,12 @@ class TimeSeriesCausalGraph(CausalGraph):
         # delta but if we have many time deltas, this could be very memory intensive. Therefore, we create the graph by
         # adding the edges one by one for each time delta.
 
-        # create the empty graph
-        tsgraph = cls()
-
         # create the full matrix from the dictionary of adjacency matrices
         # get the nodes first
-        # the full adjacency matrix has the shapx NT x NT, where N is the number of nodes and T is the number of time
+        # the full adjacency matrix has the shape NT x NT, where N is the number of nodes and T is the number of time
         # steps.
-        # time
 
-        adiacency_matrix_full = numpy.zeros((shape[0] * len(adjacency_matrices), shape[0] * len(adjacency_matrices)))
+        adjacency_matrix_full = numpy.zeros((shape[0] * len(adjacency_matrices), shape[0] * len(adjacency_matrices)))
 
         # create the node names list to match the variable names
         node_names = []
@@ -1117,12 +1113,12 @@ class TimeSeriesCausalGraph(CausalGraph):
         for time_delta, adjacency_matrix in adjacency_matrices.items():
             for row, column in zip(*numpy.where(adjacency_matrix)):
                 # add 1 to the row and column to account for the time delta
-                adiacency_matrix_full[
+                adjacency_matrix_full[
                     time_delta_to_index[time_delta] + ((shape[0] - 1) * row),
                     time_delta_to_index[0] + ((shape[0] - 1) * column),
                 ] = 1
 
-        return cls.from_adjacency_matrix(adiacency_matrix_full, node_names)
+        return cls.from_adjacency_matrix(adjacency_matrix_full, node_names)
 
     @property
     def adjacency_matrices(self) -> Dict[int, numpy.ndarray]:
