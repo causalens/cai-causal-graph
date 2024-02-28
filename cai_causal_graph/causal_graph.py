@@ -104,7 +104,9 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
     def nodes(self) -> List[Node]:
         """Return a list of all nodes."""
         # Instantiate new nodes to remove any edge information.
-        return [Node(n.identifier, meta=n.meta) for n in self._graph.nodes]
+        return [
+            self._graph._NodeCls(n.identifier, meta=n.meta, variable_type=n.variable_type) for n in self._graph.nodes
+        ]
 
     def get_node(self, identifier: NodeLike) -> Node:
         """Return node that matches the identifier."""
@@ -207,13 +209,32 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
 
         return adjacency
 
-    @staticmethod
+    @classmethod
     def from_adjacency_matrix(
-        adjacency: numpy.ndarray, node_names: Optional[List[Union[NodeLike, int]]] = None
+        cls,
+        adjacency: numpy.ndarray,
+        node_names: Optional[List[Union[NodeLike, int]]] = None,
+        graph_class: Union[Type[CausalGraph], None] = None,
     ) -> Skeleton:
-        """Instantiate a `cai_causal_graph.causal_graph.Skeleton` object from an adjacency matrix."""
-        graph: CausalGraph = CausalGraph.from_adjacency_matrix(adjacency=adjacency, node_names=node_names)
-        return Skeleton(graph=graph)
+        """
+        Instantiate a `cai_causal_graph.causal_graph.Skeleton` object from an adjacency matrix.
+
+        :param adjacency: The adjacency matrix.
+        :param node_names: A list of the node names. These should be in the order of the rows and columns of the
+            adjacency matrix.
+        :param graph_class: The appropriate subclass of `cai_causal_graph.causal_graph.CausalGraph` to use. If `None`,
+            which is the default, `cai_causal_graph.causal_graph.CausalGraph` will be used. This is to ensure the new
+            `cai_causal_graph.causal_graph.Skeleton` object has the correct node class type.
+        :return: A new `cai_causal_graph.causal_graph.Skeleton` based on the provided adjacency matrix.
+        """
+        if graph_class is not None:
+            assert issubclass(
+                graph_class, CausalGraph
+            ), f'The provided graph_class is not a subclass of CausalGraph. Got type {type(graph_class)}.'
+        else:
+            graph_class = CausalGraph
+        graph: CausalGraph = graph_class.from_adjacency_matrix(adjacency=adjacency, node_names=node_names)
+        return cls(graph=graph)
 
     def to_dict(self, include_meta: bool = True) -> dict:
         """
@@ -267,32 +288,66 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
         return '\n'.join(networkx.generate_gml(self.to_networkx()))
 
     @classmethod
-    def from_dict(cls, d: dict) -> Skeleton:
-        """Construct a `cai_causal_graph.causal_graph.Skeleton` instance from a dictionary."""
-        return cls(graph=CausalGraph.from_dict(d))
+    def from_dict(cls, d: dict, graph_class: Union[Type[CausalGraph], None] = None) -> Skeleton:
+        """
+        Instantiate a `cai_causal_graph.causal_graph.Skeleton` object from a dictionary.
 
-    @staticmethod
-    def from_networkx(g: networkx.Graph) -> Skeleton:
+        :param d: The dictionary representation of the skeleton.
+        :param graph_class: The appropriate subclass of `cai_causal_graph.causal_graph.CausalGraph` to use. If `None`,
+            which is the default, `cai_causal_graph.causal_graph.CausalGraph` will be used. This is to ensure the new
+            `cai_causal_graph.causal_graph.Skeleton` object has the correct node class type.
+        :return: A new `cai_causal_graph.causal_graph.Skeleton` based on the provided dictionary.
         """
-        Return an instance of `cai_causal_graph.causal_graph.Skeleton` constructed from the provided `networkx.Graph`
-        object.
+        if graph_class is not None:
+            assert issubclass(
+                graph_class, CausalGraph
+            ), f'The provided graph_class is not a subclass of CausalGraph. Got type {type(graph_class)}.'
+        else:
+            graph_class = CausalGraph
+        return cls(graph=graph_class.from_dict(d))
+
+    @classmethod
+    def from_networkx(cls, g: networkx.Graph, graph_class: Union[Type[CausalGraph], None] = None) -> Skeleton:
         """
+        Instantiate a `cai_causal_graph.causal_graph.Skeleton` object from a `networkx.Graph`.
+
+        :param g: The `networkx.Graph` representing the skeleton.
+        :param graph_class: The appropriate subclass of `cai_causal_graph.causal_graph.CausalGraph` to use. If `None`,
+            which is the default, `cai_causal_graph.causal_graph.CausalGraph` will be used. This is to ensure the new
+            `cai_causal_graph.causal_graph.Skeleton` object has the correct node class type.
+        :return: A new `cai_causal_graph.causal_graph.Skeleton` based on the `networkx.Graph`.
+        """
+        if graph_class is not None:
+            assert issubclass(
+                graph_class, CausalGraph
+            ), f'The provided graph_class is not a subclass of CausalGraph. Got type {type(graph_class)}.'
+        else:
+            graph_class = CausalGraph
         # Convert node names to strings.
-        node_names: List[str] = [Node.identifier_from(CausalGraph.coerce_to_nodelike(node)) for node in g.nodes()]
-        return Skeleton.from_adjacency_matrix(networkx.to_numpy_array(g), node_names)  # type: ignore
+        node_names: List[str] = [
+            graph_class._NodeCls.identifier_from(graph_class.coerce_to_nodelike(node)) for node in g.nodes()
+        ]
+        return cls.from_adjacency_matrix(networkx.to_numpy_array(g), node_names, graph_class)  # type: ignore
 
-    @staticmethod
-    def from_gml_string(gml: str) -> Skeleton:
+    @classmethod
+    def from_gml_string(cls, gml: str, graph_class: Union[Type[CausalGraph], None] = None) -> Skeleton:
         """
-        Return an instance of `cai_causal_graph.causal_graph.Skeleton` constructed from the provided Graph Modelling
-        Language (GML) string.
+        Instantiate a `cai_causal_graph.causal_graph.Skeleton` object from a Graph Modelling Language (GML) string.
+
+        :param gml: The GML string representing the skeleton.
+        :param graph_class: The appropriate subclass of `cai_causal_graph.causal_graph.CausalGraph` to use. If `None`,
+            which is the default, `cai_causal_graph.causal_graph.CausalGraph` will be used. This is to ensure the new
+            `cai_causal_graph.causal_graph.Skeleton` object has the correct node class type.
+        :return: A new `cai_causal_graph.causal_graph.Skeleton` based on the provided GML string.
         """
         g = networkx.parse_gml(gml)
-        return Skeleton.from_networkx(g)
+        return cls.from_networkx(g, graph_class)
 
     def copy(self) -> Skeleton:
         """Copy a `cai_causal_graph.causal_graph.Skeleton` instance."""
-        return Skeleton.from_dict(self.to_dict())
+        new_skeleton = self.__class__.from_dict(self.to_dict())
+        assert isinstance(new_skeleton, self.__class__)  # for linting and sanity check
+        return new_skeleton
 
     def __repr__(self) -> str:
         """Return a string description of the `cai_causal_graph.causal_graph.Skeleton` instance."""
@@ -814,9 +869,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
         identifier = self._check_node_exists(identifier)
 
-        node = self._NodeCls(identifier, variable_type=variable_type)
-
-        node.meta = meta if meta is not None else dict()
+        node = self._NodeCls(identifier, meta=meta, variable_type=variable_type)
 
         self._nodes_by_identifier[identifier] = node
 
@@ -1944,35 +1997,36 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
         return graph
 
-    @staticmethod
-    def from_networkx(g: networkx.Graph) -> CausalGraph:
+    @classmethod
+    def from_networkx(cls, g: networkx.Graph) -> CausalGraph:
         """Construct a `cai_causal_graph.causal_graph.CausalGraph` instance from a `networkx.Graph` instance."""
         # Check graph type.
         if isinstance(g, networkx.MultiGraph) or isinstance(g, networkx.MultiDiGraph):
             raise CausalGraphErrors.InvalidNetworkXError(
-                f'CausalGraph cannot be constructed from networkx.MultiGraph or networkx.MultiDiGraph. However, the '
-                f'provided graph is of type: {type(g)}.'
+                f'{cls.__class__} cannot be constructed from networkx.MultiGraph or networkx.MultiDiGraph. However, '
+                f'the provided graph is of type: {type(g)}.'
             )
         # Convert node names to strings.
-        node_names: List[str] = [Node.identifier_from(CausalGraph.coerce_to_nodelike(node)) for node in g.nodes()]
-        return CausalGraph.from_adjacency_matrix(networkx.to_numpy_array(g), node_names)  # type: ignore
+        node_names: List[str] = [cls._NodeCls.identifier_from(cls.coerce_to_nodelike(node)) for node in g.nodes()]
+        return cls.from_adjacency_matrix(networkx.to_numpy_array(g), node_names)  # type: ignore
 
-    @staticmethod
-    def from_skeleton(skeleton: Skeleton) -> CausalGraph:
+    @classmethod
+    def from_skeleton(cls, skeleton: Skeleton) -> CausalGraph:
         """
         Construct a `cai_causal_graph.causal_graph.CausalGraph` instance from a
         `cai_causal_graph.causal_graph.Skeleton` instance.
         """
-        return CausalGraph.from_networkx(skeleton.to_networkx())
+        assert isinstance(skeleton, Skeleton), f'Expected skeleton to be of type Skeleton, but got {type(skeleton)}.'
+        return cls.from_networkx(skeleton.to_networkx())
 
-    @staticmethod
-    def from_gml_string(gml: str) -> CausalGraph:
+    @classmethod
+    def from_gml_string(cls, gml: str) -> CausalGraph:
         """
         Return an instance of `cai_causal_graph.causal_graph.CausalGraph` constructed from the provided Graph Modelling
         Language (GML) string.
         """
         g = networkx.parse_gml(gml)
-        return CausalGraph.from_networkx(g)
+        return cls.from_networkx(g)
 
     @classmethod
     def from_adjacency_matrix(
@@ -2014,7 +2068,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             node_names = [f'node_{i}' for i in range(adjacency.shape[0])]
 
         # coerce node names into NodeLike to obtain the identifiers of the created nodes
-        nodes = [CausalGraph.coerce_to_nodelike(node) for node in node_names]  # type: ignore
+        nodes = [cls.coerce_to_nodelike(node) for node in node_names]  # type: ignore
 
         # Add edges. Any conversion from BasicFeature or BasicTarget is handled by the add_edge method.
         graph = cls()

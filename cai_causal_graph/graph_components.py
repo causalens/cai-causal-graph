@@ -220,7 +220,7 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
             'node_class': self.__class__.__name__,
         }
         if include_meta:
-            node_dict['meta'] = deepcopy(self.meta)   # type: ignore
+            node_dict['meta'] = self.meta  # type: ignore
 
         return node_dict
 
@@ -271,7 +271,8 @@ class TimeSeriesNode(Node):
             `cai_causal_graph.type_definitions.NodeVariableType` enum. Default is `NodeVariableType.UNSPECIFIED`.
         """
         if time_lag is not None and variable_name is not None:
-            # if identifier is not None and both time_lag and variable_name are provided, check that the identifier is correct
+            # if identifier is not None and both time_lag and variable_name are provided,
+            # check that the identifier is correct.
             rec_identifier = get_name_with_lag(variable_name, time_lag)
             assert identifier is None or identifier == rec_identifier, (
                 'The provided identifier does not match the provided time lag and variable name. Either provide a '
@@ -293,7 +294,8 @@ class TimeSeriesNode(Node):
 
         # populate the metadata for each node
         if meta is not None:
-            meta = meta.copy()
+            # need to copy it as we update it below; don't want to change dict outside scope of this constructor
+            meta = deepcopy(meta)
             meta_time_lag = meta.get(TIME_LAG)
             meta_variable_name = meta.get(VARIABLE_NAME)
             if meta_time_lag is not None and meta_time_lag != time_lag:
@@ -664,6 +666,6 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         }
 
         if include_meta:
-            edge_dict['meta'] = deepcopy(self.meta)
+            edge_dict['meta'] = self.meta
 
         return edge_dict

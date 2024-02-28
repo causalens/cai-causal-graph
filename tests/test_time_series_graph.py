@@ -1065,7 +1065,7 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         self.assertTrue(self.tsdag.__eq__(reconstruction, True))
 
     def test_from_skeleton(self):
-        reconstruction = CausalGraph.from_skeleton(self.tsdag.skeleton)
+        reconstruction = TimeSeriesCausalGraph.from_skeleton(self.tsdag.skeleton)
 
         # The reconstruction won't have directions so should just match skeleton.
 
@@ -1080,8 +1080,8 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         # Also confirm that equality method works. Again reconstruction won't have directions so just check skeletons.
         self.assertEqual(self.tsdag.skeleton, reconstruction.skeleton)
 
-        # deep equality should fail as time awareness is lost and loses meta data for nodes.
-        self.assertFalse(self.tsdag.skeleton.__eq__(reconstruction.skeleton, True))
+        # deep equality passes as we maintain time awareness and metadata for nodes.
+        self.assertTrue(self.tsdag.skeleton.__eq__(reconstruction.skeleton, True))
 
     def test_get_topological_order(self):
         g = TimeSeriesCausalGraph()
