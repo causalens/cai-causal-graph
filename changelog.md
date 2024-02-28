@@ -29,6 +29,8 @@
       were also changed to class methods for consistency. This change is transparent to the user.
 - Fixed a bug where the `cai_causal_graph.type_definitions.NodeVariableType` was not synced between the
   `cai_causal_graph.causal_graph.CausalGraph` and `cai_causal_graph.causal_graph.Skeleton`.
+- Changed `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_adjacency_matrices` from a static method
+  to a class method to align with other `from_` methods.
 - Updated `numpy` dependency from `"^1.18.0"` to `"^1.20.0"` and allow different `numpy` versions in the
   `poetry.lock` for `python` `3.8` and `3.9` - `3.12`. This is to allow specific versions for `3.8` and the others
   as there is no version of `numpy` that supports them all.
