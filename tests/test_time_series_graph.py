@@ -582,30 +582,32 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
                 self.assertEqual(edge.get_edge_type(), EdgeType.DIRECTED_EDGE)
 
         # test for the bugfix
-        edge_pairs = [('node_0', 'node_2'),
-         ('node_0 lag(n=1)', 'node_2'),
-         ('node_0 lag(n=2)', 'node_0'),
-         ('node_0 lag(n=2)', 'node_4'),
-         ('node_1', 'node_3'),
-         ('node_1 lag(n=1)', 'node_3'),
-         ('node_1 lag(n=2)', 'node_0'),
-         ('node_1 lag(n=2)', 'node_2'),
-         ('node_1 lag(n=2)', 'node_3'),
-         ('node_2 lag(n=2)', 'node_0'),
-         ('node_3 lag(n=2)', 'node_0'),
-         ('node_3 lag(n=2)', 'node_3'),
-         ('node_3 lag(n=2)', 'node_4'),
-         ('node_4', 'node_1'),
-         ('node_4', 'node_3'),
-         ('node_4 lag(n=1)', 'node_1'),
-         ('node_4 lag(n=1)', 'node_3'),
-         ('node_4 lag(n=2)', 'node_1'),
-         ('node_4 lag(n=2)', 'node_2'),
-         ('node_4 lag(n=2)', 'node_3')]
+        edge_pairs = [
+            ('node_0', 'node_2'),
+            ('node_0 lag(n=1)', 'node_2'),
+            ('node_0 lag(n=2)', 'node_0'),
+            ('node_0 lag(n=2)', 'node_4'),
+            ('node_1', 'node_3'),
+            ('node_1 lag(n=1)', 'node_3'),
+            ('node_1 lag(n=2)', 'node_0'),
+            ('node_1 lag(n=2)', 'node_2'),
+            ('node_1 lag(n=2)', 'node_3'),
+            ('node_2 lag(n=2)', 'node_0'),
+            ('node_3 lag(n=2)', 'node_0'),
+            ('node_3 lag(n=2)', 'node_3'),
+            ('node_3 lag(n=2)', 'node_4'),
+            ('node_4', 'node_1'),
+            ('node_4', 'node_3'),
+            ('node_4 lag(n=1)', 'node_1'),
+            ('node_4 lag(n=1)', 'node_3'),
+            ('node_4 lag(n=2)', 'node_1'),
+            ('node_4 lag(n=2)', 'node_2'),
+            ('node_4 lag(n=2)', 'node_3'),
+        ]
 
         # create the corresponding graph
         tsdag = TimeSeriesCausalGraph()
-        for u,v in edge_pairs:
+        for u, v in edge_pairs:
             tsdag.add_edge(u, v)
 
         # get the adjacency matrices from the tsdag
