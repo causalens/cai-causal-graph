@@ -6,6 +6,8 @@
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` where the method was not handling properly
   undirected edges in the adjacency matrices.
 - Added `mypy-extensions` dependency as `"^1.0.0"` and moved `mypy` back to dev dependency (setting it as `"^1.8.0"`).
+- Fixed a bug in `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_adjacency_matrices` introduced in
+  the previous bug fix where the method was not handling properly undirected edges in the adjacency matrices.
 
 ## 0.4.4
 

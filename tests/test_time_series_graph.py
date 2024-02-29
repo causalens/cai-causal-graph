@@ -581,6 +581,42 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
                 self.assertLess(source.time_lag, destination.time_lag)
                 self.assertEqual(edge.get_edge_type(), EdgeType.DIRECTED_EDGE)
 
+        # test for the bugfix
+        edge_pairs = [('node_0', 'node_2'),
+         ('node_0 lag(n=1)', 'node_2'),
+         ('node_0 lag(n=2)', 'node_0'),
+         ('node_0 lag(n=2)', 'node_4'),
+         ('node_1', 'node_3'),
+         ('node_1 lag(n=1)', 'node_3'),
+         ('node_1 lag(n=2)', 'node_0'),
+         ('node_1 lag(n=2)', 'node_2'),
+         ('node_1 lag(n=2)', 'node_3'),
+         ('node_2 lag(n=2)', 'node_0'),
+         ('node_3 lag(n=2)', 'node_0'),
+         ('node_3 lag(n=2)', 'node_3'),
+         ('node_3 lag(n=2)', 'node_4'),
+         ('node_4', 'node_1'),
+         ('node_4', 'node_3'),
+         ('node_4 lag(n=1)', 'node_1'),
+         ('node_4 lag(n=1)', 'node_3'),
+         ('node_4 lag(n=2)', 'node_1'),
+         ('node_4 lag(n=2)', 'node_2'),
+         ('node_4 lag(n=2)', 'node_3')]
+
+        # create the corresponding graph
+        tsdag = TimeSeriesCausalGraph()
+        for u,v in edge_pairs:
+            tsdag.add_edge(u, v)
+
+        # get the adjacency matrices from the tsdag
+        adj_matrices = tsdag.adjacency_matrices
+
+        # create the graph from the adjacency matrices
+        tsdag_2 = TimeSeriesCausalGraph.from_adjacency_matrices(adj_matrices, tsdag.variables)
+
+        # check that the graphs are equal (we need to do`get_minimal_graph` to remove the floating nodes)
+        self.assertEqual(tsdag, tsdag_2.get_minimal_graph())
+
     def test_summary_graph(self):
         summary_graph = self.tsdag.get_summary_graph()
         # the graph should be  X3 <- X1 -> X2
