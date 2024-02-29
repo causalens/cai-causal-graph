@@ -1106,13 +1106,14 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         # create a map between time delta and the index in the full adjacency matrix
         time_delta_to_index = {time_delta: i for i, time_delta in enumerate(adjacency_matrices)}
+        n_time_delta = len(adjacency_matrices)
 
         for time_delta, adjacency_matrix in adjacency_matrices.items():
             for row, column in zip(*numpy.where(adjacency_matrix)):
                 # add 1 to the row and column to account for the time delta
                 adjacency_matrix_full[
-                    time_delta_to_index[time_delta] + ((shape[0] - 1) * row),
-                    time_delta_to_index[0] + ((shape[0] - 1) * column),
+                    time_delta_to_index[time_delta] + (n_time_delta * row),
+                    time_delta_to_index[0] + (n_time_delta * column),
                 ] = 1
 
         return cls.from_adjacency_matrix(adjacency_matrix_full, node_names)  # type: ignore
