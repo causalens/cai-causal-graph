@@ -1014,6 +1014,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         cls,
         adjacency_matrices: Dict[int, numpy.ndarray],
         variable_names: Optional[List[Union[NodeLike, int]]] = None,
+        prune: bool = False,
     ) -> TimeSeriesCausalGraph:
         """
         Return a time series causal graph from a dictionary of adjacency matrices. Keys are the time deltas.
@@ -1021,8 +1022,6 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         For example, the adjacency matrix with time delta -1 is stored in adjacency_matrices[-1] and would correspond
         to X-1 -> X, where X is the set of nodes.
-
-        Moreover, if floating nodes are present, only the contemporaneous nodes will be added to the graph.
 
         Example:
         >>> import numpy
@@ -1054,6 +1053,8 @@ class TimeSeriesCausalGraph(CausalGraph):
         :param adjacency_matrices: A dictionary of adjacency matrices. Keys are the time delta.
         :param variable_names: A list of variable names. If not provided, the variable names are integers starting
             from 0. Node names must correspond to the variable names and must not contain the lag.
+        :param prune: Whether to prune the graph. If True, the graph will be pruned to remove any lagged floating nodes
+            that are not connected to any other nodes. Default is False.
         :return: A time series causal graph.
         """
         assert isinstance(adjacency_matrices, dict)
@@ -1116,18 +1117,37 @@ class TimeSeriesCausalGraph(CausalGraph):
                     time_delta_to_index[0] + (n_time_delta * column),
                 ] = 1
 
-        return cls.from_adjacency_matrix(adjacency_matrix_full, node_names)  # type: ignore
+        graph = cls.from_adjacency_matrix(adjacency_matrix_full, node_names)  # type: ignore
+
+        # remove all the floating lagged node
+        if prune:
+            for node in graph.get_nodes():
+                # count the number of inbound and outbound edges
+                count = node.count_inbound_edges() + node.count_outbound_edges()
+
+                if node.time_lag != 0 and count == 0:
+                    graph.delete_node(node.identifier)
+
+        return graph
 
     @property
-    def adjacency_matrices(self) -> Dict[int, numpy.ndarray]:
+    def adjacency_matrices(self, return_minimal: bool = True) -> Dict[int, numpy.ndarray]:
         """
-        Return the adjacency matrix dictionary of the minimal causal graph.
+        Return the adjacency matrix dictionary.
 
         The keys are the time deltas and the values are the adjacency matrices.
+
+        :param return_minimal: Whether to return the adjacency matrices for the minimal graph. If False, the adjacency
+            matrices for the full graph are returned. Default is True.
+
         """
         adjacency_matrices: Dict[int, numpy.ndarray] = {}
-        # get the minimal graph
-        graph = self.get_minimal_graph()
+
+        if return_minimal:
+            # get the minimal graph
+            graph = self.get_minimal_graph()
+        else:
+            graph = self
 
         if self.variables is None:
             return adjacency_matrices
