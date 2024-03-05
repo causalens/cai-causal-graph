@@ -1014,7 +1014,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         cls,
         adjacency_matrices: Dict[int, numpy.ndarray],
         variable_names: Optional[List[Union[NodeLike, int]]] = None,
-        prune: bool = False,
+        construct_minimal: bool = True,
     ) -> TimeSeriesCausalGraph:
         """
         Return a time series causal graph from a dictionary of adjacency matrices. Keys are the time deltas.
@@ -1053,8 +1053,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         :param adjacency_matrices: A dictionary of adjacency matrices. Keys are the time delta.
         :param variable_names: A list of variable names. If not provided, the variable names are integers starting
             from 0. Node names must correspond to the variable names and must not contain the lag.
-        :param prune: Whether to prune the graph. If True, the graph will be pruned to remove any lagged floating nodes
-            that are not connected to any other nodes. Default is False.
+        :param construct_minimal: Whether to return a minimal time series graph. Default is True.
         :return: A time series causal graph.
         """
         assert isinstance(adjacency_matrices, dict)
@@ -1119,19 +1118,13 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         graph = cls.from_adjacency_matrix(adjacency_matrix_full, node_names)  # type: ignore
 
-        # remove all the floating lagged node
-        if prune:
-            for node in graph.get_nodes():
-                # count the number of inbound and outbound edges
-                count = node.count_inbound_edges() + node.count_outbound_edges()
-
-                if node.time_lag != 0 and count == 0:
-                    graph.delete_node(node.identifier)
+        if construct_minimal:
+            graph = graph.get_minimal_graph()
 
         return graph
 
     @property
-    def adjacency_matrices(self, return_minimal: bool = True) -> Dict[int, numpy.ndarray]:
+    def adjacency_matrices(self) -> Dict[int, numpy.ndarray]:
         """
         Return the adjacency matrix dictionary.
 
@@ -1143,13 +1136,10 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         adjacency_matrices: Dict[int, numpy.ndarray] = {}
 
-        if return_minimal:
-            # get the minimal graph
-            graph = self.get_minimal_graph()
-        else:
-            graph = self
+        # get the minimal graph
+        graph = self.get_minimal_graph()
 
-        if self.variables is None:
+        if graph.variables is None:
             return adjacency_matrices
 
         for edge in graph.edges:
@@ -1169,14 +1159,14 @@ class TimeSeriesCausalGraph(CausalGraph):
 
             if edge.get_edge_type() == EdgeType.DIRECTED_EDGE:
                 adjacency_matrices[source_lag][
-                    self.variables.index(source_variable_name), self.variables.index(destination_variable_name)
+                    graph.variables.index(source_variable_name), graph.variables.index(destination_variable_name)
                 ] = 1
             elif edge.get_edge_type() == EdgeType.UNDIRECTED_EDGE:
                 adjacency_matrices[source_lag][
-                    self.variables.index(source_variable_name), self.variables.index(destination_variable_name)
+                    graph.variables.index(source_variable_name), graph.variables.index(destination_variable_name)
                 ] = 1
                 adjacency_matrices[source_lag][
-                    self.variables.index(destination_variable_name), self.variables.index(source_variable_name)
+                    graph.variables.index(destination_variable_name), graph.variables.index(source_variable_name)
                 ] = 1
             else:
                 raise TypeError(

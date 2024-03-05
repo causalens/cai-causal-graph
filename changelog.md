@@ -6,8 +6,13 @@
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` where the method was not handling properly
   undirected edges in the adjacency matrices.
 - Added `mypy-extensions` dependency as `"^1.0.0"` and moved `mypy` back to dev dependency (setting it as `"^1.8.0"`).
-- Fixed a bug in `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_adjacency_matrices` introduced in
-  the previous bug fix where the method was not handling properly undirected edges in the adjacency matrices.
+- Fixed a bug in the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_adjacency_matrices`
+  method of `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`, introduced in the previous bug fix
+  where the method was not handling properly undirected edges in the adjacency matrices.
+- Added the boolean keyword argument `construct_minimal` in
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_adjacency_matrices` to allow the user to specify
+  whether to construct a minimal graph from adjacency matrices. Default is `True`, making the change backwards
+  compatible.
 
 ## 0.4.4
 
