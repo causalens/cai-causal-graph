@@ -1150,7 +1150,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                 edge.source.meta[TIME_LAG],
             )
             if source_lag not in adjacency_matrices:
-                adjacency_matrices[source_lag] = numpy.zeros((len(self.variables), len(self.variables)))
+                adjacency_matrices[source_lag] = numpy.zeros((len(graph.variables), len(graph.variables)))
 
             destination_variable_name, _ = (
                 edge.destination.meta[VARIABLE_NAME],
