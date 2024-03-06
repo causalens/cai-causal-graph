@@ -157,15 +157,19 @@ class TestConversions(unittest.TestCase):
         self.assertNotEqual(node, tsnode)
 
         self.assertDictEqual(node_dict, Node.from_dict(node_dict).to_dict())
-        self.assertNotEqual(node_dict, TimeSeriesNode.from_dict(node_dict).to_dict())  # not equal due to meta
+        self.assertNotEqual(
+            node_dict, TimeSeriesNode.from_dict(node_dict).to_dict()
+        )  # not equal due to meta + node class
 
         self.assertNotEqual(node_dict, Node.from_dict(tsnode_dict).to_dict())  # not equal due to meta
-        self.assertNotEqual(node_dict, TimeSeriesNode.from_dict(tsnode_dict).to_dict())  # not equal due to meta
+        self.assertNotEqual(
+            node_dict, TimeSeriesNode.from_dict(tsnode_dict).to_dict()
+        )  # not equal due to meta + node class
 
-        self.assertNotEqual(tsnode_dict, Node.from_dict(node_dict).to_dict())  # not equal due to meta
+        self.assertNotEqual(tsnode_dict, Node.from_dict(node_dict).to_dict())  # not equal due to meta + node class
         self.assertDictEqual(tsnode_dict, TimeSeriesNode.from_dict(node_dict).to_dict())
 
-        self.assertNotEqual(tsnode_dict, Node.from_dict(tsnode_dict).to_dict())  # not equal due to meta
+        self.assertNotEqual(tsnode_dict, Node.from_dict(tsnode_dict).to_dict())  # not equal due to meta + node class
         self.assertDictEqual(tsnode_dict, TimeSeriesNode.from_dict(tsnode_dict).to_dict())
 
         self.assertEqual(node, Node.from_dict(node_dict))
@@ -183,7 +187,7 @@ class TestConversions(unittest.TestCase):
 
         self.assertDictEqual(tsnode.meta, {TIME_LAG: -1, VARIABLE_NAME: 'x01'})
 
-        self.assertNotEqual(tsnode_dict, Node.from_dict(tsnode_dict).to_dict())  # not equal due to meta
+        self.assertNotEqual(tsnode_dict, Node.from_dict(tsnode_dict).to_dict())  # not equal due to meta + node class
         self.assertDictEqual(tsnode_dict, TimeSeriesNode.from_dict(tsnode_dict).to_dict())
         self.assertEqual(tsnode, TimeSeriesNode.from_dict(tsnode_dict))
         self.assertTrue(tsnode.__eq__(TimeSeriesNode.from_dict(tsnode_dict), deep=True))
@@ -323,7 +327,108 @@ class TestConversions(unittest.TestCase):
         cg = CausalGraph.from_networkx(self.random_dag)
         tscg = TimeSeriesCausalGraph.from_causal_graph(cg)
 
+        # To / from dict and from_causal_graph
+        cg_dict = cg.to_dict()
+        tscg_dict = tscg.to_dict()
+
         self.assertNotEqual(cg, tscg)
-        self.assertEqual(cg, CausalGraph.from_dict(tscg.to_dict()))
+        self.assertNotEqual(cg_dict, tscg_dict)  # due to node class in dict
+
+        self.assertEqual(cg, CausalGraph.from_dict(cg_dict))
+        self.assertTrue(cg.__eq__(CausalGraph.from_dict(cg_dict), deep=True))
+
+        self.assertEqual(cg, CausalGraph.from_dict(tscg_dict))
         # This is False as meta on the second graph's nodes will have the time info
-        self.assertFalse(cg.__eq__(CausalGraph.from_dict(tscg.to_dict()), deep=True))
+        self.assertFalse(cg.__eq__(CausalGraph.from_dict(tscg_dict), deep=True))
+
+        self.assertNotEqual(tscg, CausalGraph.from_dict(cg_dict))
+        self.assertNotEqual(tscg, CausalGraph.from_dict(tscg_dict))
+
+        self.assertEqual(tscg, TimeSeriesCausalGraph.from_dict(cg_dict))
+        self.assertTrue(tscg.__eq__(TimeSeriesCausalGraph.from_dict(cg_dict), deep=True))
+
+        self.assertEqual(tscg, TimeSeriesCausalGraph.from_dict(tscg_dict))
+        self.assertTrue(tscg.__eq__(TimeSeriesCausalGraph.from_dict(tscg_dict), deep=True))
+
+        # To / from networkx
+        self.assertTrue(
+            networkx.utils.graphs_equal(
+                TimeSeriesCausalGraph.from_networkx(self.random_dag).to_networkx(), self.random_dag
+            )
+        )
+        tscg = TimeSeriesCausalGraph.from_networkx(self.random_dag)
+        self.assertEqual(tscg, TimeSeriesCausalGraph.from_networkx(self.random_dag))
+        self.assertTrue(tscg.__eq__(TimeSeriesCausalGraph.from_networkx(self.random_dag), deep=True))
+
+        # To / from dict
+        self.assertDictEqual(tscg.to_dict(), TimeSeriesCausalGraph.from_dict(tscg.to_dict()).to_dict())
+        self.assertEqual(tscg, TimeSeriesCausalGraph.from_dict(tscg.to_dict()))
+        self.assertTrue(tscg.__eq__(TimeSeriesCausalGraph.from_dict(tscg.to_dict()), deep=True))
+
+        # To / from adjacency matrix / to numpy
+        # Note that the adjacency matrix and nodes from TimeSeriesCG are sorted by node names.
+        # This is why in the setUp we must ensure that the node names are already sorted. Otherwise, we would need
+        # to reorder the adjacency matrix for comparison.
+        # It is OK though as tscg.adjacency_matrix and tscg.get_node_names() respect the same order.
+        self.assertEqual(
+            tscg, TimeSeriesCausalGraph.from_adjacency_matrix(self.random_dag_adj, node_names=self.node_names)
+        )
+        self.assertTrue(
+            tscg.__eq__(
+                TimeSeriesCausalGraph.from_adjacency_matrix(self.random_dag_adj, node_names=self.node_names), deep=True
+            )
+        )
+        numpy.testing.assert_array_equal(self.random_dag_adj, tscg.adjacency_matrix)
+        numpy.testing.assert_array_equal(
+            self.random_dag_adj,
+            TimeSeriesCausalGraph.from_adjacency_matrix(
+                self.random_dag_adj, node_names=self.node_names
+            ).adjacency_matrix,
+        )
+
+        nodes = cg.get_node_names()
+        self.assertListEqual(self.node_names, nodes)
+        adj, nodes = tscg.to_numpy()
+        numpy.testing.assert_array_equal(self.random_dag_adj, adj)
+        self.assertListEqual(self.node_names, nodes)
+
+        nodes = TimeSeriesCausalGraph.from_adjacency_matrix(
+            self.random_dag_adj, node_names=self.node_names
+        ).get_node_names()
+        self.assertListEqual(self.node_names, nodes)
+        adj, nodes = TimeSeriesCausalGraph.from_adjacency_matrix(
+            self.random_dag_adj, node_names=self.node_names
+        ).to_numpy()
+        numpy.testing.assert_array_equal(self.random_dag_adj, adj)
+        self.assertListEqual(self.node_names, nodes)
+
+        # To / from GML
+        self.assertEqual(
+            tscg.to_gml_string(), TimeSeriesCausalGraph.from_gml_string(tscg.to_gml_string()).to_gml_string()
+        )
+        self.assertEqual(tscg, TimeSeriesCausalGraph.from_gml_string(tscg.to_gml_string()))
+        self.assertTrue(tscg.__eq__(TimeSeriesCausalGraph.from_gml_string(tscg.to_gml_string()), deep=True))
+
+        # To / from Skeleton
+        # Obviously this will lose directional information so just check skeletons are same.
+        self.assertEqual(tscg.skeleton, TimeSeriesCausalGraph.from_skeleton(tscg.skeleton).skeleton)
+        self.assertTrue(tscg.skeleton.__eq__(TimeSeriesCausalGraph.from_skeleton(tscg.skeleton).skeleton, deep=True))
+        self.assertNotEqual(tscg, TimeSeriesCausalGraph.from_skeleton(tscg.skeleton))
+
+        # To / from adjacency matrices / to numpy_by_lag
+        tscg.add_edge('x01 lag(n=1)', 'x01')
+        adj_dict = tscg.adjacency_matrices
+        tscg = TimeSeriesCausalGraph.from_adjacency_matrices(adj_dict, variable_names=self.node_names)
+        self.assertEqual(adj_dict.keys(), tscg.adjacency_matrices.keys())
+        for k in adj_dict:
+            numpy.testing.assert_array_equal(adj_dict[k], tscg.adjacency_matrices[k])
+        numpy.testing.assert_array_equal(self.random_dag_adj, tscg.adjacency_matrices[0])
+
+        nodes = tscg.get_node_names()
+        self.assertNotEqual(self.node_names, nodes)  # as we have one extra node now
+        adj, nodes = tscg.to_numpy_by_lag()
+        self.assertEqual(adj_dict.keys(), adj.keys())
+        for k in adj_dict:
+            numpy.testing.assert_array_equal(adj_dict[k], adj[k])
+        numpy.testing.assert_array_equal(self.random_dag_adj, adj[0])
+        self.assertListEqual(self.node_names, nodes)  # as nodes are just variables so the lagged node name is removed
