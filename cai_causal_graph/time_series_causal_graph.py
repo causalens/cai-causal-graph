@@ -504,10 +504,6 @@ class TimeSeriesCausalGraph(CausalGraph):
 
                     lagged_destination_node = self._get_lagged_node(node=edge.destination, lag=-lag)
 
-                    # check if the new source node would go beyond the backward_steps
-                    if -lag - time_delta < -backward_steps:
-                        continue
-
                     lagged_source_node = self._get_lagged_node(node=edge.source, lag=-lag - time_delta)
 
                     # add the lagged edge
