@@ -619,9 +619,10 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         # check that the graphs are equal
         self.assertEqual(tsdag, tsdag_2)
 
-        # chek that the adjacency matrices are the same
-        for key, value in adj_matrices.items():
-            numpy.testing.assert_equal(tsdag_2.adjacency_matrices[key], adj_matrices[key])
+        # check that the adjacency matrices are the same
+        self.assertEqual(adj_matrices.keys(), tsdag_2.adjacency_matrices.keys())
+        for k in adj_matrices:
+            numpy.testing.assert_array_equal(adj_matrices[k], tsdag_2.adjacency_matrices[k])
 
         tsdag_2 = TimeSeriesCausalGraph.from_adjacency_matrices(adj_matrices, tsdag.variables, construct_minimal=False)
         self.assertNotEqual(tsdag, tsdag_2)
