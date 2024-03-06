@@ -581,7 +581,8 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
                 self.assertLess(source.time_lag, destination.time_lag)
                 self.assertEqual(edge.get_edge_type(), EdgeType.DIRECTED_EDGE)
 
-        # test for the bugfix where the are floating lagged nodes
+    def test_from_adjacency_matrices_floating_nodes(self):
+        # test for the bugfix where there are floating lagged nodes
         edge_pairs = [
             ('node_0', 'node_2'),
             ('node_0 lag(n=1)', 'node_2'),
