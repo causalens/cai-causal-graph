@@ -2,13 +2,13 @@
 
 ## NEXT
 
-- Fixed a bug in the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_adjacency_matrices`
-  method of `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`, introduced in the previous bug fix
-  where the method was not handling properly undirected edges in the adjacency matrices.
-- Added the boolean keyword argument `construct_minimal` in
+- Added the Boolean keyword argument `construct_minimal` in
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_adjacency_matrices` to allow the user to specify
   whether to construct a minimal graph from adjacency matrices. Default is `True`, making the change backwards
   compatible.
+- Fixed a bug in the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_adjacency_matrices`
+  method of `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`, introduced in the previous bug fix
+  where the method was not handling properly undirected edges in the adjacency matrices.
 - Removed the `return_minimal` argument from the
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.adjacency_matrices` property of
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` as this was never working.

@@ -582,6 +582,27 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
                 self.assertEqual(edge.get_edge_type(), EdgeType.DIRECTED_EDGE)
 
     def test_from_adjacency_matrices_floating_nodes(self):
+        tscg = TimeSeriesCausalGraph.from_adjacency_matrices({0: numpy.zeros((1, 1))})  # will have 1 floating node
+        self.assertFalse(tscg.is_empty())
+        self.assertEqual(1, len(tscg.nodes))
+        self.assertEqual(0, len(tscg.edges))
+        tscg = TimeSeriesCausalGraph.from_adjacency_matrices({-1: numpy.zeros((1, 1))})  # will have 1 floating node
+        self.assertFalse(tscg.is_empty())
+        self.assertEqual(1, len(tscg.nodes))
+        self.assertEqual(0, len(tscg.edges))
+        tscg = TimeSeriesCausalGraph.from_adjacency_matrices(
+            {0: numpy.zeros((1, 1))}, construct_minimal=False
+        )  # will have 1 floating node
+        self.assertFalse(tscg.is_empty())
+        self.assertEqual(1, len(tscg.nodes))
+        self.assertEqual(0, len(tscg.edges))
+        tscg = TimeSeriesCausalGraph.from_adjacency_matrices(
+            {-1: numpy.zeros((1, 1))}, construct_minimal=False
+        )  # will have 2 floating nodes
+        self.assertFalse(tscg.is_empty())
+        self.assertEqual(2, len(tscg.nodes))
+        self.assertEqual(0, len(tscg.edges))
+
         # test for the bugfix where there are floating lagged nodes
         edge_pairs = [
             ('node_0', 'node_2'),

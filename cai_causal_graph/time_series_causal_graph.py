@@ -1017,8 +1017,11 @@ class TimeSeriesCausalGraph(CausalGraph):
         construct_minimal: bool = True,
     ) -> TimeSeriesCausalGraph:
         """
-        Return a time series causal graph from a dictionary of adjacency matrices. Keys are the time deltas.
-        This is useful for converting a list of adjacency matrices into a time series causal graph.
+        Instantiate a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` from a dictionary of
+        adjacency matrices.
+
+        Keys are the time deltas. This is useful for converting a list of adjacency matrices into a
+        `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`.
 
         For example, the adjacency matrix with time delta -1 is stored in adjacency_matrices[-1] and would correspond
         to X-1 -> X, where X is the set of nodes.
@@ -1053,7 +1056,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         :param adjacency_matrices: A dictionary of adjacency matrices. Keys are the time delta.
         :param variable_names: A list of variable names. If not provided, the variable names are integers starting
             from 0. Node names must correspond to the variable names and must not contain the lag.
-        :param construct_minimal: Whether to return a minimal time series graph. Default is True.
+        :param construct_minimal: Whether to return a minimal time series graph. Default is `True`.
         :return: A time series causal graph.
         """
         assert isinstance(adjacency_matrices, dict)
