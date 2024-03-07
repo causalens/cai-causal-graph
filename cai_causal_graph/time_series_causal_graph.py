@@ -203,6 +203,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         # now extend the minimal graph to the current max and min lag to match the current graph
         self._stationary_graph = minimal_graph.extend_graph(-neg_lag, pos_lag)
+
         return self._stationary_graph
 
     def get_minimal_graph(self) -> TimeSeriesCausalGraph:
@@ -444,7 +445,10 @@ class TimeSeriesCausalGraph(CausalGraph):
         return self._summary_graph
 
     def extend_graph(
-        self, backward_steps: Optional[int] = None, forward_steps: Optional[int] = None
+        self,
+        backward_steps: Optional[int] = None,
+        forward_steps: Optional[int] = None,
+        include_all_parents: bool = False,
     ) -> TimeSeriesCausalGraph:
         """
         Return an extended graph.
@@ -460,6 +464,12 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         :param backward_steps: Number of steps to extend the graph backwards in time. If None, do not extend backwards.
         :param forward_steps: Number of steps to extend the graph forwards in time. If None, do not extend forwards.
+        :param include_all_parents: If `True`, any nodes and edges required to predict nodes up to `backward_steps` ago
+            will also be added, in addition to the nodes/edges normally added by this method. This may mean that nodes
+            further back in time than `backward_steps` will be added, if they are parents of any nodes up to
+            `backward_steps` ago. Default is `False`, meaning this extra nodes/edges are not added.
+            `include_all_parents` is only valid when specifying a `backward_steps`, and will have no effect on the
+            logic of `forward_steps`.
         :return: Extended graph with nodes for each variable at each time step from `backward_steps` to `forward_steps`.
         """
         # check steps are valid (positive integers) if not None
@@ -504,8 +514,9 @@ class TimeSeriesCausalGraph(CausalGraph):
 
                     lagged_destination_node = self._get_lagged_node(node=edge.destination, lag=-lag)
 
-                    # check if the new source node would go beyond the backward_steps
-                    if -lag - time_delta < -backward_steps:
+                    # check if the new source node would go beyond the backward_steps, and do not add if
+                    # include_all_parents is False
+                    if (-lag - time_delta < -backward_steps) and not include_all_parents:
                         continue
 
                     lagged_source_node = self._get_lagged_node(node=edge.source, lag=-lag - time_delta)
