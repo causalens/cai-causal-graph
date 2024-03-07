@@ -2,12 +2,12 @@
 
 ## NEXT
 
-- Added the Boolean keyword argument `include_all_parents` in
+- Added the Boolean keyword argument `include_all_parents` to
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_graph`. When `True` extra nodes may be added.
   Nodes and edges will be added as far back that all nodes up to `backward_steps` in the past have all their parents
   and inbound edges. This means that the extended graph may now have nodes at lags further back than `backward_steps`.
   Default is `False`, meaning the default behavior of the method has not changed.
-- Added the Boolean keyword argument `construct_minimal` in
+- Added the Boolean keyword argument `construct_minimal` to
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_adjacency_matrices` to allow the user to specify
   whether to construct a minimal graph from adjacency matrices. Default is `True`, making the change backwards
   compatible.
