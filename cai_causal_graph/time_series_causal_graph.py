@@ -202,7 +202,15 @@ class TimeSeriesCausalGraph(CausalGraph):
         neg_lag, pos_lag = lags[0], lags[-1]
 
         # now extend the minimal graph to the current max and min lag to match the current graph
-        self._stationary_graph = minimal_graph.extend_graph(-neg_lag, pos_lag)
+        extended_graph = minimal_graph.extend_graph(-neg_lag, pos_lag)
+
+        # extend_graph can add nodes/edges lagged further than the current furthest lag, delete if they were added
+        for node in extended_graph.nodes:
+            if node.time_lag < neg_lag:
+                extended_graph.delete_node(node)
+
+        self._stationary_graph = extended_graph
+
         return self._stationary_graph
 
     def get_minimal_graph(self) -> TimeSeriesCausalGraph:
