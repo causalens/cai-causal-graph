@@ -550,8 +550,8 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         matrices[-1][0, 1] = 1
         # there should be 3+1 nodes
         variables = ['X1', 'X2', 'X3']
-        # we need to do`get_minimal_graph` to remove the floating nodes
-        tsdag = TimeSeriesCausalGraph.from_adjacency_matrices(matrices, variables).get_minimal_graph()
+
+        tsdag = TimeSeriesCausalGraph.from_adjacency_matrices(matrices, variables)  # will be minimal graph by default
         nodes = ['X2', 'X3', 'X1 lag(n=1)']  # Only ones that should be in minimal graph.
         self.assertSetEqual(set(n.identifier for n in tsdag.nodes), set(nodes))
         self.assertEqual(len(tsdag.edges), 1)
@@ -580,6 +580,109 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
                 self.assertEqual(destination.time_lag, 0)
                 self.assertLess(source.time_lag, destination.time_lag)
                 self.assertEqual(edge.get_edge_type(), EdgeType.DIRECTED_EDGE)
+
+    def test_from_adjacency_matrices_floating_nodes(self):
+        tscg = TimeSeriesCausalGraph.from_adjacency_matrices({0: numpy.zeros((1, 1))})  # will have 1 floating node
+        self.assertFalse(tscg.is_empty())
+        self.assertEqual(1, len(tscg.nodes))
+        self.assertEqual(0, len(tscg.edges))
+        tscg = TimeSeriesCausalGraph.from_adjacency_matrices({-1: numpy.zeros((1, 1))})  # will have 1 floating node
+        self.assertFalse(tscg.is_empty())
+        self.assertEqual(1, len(tscg.nodes))
+        self.assertEqual(0, len(tscg.edges))
+        tscg = TimeSeriesCausalGraph.from_adjacency_matrices(
+            {0: numpy.zeros((1, 1))}, construct_minimal=False
+        )  # will have 1 floating node
+        self.assertFalse(tscg.is_empty())
+        self.assertEqual(1, len(tscg.nodes))
+        self.assertEqual(0, len(tscg.edges))
+        tscg = TimeSeriesCausalGraph.from_adjacency_matrices(
+            {-1: numpy.zeros((1, 1))}, construct_minimal=False
+        )  # will have 2 floating nodes
+        self.assertFalse(tscg.is_empty())
+        self.assertEqual(2, len(tscg.nodes))
+        self.assertEqual(0, len(tscg.edges))
+
+        # test for the bugfix where there are floating lagged nodes
+        edge_pairs = [
+            ('node_0', 'node_2'),
+            ('node_0 lag(n=1)', 'node_2'),
+            ('node_0 lag(n=2)', 'node_0'),
+            ('node_0 lag(n=2)', 'node_4'),
+            ('node_1', 'node_3'),
+            ('node_1 lag(n=1)', 'node_3'),
+            ('node_1 lag(n=2)', 'node_0'),
+            ('node_1 lag(n=2)', 'node_2'),
+            ('node_1 lag(n=2)', 'node_3'),
+            ('node_2 lag(n=2)', 'node_0'),
+            ('node_3 lag(n=2)', 'node_0'),
+            ('node_3 lag(n=2)', 'node_3'),
+            ('node_3 lag(n=2)', 'node_4'),
+            ('node_4', 'node_1'),
+            ('node_4', 'node_3'),
+            ('node_4 lag(n=1)', 'node_1'),
+            ('node_4 lag(n=1)', 'node_3'),
+            ('node_4 lag(n=2)', 'node_1'),
+            ('node_4 lag(n=2)', 'node_2'),
+            ('node_4 lag(n=2)', 'node_3'),
+        ]
+
+        # create the corresponding graph
+        tsdag = TimeSeriesCausalGraph()
+        for u, v in edge_pairs:
+            tsdag.add_edge(u, v)
+
+        # get the adjacency matrices from the tsdag
+        adj_matrices = tsdag.adjacency_matrices
+
+        # create the graph from the adjacency matrices
+        tsdag_2 = TimeSeriesCausalGraph.from_adjacency_matrices(adj_matrices, tsdag.variables)
+
+        # check that the graphs are equal
+        self.assertEqual(tsdag, tsdag_2)
+        self.assertTrue(tsdag.__eq__(tsdag_2, deep=True))
+
+        # check that the adjacency matrices are the same
+        self.assertEqual(adj_matrices.keys(), tsdag_2.adjacency_matrices.keys())
+        for k in adj_matrices:
+            numpy.testing.assert_array_equal(adj_matrices[k], tsdag_2.adjacency_matrices[k])
+
+        tsdag_2 = TimeSeriesCausalGraph.from_adjacency_matrices(adj_matrices, tsdag.variables, construct_minimal=False)
+        self.assertNotEqual(tsdag, tsdag_2)
+
+        # create a graph with a floating node
+        tsdag = TimeSeriesCausalGraph()
+        tsdag.add_node('X1')
+
+        self.assertDictEqual(tsdag.adjacency_matrices, {})
+        numpy.testing.assert_equal(tsdag.adjacency_matrix, numpy.zeros((1, 1)))
+
+        tsdag = TimeSeriesCausalGraph()
+        tsdag.add_edge('a', 'b')
+        tsdag.add_edge('a lag(n=1)', 'b lag(n=1)')
+        tsdag.add_edge('a lag(n=1)', 'a')
+        tsdag.add_edge('b lag(n=1)', 'b')
+
+        # get the adjacency matrices from the tsdag
+        adj_matrices = tsdag.adjacency_matrices
+
+        # check they correspond to the minimal graph
+        self.assertEqual(
+            TimeSeriesCausalGraph.from_adjacency_matrices(adj_matrices, tsdag.variables), tsdag.get_minimal_graph()
+        )
+        # test they are different if not minimal
+        self.assertNotEqual(
+            TimeSeriesCausalGraph.from_adjacency_matrices(
+                tsdag.adjacency_matrices, tsdag.variables, construct_minimal=False
+            ),
+            tsdag,
+        )
+
+        # test using the full adj matrix
+        self.assertEqual(TimeSeriesCausalGraph.from_adjacency_matrix(tsdag.adjacency_matrix, tsdag.nodes), tsdag)
+        self.assertTrue(
+            tsdag.__eq__(TimeSeriesCausalGraph.from_adjacency_matrix(tsdag.adjacency_matrix, tsdag.nodes), deep=True)
+        )
 
     def test_summary_graph(self):
         summary_graph = self.tsdag.get_summary_graph()
