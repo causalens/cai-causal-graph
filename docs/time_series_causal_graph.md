@@ -304,10 +304,10 @@ is obtained by extending (in time) the minimal graph with all the edges to the c
 ## Extended graph
 You can extend the graph in time by adding nodes for each variable at each time step from `backward_steps` to
 `forward_steps`. If a backward step of `n` is specified, it means that the graph will be extended in order to
-include nodes back to time `-n` and all the nodes connected to them as specified by the minimal graph. If a forward step
-of `n` is specified, it means the graph will be extended in order to include nodes forward to time `n` and all the nodes
-connected to them as specified by the minimal graph. If both `backward_steps` and `forward_steps` are `None`, the 
-original graph is returned.
+include nodes back to time `-n`, as well as any parents of these nodes at further lags, and all the edges between them 
+as determined by the minimal graph. If a forward step of `n` is specified, it means the graph will be extended in order 
+to include nodes forward to time `n` and all the nodes connected to them as specified by the minimal graph. If both 
+`backward_steps` and `forward_steps` are `None`, the original graph is returned.
 
 ```python
 from cai_causal_graph import TimeSeriesCausalGraph
