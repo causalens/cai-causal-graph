@@ -2,10 +2,11 @@
 
 ## NEXT
 
-- Changed the behavior of `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_graph` when
-  specifying a `backward_steps`. Now, nodes and edges will be added as far back that all nodes at `backward_steps` in
-  the past can be inferred. That is, all nodes up to `backward_steps` will now have all their inbound edges and their
-  parent nodes added. This means that the extended graph may now have nodes at lags further back than `backward_steps`.
+- Added the `include_all_parents` keyword argument to
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_graph`. When `True` extra nodes may be added.
+  Nodes and edges will be added as far back that all nodes up to `backward_steps` in the past have all their parents
+  and inbound edges. This means that the extended graph may now have nodes at lags further back than `backward_steps`.
+  Default is `False`, meaning the default behavior of the method has not changed.
 
 ## 0.4.5
 
