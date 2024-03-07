@@ -207,7 +207,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
     def get_minimal_graph(self) -> TimeSeriesCausalGraph:
         """
-        Return a minimal graph.
+        Return a minimal time series causal graph.
 
         The minimal graph is the graph with the minimal number of edges that is equivalent to the original graph.
         In other words, it is a graph that has no edges whose destination is not time delta 0.
@@ -1129,7 +1129,7 @@ class TimeSeriesCausalGraph(CausalGraph):
     @property
     def adjacency_matrices(self) -> Dict[int, numpy.ndarray]:
         """
-        Return the adjacency matrix dictionary.
+        Return the adjacency matrix dictionary of the minimal time series causal graph.
 
         The keys are the time deltas and the values are the adjacency matrices.
         """
@@ -1252,7 +1252,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
     def to_numpy_by_lag(self) -> Tuple[Dict[int, numpy.ndarray], List[str]]:
         """
-        Return the adjacency matrices of the time series causal graph ordered by the time delta.
+        Return the adjacency matrices of the minimal time series causal graph ordered by the time delta.
 
         Different time deltas are represented by different adjacency matrices.
         The keys of the dictionary are the time deltas and the values are the adjacency matrices.
