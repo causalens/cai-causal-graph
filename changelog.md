@@ -12,6 +12,9 @@
 - Fixed a bug in the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.to_numpy_by_lag` method of
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` where it was not always returning the correct
   variable names.
+- Fixed a bug in the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.adjacency_matrices` property of
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` where it was not looking at the variable names
+  of the minimal graph, as expected, but the variables names of the full graph.
 - Removed the `return_minimal` argument from the
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.adjacency_matrices` property of
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` as this was never working.
