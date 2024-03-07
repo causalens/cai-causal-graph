@@ -7,6 +7,22 @@
   Nodes and edges will be added as far back that all nodes up to `backward_steps` in the past have all their parents
   and inbound edges. This means that the extended graph may now have nodes at lags further back than `backward_steps`.
   Default is `False`, meaning the default behavior of the method has not changed.
+- Added the Boolean keyword argument `construct_minimal` in
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_adjacency_matrices` to allow the user to specify
+  whether to construct a minimal graph from adjacency matrices. Default is `True`, making the change backwards
+  compatible.
+- Fixed a bug in the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_adjacency_matrices`
+  method of `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` that was introduced in the previous
+  release. The method was not properly handling undirected edges in the adjacency matrices.
+- Fixed a bug in the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.to_numpy_by_lag` method of
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` where it was not always returning the correct
+  variable names.
+- Fixed a bug in the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.adjacency_matrices` property of
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` where it was not looking at the variable names
+  of the minimal graph, as expected, but the variables names of the full graph.
+- Removed the `return_minimal` argument from the
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.adjacency_matrices` property of
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` as this was never working.
 
 ## 0.4.5
 
