@@ -206,6 +206,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         # extend_graph can add nodes/edges lagged further than the current furthest lag, delete if they were added
         for node in extended_graph.nodes:
+            assert isinstance(node, TimeSeriesNode)   # For linting
             if node.time_lag < neg_lag:
                 extended_graph.delete_node(node)
 
