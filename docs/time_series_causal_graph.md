@@ -310,8 +310,9 @@ include nodes back to time `-n` and all the nodes connected to them as specified
 and edges will be added as far back that all nodes up to `backward_steps` in the past have all their parents and 
 inbound edges. This means that the extended graph may now have nodes at lags further back than `backward_steps`.
 If a forward step of `n` is specified, it means the graph will be extended in order to include nodes forward to time 
-`n` and all the nodes connected to them as specified by the minimal graph. If both `backward_steps` and `forward_steps` 
-are `None`, the original graph is returned.
+`n` and all the nodes connected to them as specified by the minimal graph. `include_all_parents` is only valid when 
+specifying a `backward_steps`, and will have no effect on the logic of `forward_steps`. If both `backward_steps` and 
+`forward_steps` are `None`, the original graph is returned.
 
 ```python
 from cai_causal_graph import TimeSeriesCausalGraph

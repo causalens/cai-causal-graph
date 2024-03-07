@@ -468,6 +468,8 @@ class TimeSeriesCausalGraph(CausalGraph):
             will also be added, in addition to the nodes/edges normally added by this method. This may mean that nodes
             further back in time than `backward_steps` will be added, if they are parents of any nodes up to
             `backward_steps` ago. Default is `False`, meaning this extra nodes/edges are not added.
+            `include_all_parents` is only valid when specifying a `backward_steps`, and will have no effect on the
+            logic of `forward_steps`.
         :return: Extended graph with nodes for each variable at each time step from `backward_steps` to `forward_steps`.
         """
         # check steps are valid (positive integers) if not None
