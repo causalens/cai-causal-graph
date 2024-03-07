@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.4.6
 
 - Added the Boolean keyword argument `include_all_parents` to
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_graph`. When `True` extra nodes may be added.
