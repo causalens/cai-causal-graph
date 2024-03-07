@@ -425,7 +425,8 @@ class TestConversions(unittest.TestCase):
         numpy.testing.assert_array_equal(self.random_dag_adj, tscg.adjacency_matrices[0])
 
         nodes = tscg.get_node_names()
-        self.assertNotEqual(self.node_names, nodes)  # as we have one extra node now
+        self.assertNotEqual(self.node_names, nodes)  # as we have one extra node now (lagged 'x01')
+        self.assertListEqual(self.node_names, tscg.variables)  # equal as it won't have lagged node
         adj, nodes = tscg.to_numpy_by_lag()
         self.assertEqual(adj_dict.keys(), adj.keys())
         for k in adj_dict:
