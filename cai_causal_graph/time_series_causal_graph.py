@@ -118,6 +118,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         self._summary_graph: Optional[CausalGraph] = None
         self._stationary_graph: Optional[TimeSeriesCausalGraph] = None
         self._minimal_graph: Optional[TimeSeriesCausalGraph] = None
+        self.lag_to_nodes, self.variable_name_to_nodes = self.cache_nodes()
 
     # Overwrite type annotations for linting and code completion.
     from_adjacency_matrix: Callable[  # type: ignore
@@ -723,6 +724,9 @@ class TimeSeriesCausalGraph(CausalGraph):
         identifier = self._check_node_exists(node)
         self._nodes_by_identifier[identifier] = node
 
+        if all(hasattr(self, attr) for attr in ['lag_to_nodes', 'variable_name_to_nodes']):
+            self.update_cache(node)
+
         return node
 
     @_reset_ts_graph_attributes
@@ -1279,14 +1283,41 @@ class TimeSeriesCausalGraph(CausalGraph):
         assert graph.variables is not None
         return adjacency_matrices, graph.variables
 
+    def cache_nodes(self):
+        """Populate the caches for efficient lookup."""
+        self.lag_to_nodes = {}
+        self.variable_name_to_nodes = {}
+        for node in self.get_nodes():
+            # Update lag-to-nodes cache
+            if node.time_lag not in self.lag_to_nodes:
+                self.lag_to_nodes[node.time_lag] = []
+            self.lag_to_nodes[node.time_lag].append(node)
+
+            # Update variable-name-to-nodes cache
+            if node.variable_name not in self.variable_name_to_nodes:
+                self.variable_name_to_nodes[node.variable_name] = []
+            self.variable_name_to_nodes[node.variable_name].append(node)
+        return self.lag_to_nodes, self.variable_name_to_nodes
+
+    def update_cache(self, node: TimeSeriesNode):
+        """Update the caches for efficient lookup."""
+        # Update lag-to-nodes cache
+        if node.time_lag not in self.lag_to_nodes:
+            self.lag_to_nodes[node.time_lag] = []
+        self.lag_to_nodes[node.time_lag].append(node)
+
+        # Update variable-name-to-nodes cache
+        if node.variable_name not in self.variable_name_to_nodes:
+            self.variable_name_to_nodes[node.variable_name] = []
+        self.variable_name_to_nodes[node.variable_name].append(node)
+
     def get_nodes_at_lag(self, time_lag: int = 0) -> List[TimeSeriesNode]:
         """
         Return all nodes at time delta `time_lag`.
 
         :param time_lag: Time lag to return nodes for. Default is `0`.
         """
-        # TODO Efficiency: don't loop through all nodes, by caching a lag -> node mapping: CAUSALAI-4384
-        return [node for node in self.get_nodes() if node.time_lag == time_lag]
+        return self.lag_to_nodes.get(time_lag, [])
 
     def get_nodes_for_variable_name(self, variable_name: str) -> List[TimeSeriesNode]:
         """
@@ -1294,8 +1325,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         :param variable_name: Variable name to return nodes for.
         """
-        # TODO Efficiency: don't loop through all nodes, by caching a variable -> node mapping: CAUSALAI-4384
-        return [node for node in self.get_nodes() if node.variable_name == variable_name]
+        return self.variable_name_to_nodes.get(variable_name, [])
 
     def get_contemporaneous_nodes(self, node: NodeLike) -> List[TimeSeriesNode]:
         """Return all nodes that are contemporaneous (i.e. have the same time_lag) to the provided node."""
