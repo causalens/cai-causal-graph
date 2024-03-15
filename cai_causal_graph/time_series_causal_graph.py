@@ -17,6 +17,7 @@ limitations under the License.
 from __future__ import annotations
 
 import logging
+from collections import defaultdict
 from copy import deepcopy
 from functools import wraps
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
@@ -68,6 +69,8 @@ class TimeSeriesCausalGraph(CausalGraph):
     _NodeCls: Type[TimeSeriesNode] = TimeSeriesNode
     _EdgeCls: Type[Edge] = Edge
     _SummaryGraphCls: Type[CausalGraph] = CausalGraph
+    lag_to_nodes: Dict[int, List[TimeSeriesNode]]
+    variable_name_to_nodes: Dict[str, List[TimeSeriesNode]]
 
     def __init__(
         self,
@@ -111,6 +114,9 @@ class TimeSeriesCausalGraph(CausalGraph):
             be created. If either or both are provided, but this is `False` (default), then the nodes will be added but
             not connected by edges.
         """
+        # Initialize caches for fast lookups
+        self.lag_to_nodes = defaultdict(list)
+        self.variable_name_to_nodes = defaultdict(list)
         super().__init__(input_list, output_list, fully_connected)
 
         # list of variables in the graph, i.e. discarding the lags (X1(t-1) and X1 are the same variable)
@@ -118,7 +124,6 @@ class TimeSeriesCausalGraph(CausalGraph):
         self._summary_graph: Optional[CausalGraph] = None
         self._stationary_graph: Optional[TimeSeriesCausalGraph] = None
         self._minimal_graph: Optional[TimeSeriesCausalGraph] = None
-        self.lag_to_nodes, self.variable_name_to_nodes = self.cache_nodes()
 
     # Overwrite type annotations for linting and code completion.
     from_adjacency_matrix: Callable[  # type: ignore
@@ -723,9 +728,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         identifier = self._check_node_exists(node)
         self._nodes_by_identifier[identifier] = node
-
-        if all(hasattr(self, attr) for attr in ['lag_to_nodes', 'variable_name_to_nodes']):
-            self.update_cache(node)
+        self.update_cache(node)
 
         return node
 
@@ -773,6 +776,9 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         See `cai_causal_graph.causal_graph.CausalGraph.delete_node` for more details.
         """
+        node = self.get_node(self._NodeCls.identifier_from(identifier))
+        assert isinstance(node, TimeSeriesNode)  # for linting
+        self.update_cache(node, operation='remove')
         super().delete_node(identifier)
 
     @_reset_ts_graph_attributes
@@ -1283,33 +1289,40 @@ class TimeSeriesCausalGraph(CausalGraph):
         assert graph.variables is not None
         return adjacency_matrices, graph.variables
 
-    def cache_nodes(self):
-        """Populate the caches for efficient lookup."""
-        self.lag_to_nodes = {}
-        self.variable_name_to_nodes = {}
-        for node in self.get_nodes():
-            # Update lag-to-nodes cache
+    def update_cache(self, node: TimeSeriesNode, operation: str = 'add'):
+        """Update the caches for efficient.
+
+        :param node: The node to add or remove.
+        :param operation: The operation to perform: 'add' (default) or 'remove'.
+        """
+        if operation == 'add':
+            # Update lag-to-nodes cache for addition
             if node.time_lag not in self.lag_to_nodes:
                 self.lag_to_nodes[node.time_lag] = []
             self.lag_to_nodes[node.time_lag].append(node)
 
-            # Update variable-name-to-nodes cache
+            # Update variable-name-to-nodes cache for addition
             if node.variable_name not in self.variable_name_to_nodes:
                 self.variable_name_to_nodes[node.variable_name] = []
             self.variable_name_to_nodes[node.variable_name].append(node)
-        return self.lag_to_nodes, self.variable_name_to_nodes
 
-    def update_cache(self, node: TimeSeriesNode):
-        """Update the caches for efficient lookup."""
-        # Update lag-to-nodes cache
-        if node.time_lag not in self.lag_to_nodes:
-            self.lag_to_nodes[node.time_lag] = []
-        self.lag_to_nodes[node.time_lag].append(node)
+        elif operation == 'remove':
+            # Handle removal from lag-to-nodes cache
+            if node.time_lag in self.lag_to_nodes and node in self.lag_to_nodes[node.time_lag]:
+                self.lag_to_nodes[node.time_lag].remove(node)
+                # Optionally, clean up the entry if the list is now empty
+                if not self.lag_to_nodes[node.time_lag]:
+                    del self.lag_to_nodes[node.time_lag]
 
-        # Update variable-name-to-nodes cache
-        if node.variable_name not in self.variable_name_to_nodes:
-            self.variable_name_to_nodes[node.variable_name] = []
-        self.variable_name_to_nodes[node.variable_name].append(node)
+            # Handle removal from variable-name-to-nodes cache
+            if (
+                node.variable_name in self.variable_name_to_nodes
+                and node in self.variable_name_to_nodes[node.variable_name]
+            ):
+                self.variable_name_to_nodes[node.variable_name].remove(node)
+                # Optionally, clean up the entry if the list is now empty
+                if not self.variable_name_to_nodes[node.variable_name]:
+                    del self.variable_name_to_nodes[node.variable_name]
 
     def get_nodes_at_lag(self, time_lag: int = 0) -> List[TimeSeriesNode]:
         """
@@ -1317,7 +1330,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         :param time_lag: Time lag to return nodes for. Default is `0`.
         """
-        return self.lag_to_nodes.get(time_lag, [])
+        return self.lag_to_nodes[time_lag]
 
     def get_nodes_for_variable_name(self, variable_name: str) -> List[TimeSeriesNode]:
         """
