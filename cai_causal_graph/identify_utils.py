@@ -20,7 +20,7 @@ import networkx
 from cai_causal_graph import CausalGraph, Skeleton
 from cai_causal_graph.exceptions import CausalGraphErrors
 from cai_causal_graph.graph_components import Node
-from cai_causal_graph.type_definitions import NodeLike
+from cai_causal_graph.type_definitions import EdgeType, NodeLike
 
 
 def _verify_identify_inputs(
@@ -387,3 +387,45 @@ def identify_markov_boundary(graph: Union[CausalGraph, Skeleton], node: NodeLike
         mb = graph.get_neighbors(node_id)
 
     return mb
+
+
+def identify_colliders(graph: CausalGraph, unshielded: bool = False) -> List[str]:
+    """
+    Identify all the collider nodes in the provided `graph`.
+
+    :param graph: The graph given by a `cai_causal_graph.causal_graph.CausalGraph` instance.
+    :param unshielded: If `True`, only unshielded colliders are returned. If `False`, all colliders are returned.
+        Default is `False`.
+    """
+    colliders = set()
+
+    bidirected_edges = [(edge.source.identifier, edge.destination.identifier) for edge in graph.get_bidirected_edges()]
+
+    # go through every node in the graph
+    for node in graph.get_node_names():
+        # the node z is collider if x <> z <> y, x -> z <- y, x <> z <- y, or x -> z <> y
+        neighbors = graph.get_neighbors(node)
+
+        counter = 0
+        for neighbor_node in neighbors:
+            # we need to check if the directed edge (neigh_node, node) exists
+            directed_exists = (
+                graph.edge_exists(neighbor_node, node)
+                and graph.get_edge(neighbor_node, node).edge_type == EdgeType.DIRECTED_EDGE
+            )
+            # we need to check if the bi-directed edge (neigh_node, node) or (node, neigh_node) exists
+            bidirected_exists = (neighbor_node, node) in bidirected_edges or (node, neighbor_node) in bidirected_edges
+            is_unshielded = not graph.edge_exists(neighbor_node, node) and not graph.edge_exists(node, neighbor_node)
+
+            condition = directed_exists or bidirected_exists
+
+            if condition:
+                if unshielded and not is_unshielded:
+                    continue
+
+                counter += 1
+                if counter == 2:
+                    colliders.add(node)
+                    break
+
+    return list(colliders)
