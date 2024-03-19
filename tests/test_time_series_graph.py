@@ -15,7 +15,6 @@ limitations under the License.
 """
 import json
 import unittest
-from collections import defaultdict
 
 import networkx
 import numpy
