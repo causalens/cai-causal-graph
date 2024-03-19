@@ -1847,7 +1847,6 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
         self.assertEqual(repr(cg['donut future(n=2)']), 'TimeSeriesNode("donut future(n=2)")')
 
     def test_get_nodes_for_variable_name(self):
-
         cg = TimeSeriesCausalGraph()
         cg.add_time_edge('a', -1, 'a', 0)
         cg.add_time_edge('a', -2, 'a', 0)
@@ -1887,14 +1886,32 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
             dict(ts_graph.lag_to_nodes),
             {0: [ts_graph['B'], ts_graph['C']], -1: [ts_graph['A lag(n=1)']], -2: [ts_graph['A lag(n=2)']]},
         )
+        self.assertDictEqual(
+            dict(ts_graph.variable_name_to_nodes),
+            {'B': [ts_graph['B']], 'C': [ts_graph['C']], 'A': [ts_graph['A lag(n=2)'], ts_graph['A lag(n=1)']]},
+        )
 
-    def test_node_cache_update_deletion(self):
+    def test_node_cache_update_removal(self):
         input_nodes = ['A lag(n=2)', 'A lag(n=1)', 'B']
 
         ts_graph = TimeSeriesCausalGraph(input_list=input_nodes, fully_connected=False)
 
         ts_graph.remove_node('A lag(n=2)')
         self.assertDictEqual(dict(ts_graph.lag_to_nodes), {0: [ts_graph['B']], -1: [ts_graph['A lag(n=1)']]})
+        self.assertDictEqual(
+            dict(ts_graph.variable_name_to_nodes), {'B': [ts_graph['B']], 'A': [ts_graph['A lag(n=1)']]}
+        )
+
+    def test_node_cache_update_deletion(self):
+        input_nodes = ['A lag(n=2)', 'A lag(n=1)', 'B']
+
+        ts_graph = TimeSeriesCausalGraph(input_list=input_nodes, fully_connected=False)
+
+        ts_graph.delete_node('A lag(n=2)')
+        self.assertDictEqual(dict(ts_graph.lag_to_nodes), {0: [ts_graph['B']], -1: [ts_graph['A lag(n=1)']]})
+        self.assertDictEqual(
+            dict(ts_graph.variable_name_to_nodes), {'A': [ts_graph['A lag(n=1)']], 'B': [ts_graph['B']]}
+        )
 
     def test_cache_when_from_causal_graph(self):
         cg = CausalGraph()
@@ -1904,3 +1921,6 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
         ts_graph = TimeSeriesCausalGraph.from_causal_graph(cg)
 
         self.assertDictEqual(dict(ts_graph.lag_to_nodes), {0: [ts_graph['A'], ts_graph['B'], ts_graph['C']]})
+        self.assertDictEqual(
+            dict(ts_graph.variable_name_to_nodes), {'A': [ts_graph['A']], 'B': [ts_graph['B']], 'C': [ts_graph['C']]}
+        )
