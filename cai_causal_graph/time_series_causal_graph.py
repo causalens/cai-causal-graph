@@ -1290,10 +1290,12 @@ class TimeSeriesCausalGraph(CausalGraph):
         return adjacency_matrices, graph.variables
 
     def add_node_to_cache(self, node: TimeSeriesNode):
+        """Add a node to the model caches."""
         self.lag_to_nodes[node.time_lag].append(node)
         self.variable_name_to_nodes[node.variable_name].append(node)
 
     def remove_node_from_cache(self, node: TimeSeriesNode):
+        """Remove a node to the model caches."""
         # Handle removal from lag-to-nodes cache
         if node.time_lag in self.lag_to_nodes and node in self.lag_to_nodes[node.time_lag]:
             self.lag_to_nodes[node.time_lag].remove(node)
