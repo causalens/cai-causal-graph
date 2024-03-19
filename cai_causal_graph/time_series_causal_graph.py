@@ -728,7 +728,8 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         identifier = self._check_node_exists(node)
         self._nodes_by_identifier[identifier] = node
-        self.update_cache(node)
+        # self.update_cache(node)
+        self.add_node_to_cache(node)
 
         return node
 
@@ -778,7 +779,8 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         node = self.get_node(self._NodeCls.identifier_from(identifier))
         assert isinstance(node, TimeSeriesNode)  # for linting
-        self.update_cache(node, operation='remove')
+        # self.update_cache(node, operation='remove')
+        self.remove_node_from_cache(node)
         super().delete_node(identifier)
 
     @_reset_ts_graph_attributes
@@ -1289,40 +1291,27 @@ class TimeSeriesCausalGraph(CausalGraph):
         assert graph.variables is not None
         return adjacency_matrices, graph.variables
 
-    def update_cache(self, node: TimeSeriesNode, operation: str = 'add'):
-        """Update the caches for efficient.
+    def add_node_to_cache(self, node: TimeSeriesNode):
+        self.lag_to_nodes[node.time_lag].append(node)
+        self.variable_name_to_nodes[node.variable_name].append(node)
 
-        :param node: The node to add or remove.
-        :param operation: The operation to perform: 'add' (default) or 'remove'.
-        """
-        if operation == 'add':
-            # Update lag-to-nodes cache for addition
-            if node.time_lag not in self.lag_to_nodes:
-                self.lag_to_nodes[node.time_lag] = []
-            self.lag_to_nodes[node.time_lag].append(node)
+    def remove_node_from_cache(self, node: TimeSeriesNode):
+        # Handle removal from lag-to-nodes cache
+        if node.time_lag in self.lag_to_nodes and node in self.lag_to_nodes[node.time_lag]:
+            self.lag_to_nodes[node.time_lag].remove(node)
+            # Optionally, clean up the entry if the list is now empty
+            if not self.lag_to_nodes[node.time_lag]:
+                del self.lag_to_nodes[node.time_lag]
 
-            # Update variable-name-to-nodes cache for addition
-            if node.variable_name not in self.variable_name_to_nodes:
-                self.variable_name_to_nodes[node.variable_name] = []
-            self.variable_name_to_nodes[node.variable_name].append(node)
-
-        elif operation == 'remove':
-            # Handle removal from lag-to-nodes cache
-            if node.time_lag in self.lag_to_nodes and node in self.lag_to_nodes[node.time_lag]:
-                self.lag_to_nodes[node.time_lag].remove(node)
-                # Optionally, clean up the entry if the list is now empty
-                if not self.lag_to_nodes[node.time_lag]:
-                    del self.lag_to_nodes[node.time_lag]
-
-            # Handle removal from variable-name-to-nodes cache
-            if (
+        # Handle removal from variable-name-to-nodes cache
+        if (
                 node.variable_name in self.variable_name_to_nodes
                 and node in self.variable_name_to_nodes[node.variable_name]
-            ):
-                self.variable_name_to_nodes[node.variable_name].remove(node)
-                # Optionally, clean up the entry if the list is now empty
-                if not self.variable_name_to_nodes[node.variable_name]:
-                    del self.variable_name_to_nodes[node.variable_name]
+        ):
+            self.variable_name_to_nodes[node.variable_name].remove(node)
+            # Optionally, clean up the entry if the list is now empty
+            if not self.variable_name_to_nodes[node.variable_name]:
+                del self.variable_name_to_nodes[node.variable_name]
 
     def get_nodes_at_lag(self, time_lag: int = 0) -> List[TimeSeriesNode]:
         """
@@ -1338,7 +1327,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         :param variable_name: Variable name to return nodes for.
         """
-        return self.variable_name_to_nodes.get(variable_name, [])
+        return self.variable_name_to_nodes[variable_name]
 
     def get_contemporaneous_nodes(self, node: NodeLike) -> List[TimeSeriesNode]:
         """Return all nodes that are contemporaneous (i.e. have the same time_lag) to the provided node."""
