@@ -15,10 +15,10 @@ limitations under the License.
 """
 import json
 import unittest
+from collections import defaultdict
 
 import networkx
 import numpy
-from collections import defaultdict
 
 from cai_causal_graph import CausalGraph, EdgeType, NodeVariableType, TimeSeriesCausalGraph
 from cai_causal_graph.exceptions import CausalGraphErrors
@@ -1872,8 +1872,10 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
 
         ts_graph = TimeSeriesCausalGraph(input_list=input_nodes, fully_connected=False)
 
-        self.assertDictEqual(dict(ts_graph.lag_to_nodes), {0: [ts_graph['B']], -1: [ts_graph['A lag(n=1)']],
-                                                           -2: [ts_graph['A lag(n=2)']]})
+        self.assertDictEqual(
+            dict(ts_graph.lag_to_nodes),
+            {0: [ts_graph['B']], -1: [ts_graph['A lag(n=1)']], -2: [ts_graph['A lag(n=2)']]},
+        )
 
     def test_node_cache_update_addition(self):
         input_nodes = ['A lag(n=2)', 'A lag(n=1)', 'B']
@@ -1881,8 +1883,11 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
         ts_graph = TimeSeriesCausalGraph(input_list=input_nodes, fully_connected=False)
         ts_graph.add_node('C')
 
-        self.assertDictEqual(dict(ts_graph.lag_to_nodes), {0: [ts_graph['B'], ts_graph['C']],
-                                                           -1: [ts_graph['A lag(n=1)']], -2: [ts_graph['A lag(n=2)']]})
+        self.assertDictEqual(
+            dict(ts_graph.lag_to_nodes),
+            {0: [ts_graph['B'], ts_graph['C']], -1: [ts_graph['A lag(n=1)']], -2: [ts_graph['A lag(n=2)']]},
+        )
+
     def test_node_cache_update_deletion(self):
         input_nodes = ['A lag(n=2)', 'A lag(n=1)', 'B']
 
@@ -1891,7 +1896,6 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
         ts_graph.remove_node('A lag(n=2)')
         self.assertDictEqual(dict(ts_graph.lag_to_nodes), {0: [ts_graph['B']], -1: [ts_graph['A lag(n=1)']]})
 
-
     def test_cache_when_from_causal_graph(self):
         cg = CausalGraph()
         cg.add_edge('A', 'B')
@@ -1899,4 +1903,4 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
         cg.add_edge('B', 'C')
         ts_graph = TimeSeriesCausalGraph.from_causal_graph(cg)
 
-        self.assertDictEqual(dict(ts_graph.lag_to_nodes), {0: [ts_graph['B']], -1: [ts_graph['A lag(n=1)']]})
+        self.assertDictEqual(dict(ts_graph.lag_to_nodes), {0: [ts_graph['A'], ts_graph['B'], ts_graph['C']]})

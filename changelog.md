@@ -2,8 +2,8 @@
 
 ## NEXT
 
-- Added `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.cache_nodes` and
-  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.cache_nodes` to avoid having to loop
+- Added `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.add_node_to_cache` and
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.remove_node_from_cache` to avoid having to loop
   through the nodes of the graph multiple times.
 
 ## 0.4.6

@@ -728,7 +728,6 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         identifier = self._check_node_exists(node)
         self._nodes_by_identifier[identifier] = node
-        # self.update_cache(node)
         self.add_node_to_cache(node)
 
         return node
@@ -779,7 +778,6 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         node = self.get_node(self._NodeCls.identifier_from(identifier))
         assert isinstance(node, TimeSeriesNode)  # for linting
-        # self.update_cache(node, operation='remove')
         self.remove_node_from_cache(node)
         super().delete_node(identifier)
 
@@ -1305,8 +1303,8 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         # Handle removal from variable-name-to-nodes cache
         if (
-                node.variable_name in self.variable_name_to_nodes
-                and node in self.variable_name_to_nodes[node.variable_name]
+            node.variable_name in self.variable_name_to_nodes
+            and node in self.variable_name_to_nodes[node.variable_name]
         ):
             self.variable_name_to_nodes[node.variable_name].remove(node)
             # Optionally, clean up the entry if the list is now empty
