@@ -408,7 +408,6 @@ def identify_colliders(graph: CausalGraph, unshielded_only: bool = False) -> Lis
         # the node z is collider if x <> z <> y, x -> z <- y, x <> z <- y, or x -> z <> y
         neighbors = graph.get_neighbors(node)
 
-        counter = 0
         potential_parents = set()
 
         for neighbor_node in neighbors:
@@ -424,9 +423,8 @@ def identify_colliders(graph: CausalGraph, unshielded_only: bool = False) -> Lis
 
             if condition:
                 potential_parents.add(neighbor_node)
-                counter += 1
 
-        if counter >= 2:
+        if len(potential_parents) >= 2:
             # check if the collider is unshielded. A collider is unshielded if there is no edge between any
             is_unshielded = True
             # of its parents
