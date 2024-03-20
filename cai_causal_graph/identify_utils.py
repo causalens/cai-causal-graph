@@ -429,7 +429,7 @@ def identify_colliders(graph: CausalGraph, unshielded_only: bool = False) -> Lis
             is_unshielded = True
             # of its parents
             if unshielded_only:
-                # if there is no directed edge between any of the parents, then the collider is unshielded
+                # if there is no edge between any of the parents, then the collider is unshielded
                 # test all the possible combinations of the potential parents
                 for parent_1, parent_2 in combinations(potential_parents, 2):
                     if graph.edge_exists(parent_1, parent_2) or graph.edge_exists(parent_2, parent_1):
