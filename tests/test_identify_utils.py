@@ -815,9 +815,24 @@ class TestIdentifyCollider(unittest.TestCase):
         cg.add_edge('x', 'y')
 
         # find the colliders in the graph; output: ['y']
-        collider_variables = identify_colliders(cg, unshielded=False)
+        collider_variables = identify_colliders(cg, unshielded_only=False)
         self.assertListEqual(collider_variables, ['y'])
 
         # find the unshielded colliders in the graph; output: []
-        collider_variables = identify_colliders(cg, unshielded=True)
+        collider_variables = identify_colliders(cg, unshielded_only=True)
+        self.assertListEqual(collider_variables, [])
+
+        cg = CausalGraph()
+        cg.add_edge('x', 'y')
+        cg.add_edge('z', 'y')
+
+        collider_variables = identify_colliders(cg, unshielded_only=True)
+        self.assertListEqual(collider_variables, ['y'])
+
+        cg = CausalGraph()
+        cg.add_edge('x', 'y')
+        cg.add_edge('z', 'y')
+        cg.add_edge('z', 'x')
+
+        collider_variables = identify_colliders(cg, unshielded_only=True)
         self.assertListEqual(collider_variables, [])

@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+from itertools import combinations
 from typing import List, Optional, Set, Tuple, Union
 
 import networkx
@@ -389,13 +390,14 @@ def identify_markov_boundary(graph: Union[CausalGraph, Skeleton], node: NodeLike
     return mb
 
 
-def identify_colliders(graph: CausalGraph, unshielded: bool = False) -> List[str]:
+def identify_colliders(graph: CausalGraph, unshielded_only: bool = False) -> List[str]:
     """
     Identify all the collider nodes in the provided `graph`.
 
     :param graph: The graph given by a `cai_causal_graph.causal_graph.CausalGraph` instance.
-    :param unshielded: If `True`, only unshielded colliders are returned. If `False`, all colliders are returned.
-        Default is `False`.
+    :param unshielded_only: If `True`, only unshielded colliders are returned. If `False`, all colliders are returned.
+        Default is `False`. A collider is unshielded if there is no edge between any of its parents.
+    :return: A list of all node identifiers for the collider nodes in the graph.
     """
     colliders = set()
 
@@ -407,6 +409,8 @@ def identify_colliders(graph: CausalGraph, unshielded: bool = False) -> List[str
         neighbors = graph.get_neighbors(node)
 
         counter = 0
+        potential_parents = set()
+
         for neighbor_node in neighbors:
             # we need to check if the directed edge (neigh_node, node) exists
             directed_exists = (
@@ -415,17 +419,26 @@ def identify_colliders(graph: CausalGraph, unshielded: bool = False) -> List[str
             )
             # we need to check if the bi-directed edge (neigh_node, node) or (node, neigh_node) exists
             bidirected_exists = (neighbor_node, node) in bidirected_edges or (node, neighbor_node) in bidirected_edges
-            is_unshielded = not graph.edge_exists(neighbor_node, node) and not graph.edge_exists(node, neighbor_node)
 
             condition = directed_exists or bidirected_exists
 
             if condition:
-                if unshielded and not is_unshielded:
-                    continue
-
+                potential_parents.add(neighbor_node)
                 counter += 1
-                if counter == 2:
-                    colliders.add(node)
-                    break
+
+        if counter >= 2:
+            # check if the collider is unshielded. A collider is unshielded if there is no edge between any
+            is_unshielded = True
+            # of its parents
+            if unshielded_only:
+                # if there is no directed edge between any of the parents, then the collider is unshielded
+                # test all the possible combinations of the potential parents
+                for parent_1, parent_2 in combinations(potential_parents, 2):
+                    if graph.edge_exists(parent_1, parent_2) or graph.edge_exists(parent_2, parent_1):
+                        is_unshielded = False
+                        break
+
+            if not unshielded_only or is_unshielded:
+                colliders.add(node)
 
     return list(colliders)

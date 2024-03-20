@@ -162,10 +162,10 @@ cg.add_edge('m', 'y')
 cg.add_edge('x', 'y')
 
 # find the colliders in the graph; output: ['y']
-collider_variables: List[str] = identify_colliders(cg, unshielded=False)
+collider_variables: List[str] = identify_colliders(cg, unshielded_only=False)
 
 # find the unshielded colliders in the graph; output: []
-collider_variables: List[str] = identify_colliders(cg, unshielded=True)
+collider_variables: List[str] = identify_colliders(cg, unshielded_only=True)
 ```
 
 The `unshielded` parameter is used to specify whether to return only unshielded colliders. If `unshielded` is set to 
