@@ -1,5 +1,10 @@
 # Changelog
 
+## NEXT
+
+- Added the `cai_causal_graph.causal_graph.identify_utils.identity_colliders` utility function, which allows you to
+  identify a list of colliders in a `cai_causal_graph.causal_graph.CausalGraph`.
+
 ## 0.4.6
 
 - Added the Boolean keyword argument `include_all_parents` to
