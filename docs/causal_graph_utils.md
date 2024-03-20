@@ -168,5 +168,6 @@ collider_variables: List[str] = identify_colliders(cg, unshielded_only=False)
 collider_variables: List[str] = identify_colliders(cg, unshielded_only=True)
 ```
 
-The `unshielded` parameter is used to specify whether to return only unshielded colliders. If `unshielded` is set to 
-`True`, only unshielded colliders are returned. If `unshielded` is set to `False`, all colliders are returned.
+The `unshielded_only` parameter is used to specify whether to return only unshielded colliders. If `unshielded_only` 
+is set to `True`, only unshielded colliders are returned. If `unshielded_only` is set to `False`, all colliders are 
+returned.
