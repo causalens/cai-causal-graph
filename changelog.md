@@ -1,5 +1,10 @@
 # Changelog
 
+## NEXT
+
+- Improved efficiency of `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_nodes_at_lag` and
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_nodes_for_variable_name` by adding caching.
+
 ## 0.4.6
 
 - Added the Boolean keyword argument `include_all_parents` to
