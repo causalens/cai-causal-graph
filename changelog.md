@@ -4,6 +4,8 @@
 
 - Added the `cai_causal_graph.causal_graph.identify_utils.identity_colliders` utility function, which allows you to
   identify a list of colliders in a `cai_causal_graph.causal_graph.CausalGraph`.
+- Improved efficiency of `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_nodes_at_lag` and
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_nodes_for_variable_name` by adding caching.
 
 ## 0.4.6
 
