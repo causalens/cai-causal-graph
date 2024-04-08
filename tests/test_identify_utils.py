@@ -21,6 +21,7 @@ import networkx
 from cai_causal_graph import CausalGraph, TimeSeriesCausalGraph
 from cai_causal_graph.exceptions import CausalGraphErrors
 from cai_causal_graph.identify_utils import (
+    identify_colliders,
     identify_confounders,
     identify_instruments,
     identify_markov_boundary,
@@ -765,3 +766,93 @@ class TestIdentifyMarkovBoundary(unittest.TestCase):
 
         with self.assertRaises(CausalGraphErrors.NodeDoesNotExistError):
             identify_markov_boundary(cg.skeleton, node='b')
+
+
+class TestIdentifyCollider(unittest.TestCase):
+    def test_simple(self):
+        # Test CausalGraph.
+        cg = CausalGraph()
+        cg.add_edge('u', 'b')
+        cg.add_edge('v', 'c')
+        cg.add_edge('b', 'a')  # 'b' is a parent of 'a'
+        cg.add_edge('c', 'a')  # 'c' is a parent of 'a'
+        cg.add_edge('a', 'd')  # 'd' is a child of 'a'
+        cg.add_edge('a', 'e')  # 'e' is a child of 'a'
+        cg.add_edge('w', 'f')
+        cg.add_edge('f', 'd')  # 'f' is a parent of 'd', which is a child of 'a'
+        cg.add_edge('g', 'e')  # 'g' is a parent of 'e', which is a child of 'a'
+
+        colliders = identify_colliders(cg)
+        self.assertSetEqual(set(colliders), {'a', 'd', 'e'})
+
+        # test with bidirected edge
+        cg.change_edge_type('c', 'a', EDGE_T.BIDIRECTED_EDGE)
+        colliders = identify_colliders(cg)
+        self.assertSetEqual(set(colliders), {'a', 'c', 'd', 'e'})
+
+        # test with another graph
+        cg = CausalGraph()
+        cg.add_edge('a', 'b')
+        cg.add_edge('c', 'b')
+        cg.add_edge('x', 'y', edge_type=EDGE_T.UNDIRECTED_EDGE)
+        cg.add_edge('c', 'y')
+
+        self.assertSetEqual(set(identify_colliders(cg)), {'b'})
+
+        cg.change_edge_type('a', 'b', EDGE_T.BIDIRECTED_EDGE)
+        self.assertSetEqual(set(identify_colliders(cg)), {'b'})
+
+        cg.change_edge_type('x', 'y', EDGE_T.BIDIRECTED_EDGE)
+        self.assertSetEqual(set(identify_colliders(cg)), {'b', 'y'})
+
+        cg.remove_edge('c', 'y')
+        self.assertSetEqual(set(identify_colliders(cg)), {'b'})
+
+        # test unshielded collider
+        cg = CausalGraph()
+        cg.add_edge('x', 'm')
+        cg.add_edge('m', 'y')
+        cg.add_edge('x', 'y')
+
+        # find the colliders in the graph; output: ['y']
+        collider_variables = identify_colliders(cg, unshielded_only=False)
+        self.assertListEqual(collider_variables, ['y'])
+
+        # find the unshielded colliders in the graph; output: []
+        collider_variables = identify_colliders(cg, unshielded_only=True)
+        self.assertListEqual(collider_variables, [])
+
+        cg = CausalGraph()
+        cg.add_edge('x', 'y')
+        cg.add_edge('z', 'y')
+
+        collider_variables = identify_colliders(cg, unshielded_only=True)
+        self.assertListEqual(collider_variables, ['y'])
+
+        cg = CausalGraph()
+        cg.add_edge('x', 'y')
+        cg.add_edge('z', 'y')
+        cg.add_edge('z', 'x')
+
+        collider_variables = identify_colliders(cg, unshielded_only=True)
+        self.assertListEqual(collider_variables, [])
+
+    def test_time_series(self):
+        # Test TimeSeriesCausalGraph.
+        cg = TimeSeriesCausalGraph()
+        cg.add_edge('u lag(n=1)', 'u')
+        cg.add_edge('v', 'u')
+        cg.add_edge('u lag(n=1)', 'v')
+
+        collider_variables = identify_colliders(cg, unshielded_only=True)
+        self.assertListEqual(collider_variables, [])
+
+        collider_variables = identify_colliders(cg, unshielded_only=False)
+        self.assertListEqual(collider_variables, ['u'])
+
+        cg.add_edge('v', 'r')
+        cg.add_edge('r', 'h')
+        cg.add_edge('u', 'h')
+
+        collider_variables = identify_colliders(cg, unshielded_only=True)
+        self.assertListEqual(collider_variables, ['h'])
