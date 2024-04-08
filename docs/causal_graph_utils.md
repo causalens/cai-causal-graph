@@ -88,6 +88,36 @@ cg.add_edge('x', 'y')
 mediator_variables: List[str] = identify_mediators(cg, source='x', destination='y')
 ```
 
+### Identifying Colliders
+
+The `cai-causal-graph` package implements the `cai_causal_graph.identify_utils.identify_colliders` utility function,
+which allows you to identify the list of potential collider nodes in the causal graph.
+
+A collider is a node in the causal graph that is a child in a V-structure. A V-structure is a structure in the graph
+where two nodes have a common child, and there is no direct edge between the two nodes.
+
+```python
+from typing import List
+from cai_causal_graph import CausalGraph
+from cai_causal_graph.identify_utils import identify_colliders
+
+# define a causal graph
+cg = CausalGraph()
+cg.add_edge('x', 'm')
+cg.add_edge('m', 'y')
+cg.add_edge('x', 'y')
+
+# find the colliders in the graph; output: ['y']
+collider_variables: List[str] = identify_colliders(cg, unshielded_only=False)
+
+# find the unshielded colliders in the graph; output: []
+collider_variables: List[str] = identify_colliders(cg, unshielded_only=True)
+```
+
+The `unshielded_only` parameter is used to specify whether to return only unshielded colliders. If `unshielded_only` 
+is set to `True`, only unshielded colliders are returned. If `unshielded_only` is set to `False`, all colliders are 
+returned.
+
 ### Identifying Markov Boundary
 
 The `cai-causal-graph` package implements the `cai_causal_graph.identify_utils.identify_markov_boundary` utility 
@@ -141,33 +171,3 @@ skeleton: Skeleton = cg.skeleton
 # note the order may not match but the elements will be those four.
 markov_boundary: List[str] = identify_markov_boundary(skeleton, node='a')
 ```
-
-### Identifying Colliders
-
-The `cai-causal-graph` package implements the `cai_causal_graph.identify_utils.identify_colliders` utility function,
-which allows you to identify the list of potential collider nodes in the causal graph.
-
-A collider is a node in the causal graph that is a child in a V-structure. A V-structure is a structure in the graph
-where two nodes have a common child, and there is no direct edge between the two nodes.
-
-```python
-from typing import List
-from cai_causal_graph import CausalGraph
-from cai_causal_graph.identify_utils import identify_colliders
-
-# define a causal graph
-cg = CausalGraph()
-cg.add_edge('x', 'm')
-cg.add_edge('m', 'y')
-cg.add_edge('x', 'y')
-
-# find the colliders in the graph; output: ['y']
-collider_variables: List[str] = identify_colliders(cg, unshielded_only=False)
-
-# find the unshielded colliders in the graph; output: []
-collider_variables: List[str] = identify_colliders(cg, unshielded_only=True)
-```
-
-The `unshielded_only` parameter is used to specify whether to return only unshielded colliders. If `unshielded_only` 
-is set to `True`, only unshielded colliders are returned. If `unshielded_only` is set to `False`, all colliders are 
-returned.

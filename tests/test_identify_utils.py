@@ -836,3 +836,23 @@ class TestIdentifyCollider(unittest.TestCase):
 
         collider_variables = identify_colliders(cg, unshielded_only=True)
         self.assertListEqual(collider_variables, [])
+
+    def test_time_series(self):
+        # Test TimeSeriesCausalGraph.
+        cg = TimeSeriesCausalGraph()
+        cg.add_edge('u lag(n=1)', 'u')
+        cg.add_edge('v', 'u')
+        cg.add_edge('u lag(n=1)', 'v')
+
+        collider_variables = identify_colliders(cg, unshielded_only=True)
+        self.assertListEqual(collider_variables, [])
+
+        collider_variables = identify_colliders(cg, unshielded_only=False)
+        self.assertListEqual(collider_variables, ['u'])
+
+        cg.add_edge('v', 'r')
+        cg.add_edge('r', 'h')
+        cg.add_edge('u', 'h')
+
+        collider_variables = identify_colliders(cg, unshielded_only=True)
+        self.assertListEqual(collider_variables, ['h'])
