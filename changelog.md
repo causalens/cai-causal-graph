@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.4.8
 
 - Upgraded `docs-builder` dependency to `"~0.2.1"` in the Makefile and updated syntax to support newer `poetry`.
 
