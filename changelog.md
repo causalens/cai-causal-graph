@@ -4,6 +4,7 @@
 
 - Improved efficiency of `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_nodes_at_lag` and
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_nodes_for_variable_name` by adding caching.
+- Upgraded `poetry` version from `1.7.1` to `1.8.2` in the GitHub workflows.
 
 ## 0.4.6
 
