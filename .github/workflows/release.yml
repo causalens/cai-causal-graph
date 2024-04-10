@@ -78,7 +78,7 @@ jobs:
         uses: snok/install-poetry@v1
         with:
           installer-parallel: true
-          version: 1.7.1  # This should be a specific micro version for reproducibility
+          version: 1.8.2  # This should be a specific micro version for reproducibility
       - name: Set poetry cache
         # To have a consistent cache directory between different os (linux/macosx)
         run: poetry config cache-dir .pypoetry
@@ -154,7 +154,7 @@ jobs:
       - name: Trigger post-release workflow
         # This will check if newly published packages can be pip installed in clean environments
         if: success()
-        uses: peter-evans/repository-dispatch@v2.0.0
+        uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.GH_ACTIONS_KEY }}
           repository: ${{ github.repository }}
