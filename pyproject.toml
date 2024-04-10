@@ -54,9 +54,10 @@ packages = [{include = "cai_causal_graph"}]
 
 [tool.poetry.dependencies]
 mypy-extensions = "^1.0.0"
+# networkx 3.3 broke how get_all_simple_paths works so want to bound for now.
 # networkx 3.1 is the last one to support 3.8. We will drop 3.8 on next minor.
 networkx = [
-    {version = ">=3.0.0, <4.0.0", python = ">=3.9.0, <3.13.0"},
+    {version = ">=3.0.0, <3.3.0", python = ">=3.9.0, <3.13.0"},
     {version = ">=3.0.0, <3.2.0", python = ">=3.8.0, <3.9.0"}  # 3.1 is the last version to support 3.8.
 ]
 # Newest numpy is >= 3.9 so need to have different deps while we still support 3.8 but will drop 3.8 on next minor.

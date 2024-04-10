@@ -160,6 +160,16 @@ class TestCausalPaths(unittest.TestCase):
 
         self.assertListEqual(all_paths, [])
 
+    def test_source_is_destination(self):
+        g = CausalGraph()
+        g.add_node('a')
+        g.add_node('b')
+
+        self.assertListEqual(g.get_all_causal_paths('a', 'a'), [])
+        self.assertListEqual(g.get_all_causal_paths('b', 'b'), [])
+        self.assertListEqual(g.get_all_causal_paths('a', 'b'), [])
+        self.assertListEqual(g.get_all_causal_paths('b', 'a'), [])
+
     def test_neighbours(self):
         g = CausalGraph()
         g.add_edge('a', 'b')

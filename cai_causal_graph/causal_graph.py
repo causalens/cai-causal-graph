@@ -1797,6 +1797,12 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
         assert all(node in self.get_node_names() for node in [source, destination])
 
+        # In networkx 3.3 this will return a path of length 1 with just that node in it. We don't want to consider this
+        # particularly as there is no self loop from that node to itself. One could make an edge from source to source
+        # but then it would no longer be a DAG as we confirm in the first step of this method.
+        if source == destination:
+            return []
+
         return list(networkx.all_simple_paths(self.to_networkx(), source, destination))
 
     def directed_path_exists(self, source: NodeLike, destination: NodeLike) -> bool:
