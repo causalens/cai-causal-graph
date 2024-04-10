@@ -2,7 +2,7 @@
 
 ## NEXT
 
-- Upgraded `docs-builder` dependency to `"~0.2.1"` in the Makefile.
+- Upgraded `docs-builder` dependency to `"~0.2.1"` in the Makefile and updated syntax to support newer `poetry`.
 
 ## 0.4.7
 
