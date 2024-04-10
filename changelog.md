@@ -1,5 +1,9 @@
 # Changelog
 
+## NEXT
+
+- Upgraded `docs-builder` dependency to `"~0.2.1"` in the Makefile.
+
 ## 0.4.7
 
 - Added the `cai_causal_graph.causal_graph.identify_utils.identity_colliders` utility function, which allows you to
