@@ -1931,3 +1931,44 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
         ts_graph._remove_node_from_cache(ts_graph.get_node(ts_graph._NodeCls.identifier_from('B')))
         with self.assertRaises(ValueError):
             ts_graph.delete_node('B')
+
+    def test_floating_nodes_correctly_added_to_minimal_graph(self):
+        cg = TimeSeriesCausalGraph()
+        cg.add_time_edge('a', -1, 'a', 0)
+        cg.add_time_edge('a', 0, 'b', 0)
+        cg.add_time_edge('a', -1, 'b', -1)
+        cg.add_node(
+            variable_name='floating', time_lag=0, meta={'some': 'metadata'}, variable_type=NodeVariableType.BINARY
+        )
+
+        self.assertFalse(cg.is_minimal_graph())
+
+        minimal_graph = cg.get_minimal_graph()
+
+        self.assertTrue(minimal_graph.is_minimal_graph())
+
+        minimal_node = minimal_graph.get_node('floating')
+        self.assertEqual(minimal_node.meta['some'], 'metadata')
+        self.assertEqual(minimal_node.variable_type, NodeVariableType.BINARY)
+        self.assertEqual(minimal_node.time_lag, 0)
+
+    def test_lagged_floating_nodes_correctly_added_to_minimal_graph(self):
+        """Same as previous test, but floating node is lagged. It should still be at lag=0 in the minimal graph."""
+        cg = TimeSeriesCausalGraph()
+        cg.add_time_edge('a', -1, 'a', 0)
+        cg.add_time_edge('a', 0, 'b', 0)
+        cg.add_time_edge('a', -1, 'b', -1)
+        cg.add_node(
+            variable_name='floating', time_lag=-1, meta={'some': 'metadata'}, variable_type=NodeVariableType.BINARY
+        )
+
+        self.assertFalse(cg.is_minimal_graph())
+
+        minimal_graph = cg.get_minimal_graph()
+
+        self.assertTrue(minimal_graph.is_minimal_graph())
+
+        minimal_node = minimal_graph.get_node('floating')
+        self.assertEqual(minimal_node.meta['some'], 'metadata')
+        self.assertEqual(minimal_node.variable_type, NodeVariableType.BINARY)
+        self.assertEqual(minimal_node.time_lag, 0)

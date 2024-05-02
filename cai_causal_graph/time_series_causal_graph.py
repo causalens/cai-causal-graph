@@ -306,7 +306,14 @@ class TimeSeriesCausalGraph(CausalGraph):
                 if (
                     minimal_cg.variables is None or variable not in minimal_cg.variables
                 ) and not minimal_cg.node_exists(variable):
-                    minimal_cg.add_node(variable)
+                    # Guaranteed there is at least one node, take the first for simplicity as they should be the same
+                    original_floating_node = self.get_nodes_for_variable_name(variable)[0]
+                    new_floating_node = self._NodeCls(
+                        identifier=variable,
+                        meta=original_floating_node.meta,
+                        variable_type=original_floating_node.variable_type,
+                    )
+                    minimal_cg.add_node(node=new_floating_node)
 
         return minimal_cg
 
