@@ -1993,11 +1993,11 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
         self.assertTrue(minimal_graph.is_minimal_graph())
 
         floating_node = minimal_graph.get_node('floating')
-        self.assertEqual(minimal_node.meta['some more'], 'metadata')  # it takes meta from td=0 one
-        self.assertEqual(minimal_node.variable_type, NodeVariableType.BINARY)
-        self.assertEqual(minimal_node.time_lag, 0)
+        self.assertEqual(floating_node.meta['some'], 'metadata')  # it takes meta from td=-1 as it is first
+        self.assertEqual(floating_node.variable_type, NodeVariableType.BINARY)
+        self.assertEqual(floating_node.time_lag, 0)
 
         floating_cont_node = minimal_graph.get_node('floating_cont')
-        self.assertEqual(minimal_node.meta['some cont'], 'metadata')
-        self.assertEqual(minimal_node.variable_type, NodeVariableType.CONTINUOUS)
-        self.assertEqual(minimal_node.time_lag, 0)
+        self.assertEqual(floating_cont_node.meta['some cont'], 'metadata')
+        self.assertEqual(floating_cont_node.variable_type, NodeVariableType.CONTINUOUS)
+        self.assertEqual(floating_cont_node.time_lag, 0)
