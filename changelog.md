@@ -1,5 +1,12 @@
 # Changelog
 
+## NEXT
+
+- Fixed a bug where metadata on floating nodes would not be correctly carried over to the minimal graph when calling
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph`. This also fixes an issue where
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.is_minimal_graph` could return `False` on minimal
+  graphs that contain floating nodes.
+
 ## 0.4.8
 
 - Upgraded `docs-builder` dependency to `"~0.2.1"` in the Makefile and updated syntax to support newer `poetry`.
