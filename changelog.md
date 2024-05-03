@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.4.9
 
 - Fixed a bug where metadata on floating nodes would not be correctly carried over to the minimal graph when calling
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph`. This also fixes an issue where
