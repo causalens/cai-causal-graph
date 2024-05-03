@@ -1972,3 +1972,32 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
         self.assertEqual(minimal_node.meta['some'], 'metadata')
         self.assertEqual(minimal_node.variable_type, NodeVariableType.BINARY)
         self.assertEqual(minimal_node.time_lag, 0)
+
+        # Add td=0 floating as well to ensure we end up with 1.
+        cg.add_node(
+            variable_name='floating', time_lag=0, meta={'some more': 'metadata'}, variable_type=NodeVariableType.BINARY
+        )
+
+        # Add another floating node so minimal graph should have 2 floating nodes at td=0.
+        cg.add_node(
+            variable_name='floating_cont',
+            time_lag=-1,
+            meta={'some cont': 'metadata'},
+            variable_type=NodeVariableType.CONTINUOUS,
+        )
+
+        self.assertFalse(cg.is_minimal_graph())
+
+        minimal_graph = cg.get_minimal_graph()
+
+        self.assertTrue(minimal_graph.is_minimal_graph())
+
+        floating_node = minimal_graph.get_node('floating')
+        self.assertEqual(minimal_node.meta['some more'], 'metadata')  # it takes meta from td=0 one
+        self.assertEqual(minimal_node.variable_type, NodeVariableType.BINARY)
+        self.assertEqual(minimal_node.time_lag, 0)
+
+        floating_cont_node = minimal_graph.get_node('floating_cont')
+        self.assertEqual(minimal_node.meta['some cont'], 'metadata')
+        self.assertEqual(minimal_node.variable_type, NodeVariableType.CONTINUOUS)
+        self.assertEqual(minimal_node.time_lag, 0)
