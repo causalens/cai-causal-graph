@@ -396,7 +396,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         Return a summary graph.
 
         Collapse graph in time into a single node per variable (column name).
-        This can become cyclic and bi-directed as X-1 -> Y and Y-1 -> X would become X <-> Y.
+        This can become cyclic and bi-directed as `X-1 -> Y` and `Y-1 -> X` would become `X <-> Y`.
 
         There are several cases to consider. Assume the edge in consideration is called B.
         - if the edge is not in the summary graph, add it

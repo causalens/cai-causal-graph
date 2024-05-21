@@ -1,5 +1,9 @@
 # Changelog
 
+## NEXT
+
+- Improved documentation by cleaning up a few syntax issues to support the new docs building process.
+
 ## 0.4.9
 
 - Fixed a bug where metadata on floating nodes would not be correctly carried over to the minimal graph when calling
