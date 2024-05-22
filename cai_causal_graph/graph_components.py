@@ -16,7 +16,7 @@ limitations under the License.
 from __future__ import annotations
 
 import logging
-from copy import deepcopy
+from copy import copy, deepcopy
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from cai_causal_graph.exceptions import CausalGraphErrors
@@ -295,7 +295,7 @@ class TimeSeriesNode(Node):
         # populate the metadata for each node
         if meta is not None:
             # need to copy it as we update it below; don't want to change dict outside scope of this constructor
-            meta = deepcopy(meta)
+            meta = copy(meta)
             meta_time_lag = meta.get(TIME_LAG)
             meta_variable_name = meta.get(VARIABLE_NAME)
             if meta_time_lag is not None and meta_time_lag != time_lag:
