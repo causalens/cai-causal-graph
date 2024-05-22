@@ -733,7 +733,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                 variable_name is not None and time_lag is not None
             ), 'Either identifier or (variable_name and time_lag) must be provided.'
 
-        node = TimeSeriesNode(
+        node = self._NodeCls(
             identifier=identifier,
             time_lag=time_lag,
             variable_name=variable_name,
