@@ -628,6 +628,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         return sorted(var_names)
 
+    # TODO: `lag` should default to 0
     def _get_lagged_node(
         self, identifier: Optional[NodeLike] = None, node: Optional[TimeSeriesNode] = None, lag: Optional[int] = None
     ) -> TimeSeriesNode:
@@ -653,6 +654,8 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         if node is not None:
             identifier = node.identifier
+
+        # TODO: why is this elif needed?
         elif isinstance(identifier, HasIdentifier):
             identifier = identifier.identifier
 
@@ -660,6 +663,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         variable_type = None
 
+        # TODO: So if node is none, meta is not copied even if node with provided identifier exists?
         if node is None:
             # extract the variable name from the identifier
             variable_name, _ = get_variable_name_and_lag(identifier)
@@ -674,12 +678,14 @@ class TimeSeriesCausalGraph(CausalGraph):
             meta = node.meta.copy()
             variable_type = node.variable_type
 
+        # TODO: this
         assert node is not None, 'The node must be valid. Got None.'
 
         node = self._NodeCls(
             variable_name=node.variable_name,
             time_lag=lag,
             meta=meta,
+            # TODO: should not specify default here
             variable_type=variable_type if variable_type is not None else NodeVariableType.UNSPECIFIED,
         )
         return node
