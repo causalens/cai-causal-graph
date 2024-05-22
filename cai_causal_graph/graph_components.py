@@ -294,6 +294,7 @@ class TimeSeriesNode(Node):
 
         # populate the metadata for each node
         if meta is not None:
+            # TODO: should use `update_meta` here?
             # need to copy it as we update it below; don't want to change dict outside scope of this constructor
             meta = copy(meta)
             meta_time_lag = meta.get(TIME_LAG)
@@ -379,6 +380,7 @@ class TimeSeriesNode(Node):
         :return: The time series node created from the dictionary.
         """
         assert 'identifier' in dictionary, 'The dictionary must contain the `identifier` key.'
+        # TODO: is this needed? Does this actually happen? Seem to just be a warning?
         if dictionary.get('node_class', 'TimeSeriesNode') != 'TimeSeriesNode':
             logger.debug(
                 f'The node class in the dictionary is {dictionary.get("node_class")}, but the class is '
@@ -386,6 +388,7 @@ class TimeSeriesNode(Node):
                 '`TimeSeriesNode`.'
             )
 
+        # TODO: validation should probably be done just within the constructor
         # check the meta for the time lag and variable name match the ones in the dictionary
         time_lag = dictionary.get(TIME_LAG, None)
         variable_name = dictionary.get(VARIABLE_NAME, None)
