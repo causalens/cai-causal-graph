@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.4.10
 
 - Improved documentation by cleaning up a few syntax issues to support the new docs building process.
 
