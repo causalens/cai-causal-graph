@@ -764,6 +764,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         See `cai_causal_graph.causal_graph.CausalGraph.replace_node` for more details.
         """
+        # TODO: this is actually wrong - should enable editting original node inplace. See same method on CausalGraph
         # either new_node_id or (variable_name and time_lag) must be provided
         assert new_node_id is not None or (
             variable_name is not None and time_lag is not None
