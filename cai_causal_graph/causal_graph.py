@@ -1072,32 +1072,32 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         return self.edge_exists(pair[0], pair[1], edge_type=edge_type)
 
     def get_directed_edges(self) -> List[Edge]:
-        """Returns a list of directed edges, e.g. ('X' -> 'Y'), in the causal graph."""
+        """Returns a list of directed edges, e.g. `'X' -> 'Y'`, in the causal graph."""
         return self._get_edges_by_type(EdgeType.DIRECTED_EDGE)
 
     def get_undirected_edges(self) -> List[Edge]:
-        """Returns a list of undirected edges, e.g. ('X' -- 'Y'), in the causal graph."""
+        """Returns a list of undirected edges, e.g. `'X' -- 'Y'`, in the causal graph."""
         return self._get_edges_by_type(EdgeType.UNDIRECTED_EDGE)
 
     def get_bidirected_edges(self) -> List[Edge]:
-        """Returns a list of bidirectional edges, e.g. ('X' <-> 'Y'),  in the causal graph."""
+        """Returns a list of bidirectional edges, e.g. `'X' <-> 'Y'`,  in the causal graph."""
         return self._get_edges_by_type(EdgeType.BIDIRECTED_EDGE)
 
     def get_unknown_edges(self) -> List[Edge]:
-        """Returns a list of edges that are unknown, e.g. ('X' oo 'Y'), in the causal graph."""
+        """Returns a list of edges that are unknown, e.g. `'X' oo 'Y'`, in the causal graph."""
         return self._get_edges_by_type(EdgeType.UNKNOWN_EDGE)
 
     def get_unknown_directed_edges(self) -> List[Edge]:
-        """Returns a list of edges that are unknown-directed, e.g. ('X' o> 'Y'), in the causal graph."""
+        """Returns a list of edges that are unknown-directed, e.g. `'X' o> 'Y'`, in the causal graph."""
         return self._get_edges_by_type(EdgeType.UNKNOWN_DIRECTED_EDGE)
 
     def get_unknown_undirected_edges(self) -> List[Edge]:
-        """Returns a list of edges that are unknown-undirected, e.g. ('X' o- 'Y'), in the causal graph."""
+        """Returns a list of edges that are unknown-undirected, e.g. `'X' o- 'Y'`, in the causal graph."""
         return self._get_edges_by_type(EdgeType.UNKNOWN_UNDIRECTED_EDGE)
 
     def _get_edges_by_type(self, edge_type: EdgeType) -> List[Edge]:
         """
-        Get a list of edges that have the provided type, e.g. ->.
+        Get a list of edges that have the provided type, e.g. `->`.
 
         :param edge_type: The type to query.
         """
