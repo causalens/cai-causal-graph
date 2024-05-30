@@ -628,6 +628,9 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         return sorted(var_names)
 
+    def get_all_variable_names(self) -> List[str]:
+        return list(set(self.get_variable_names_from_node_names(node_names=self.get_node_names())))
+
     # TODO: `lag` should default to 0
     def _get_lagged_node(
         self, identifier: Optional[NodeLike] = None, node: Optional[TimeSeriesNode] = None, lag: Optional[int] = None
