@@ -2,8 +2,13 @@
 Copyright (c) 2024 by Impulse Innovations Ltd. Private and confidential. Part of the causaLens product.
 """
 import abc
+from copy import copy
 from dataclasses import dataclass
 from typing import Any, List, Optional
+
+
+class MetaDataError(Exception):
+    ...
 
 
 @dataclass
@@ -23,29 +28,39 @@ class HasMeta(abc.ABC):
         self.meta = meta
 
     @classmethod
-    @abc.abstractmethod
     def get_metadata_schema(cls) -> List[MetaField]:
-        pass
+        return []
 
     def _process_meta(self, meta: Optional[dict], **kwargs) -> Optional[dict]:
         schema = self.get_metadata_schema()
+        self._validate_schema(schema=schema)
 
         requested_meta = {field.metatag: kwargs.get(field.parameter_name, field.default_value) for field in schema}
 
-        return self._update_metadata(meta=meta, **requested_meta)
+        return self._update_metadata(meta=copy(meta), **requested_meta)
 
-    @staticmethod
-    def _update_metadata(meta: Optional[dict], **kwargs) -> dict:
+    def _validate_schema(self, schema: List[MetaField]):
+        return
+        tags, properties, parameters = list(
+            zip(*[[field.metatag, field.property_name, field.parameter_name] for field in schema])
+        )
+
+        for l, name in [(tags, 'metatags'), (properties, 'property names'), (parameters, 'parameter names')]:
+            if len(set(l)) != len(l):
+                raise MetaDataError(f'Found multiple meta fields with identical {name} in schema: {schema}.')
+
+    def _update_metadata(self, meta: Optional[dict], **kwargs) -> dict:
         if meta is None:
-            return kwargs
-        else:
-            for k, v in kwargs.items():
-                if v is not None:
-                    if (existing_v := meta.get(k, None)) is not None:
-                        if existing_v != v:
-                            raise ValueError(
-                                f'Cannot set {k}, because it already exists in provided metadata as {existing_v}.'
-                            )
-                    meta[k] = v
+            meta = dict()
 
-            return meta
+        for k, v in kwargs.items():
+            if v is not None:
+                if (existing_v := meta.get(k, None)) is not None:
+                    if existing_v != v:
+                        raise MetaDataError(
+                            f'Cannot set {k} in metadata of {self}, because it already exists in provided '
+                            f'metadata as {existing_v}.'
+                        )
+                meta[k] = v
+
+        return meta
