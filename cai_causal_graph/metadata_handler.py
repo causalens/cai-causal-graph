@@ -31,16 +31,20 @@ class HasMeta(abc.ABC):
     def get_metadata_schema(cls) -> List[MetaField]:
         return []
 
-    def _process_meta(self, meta: Optional[dict], **kwargs) -> Optional[dict]:
+    def _process_meta(
+        self, meta: Optional[dict], kwargs_dict: dict, raise_if_unknown_tags: bool = False
+    ) -> Optional[dict]:
         schema = self.get_metadata_schema()
         self._validate_schema(schema=schema)
 
-        requested_meta = {field.metatag: kwargs.get(field.parameter_name, field.default_value) for field in schema}
+        requested_meta = {field.metatag: kwargs_dict.pop(field.parameter_name, field.default_value) for field in schema}
+
+        if raise_if_unknown_tags and len(kwargs_dict) > 0:
+            raise MetaDataError(f'Unknown keyword arguments {kwargs_dict}. Metadata schema is {schema}.')
 
         return self._update_metadata(meta=copy(meta), **requested_meta)
 
     def _validate_schema(self, schema: List[MetaField]):
-        return
         tags, properties, parameters = list(
             zip(*[[field.metatag, field.property_name, field.parameter_name] for field in schema])
         )

@@ -9,7 +9,7 @@ from cai_causal_graph.metadata_handler import HasMeta, MetaDataError, MetaField
 
 class ManualHasMeta(HasMeta):
     def __init__(self, meta: Optional[dict] = None, **kwargs):
-        super().__init__(meta=self._process_meta(meta=meta, **kwargs))
+        super().__init__(meta=self._process_meta(meta=meta, kwargs_dict=kwargs, raise_if_unknown_tags=True))
 
     @classmethod
     def get_metadata_schema(cls) -> List[MetaField]:
@@ -24,6 +24,30 @@ class ChildManualHasMeta(ManualHasMeta):
     def get_metadata_schema(cls) -> List[MetaField]:
         return super().get_metadata_schema() + [
             MetaField(metatag='hello', property_name='_hello', parameter_name='hello'),
+        ]
+
+
+class GrandChildWithDuplicateTag(ChildManualHasMeta):
+    @classmethod
+    def get_metadata_schema(cls) -> List[MetaField]:
+        return super().get_metadata_schema() + [
+            MetaField(metatag='hello', property_name='__hello', parameter_name='_hello'),
+        ]
+
+
+class GrandChildWithDuplicateProperty(ChildManualHasMeta):
+    @classmethod
+    def get_metadata_schema(cls) -> List[MetaField]:
+        return super().get_metadata_schema() + [
+            MetaField(metatag='_hello', property_name='_hello', parameter_name='_hello'),
+        ]
+
+
+class GrandChildWithDuplicateParameter(ChildManualHasMeta):
+    @classmethod
+    def get_metadata_schema(cls) -> List[MetaField]:
+        return super().get_metadata_schema() + [
+            MetaField(metatag='_hello', property_name='hello', parameter_name='hello'),
         ]
 
 
@@ -113,6 +137,10 @@ class TestHasMetaManual(TestCase):
         self.assertEqual(len(o.meta), 1)
         self.assertDictEqual(o.meta, {'foo_tag': 'bar'})
 
+    def test_unknown_kwarg_raises(self):
+        with self.assertRaises(MetaDataError):
+            ManualHasMeta(unknown=2)
+
     def test_default(self):
         meta = {'hello': 'bye'}
 
@@ -131,10 +159,51 @@ class TestHasMetaManual(TestCase):
         self.assertEqual(len(o.meta), 3)
 
     def test_duplicate_tags(self):
-        ...
+        with self.assertRaises(MetaDataError):
+            GrandChildWithDuplicateTag()
 
     def test_duplicate_property_names(self):
-        ...
+        with self.assertRaises(MetaDataError):
+            GrandChildWithDuplicateProperty()
 
     def test_duplicate_parameters(self):
-        ...
+        with self.assertRaises(MetaDataError):
+            GrandChildWithDuplicateParameter()
+
+    def test_on_child_kwargs_only_parent(self):
+        o = ChildManualHasMeta(model=10, foo='barfoo')
+
+        self.assertEqual(o.meta['model'], 10)
+        self.assertEqual(o.meta['foo_tag'], 'barfoo')
+        self.assertEqual(len(o.meta), 2)
+
+    def test_on_child_kwargs_only_child(self):
+        o = ChildManualHasMeta(hello=3)
+
+        self.assertEqual(len(o.meta), 2)
+        self.assertEqual(o.meta['hello'], 3)
+
+    def test_on_child_mixed_kwargs(self):
+        o = ChildManualHasMeta(model=10, foo='barfoo', hello=3)
+
+        self.assertEqual(o.meta['model'], 10)
+        self.assertEqual(o.meta['foo_tag'], 'barfoo')
+        self.assertEqual(o.meta['hello'], 3)
+        self.assertEqual(len(o.meta), 3)
+
+    def test_on_child_kwargs_and_meta(self):
+        meta = dict(hello='bye', model=10, cool=True)
+
+        o = ChildManualHasMeta(
+            meta=meta,
+            foo='barfoo',
+        )
+
+        # test for shallow copy of meta
+        meta['bye'] = 'hello'
+
+        self.assertEqual(o.meta['model'], 10)
+        self.assertEqual(o.meta['foo_tag'], 'barfoo')
+        self.assertEqual(o.meta['hello'], 'bye')
+        self.assertEqual(o.meta['cool'], True)
+        self.assertEqual(len(o.meta), 4)
