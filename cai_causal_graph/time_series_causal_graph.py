@@ -208,7 +208,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         neg_lag, pos_lag = lags[0], lags[-1]
 
         # now extend the minimal graph to the current max and min lag to match the current graph
-        self._stationary_graph = minimal_graph.extend_graph(-neg_lag, pos_lag)
+        self._stationary_graph = minimal_graph.extend_graph(-neg_lag, pos_lag, include_all_parents=False)
 
         return self._stationary_graph
 
@@ -784,6 +784,7 @@ class TimeSeriesCausalGraph(CausalGraph):
             meta = meta.copy()
             meta.update({VARIABLE_NAME: variable_name, TIME_LAG: time_lag})
         else:
+            # TODO: this does not copy the meta from the old node
             meta = {VARIABLE_NAME: variable_name, TIME_LAG: time_lag}
 
         super().replace_node(node_id, new_node_id, variable_type=variable_type, meta=meta)
