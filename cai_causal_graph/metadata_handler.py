@@ -4,7 +4,8 @@ Copyright (c) 2024 by Impulse Innovations Ltd. Private and confidential. Part of
 import abc
 from copy import copy
 from dataclasses import dataclass
-from typing import Any, List, Optional
+from functools import wraps
+from typing import Any, Callable, List, Optional
 
 
 class MetaDataError(Exception):
@@ -30,6 +31,20 @@ class HasMeta(abc.ABC):
     @classmethod
     def get_metadata_schema(cls) -> List[MetaField]:
         return []
+
+    def _get_field_for_property_name(self, property_name: str):
+        schema = self.get_metadata_schema()
+        self._validate_schema(schema=schema)
+
+        matched_fields = list(filter(lambda field_: field_.property_name == property_name, schema))
+
+        if len(matched_fields) == 0:
+            raise KeyError(f'No metadata field with property name matching {property_name} in the schema {schema}.')
+        elif len(matched_fields) > 1:
+            # This should never be raised in reality since schema is validated.
+            raise MetaDataError(f'Found multiple fields {matched_fields} with identical property name.')
+        else:
+            return matched_fields[0]
 
     def _process_meta(
         self, meta: Optional[dict], kwargs_dict: dict, raise_if_unknown_tags: bool = False
@@ -68,3 +83,25 @@ class HasMeta(abc.ABC):
                 meta[k] = v
 
         return meta
+
+
+def access_meta(f: callable) -> property:
+    @wraps(f)
+    def getter(self) -> Any:
+        if not isinstance(self, HasMeta):
+            raise TypeError(f'Cannot automatically access meta of {self} since it does not extend {HasMeta} class.')
+        field: MetaField = self._get_field_for_property_name(f.__name__)
+
+        if field.default_value is None:
+            return self.meta.get(field.metatag, None)
+        else:
+            return self.meta[field.metatag]
+
+    def setter(self, val: Any):
+        if not isinstance(self, HasMeta):
+            raise TypeError(f'Cannot automatically access meta of {self} since it does not extend {HasMeta} class.')
+        field: MetaField = self._get_field_for_property_name(f.__name__)
+
+        self.meta[field.metatag] = val
+
+    return property(getter, setter)
