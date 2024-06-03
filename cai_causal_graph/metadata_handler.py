@@ -38,9 +38,10 @@ class HasMeta(abc.ABC):
     def get_metadata_schema(cls) -> List[MetaField]:
         return []
 
-    def _get_field_for_property_name(self, property_name: str):
-        schema = self.get_metadata_schema()
-        self._validate_schema(schema=schema)
+    @classmethod
+    def _get_field_for_property_name(cls, property_name: str):
+        schema = cls.get_metadata_schema()
+        cls._validate_schema(schema=schema)
 
         matched_fields = list(filter(lambda field_: field_.property_name == property_name, schema))
 
@@ -52,20 +53,22 @@ class HasMeta(abc.ABC):
         else:
             return matched_fields[0]
 
+    @classmethod
     def _process_meta(
-        self, meta: Optional[dict], kwargs_dict: dict, raise_if_unknown_tags: bool = False
+        cls, meta: Optional[dict], kwargs_dict: dict, raise_if_unknown_tags: bool = False
     ) -> Optional[dict]:
-        schema = self.get_metadata_schema()
-        self._validate_schema(schema=schema)
+        schema = cls.get_metadata_schema()
+        cls._validate_schema(schema=schema)
 
         requested_meta = {field.metatag: kwargs_dict.pop(field.parameter_name, field.default_value) for field in schema}
 
         if raise_if_unknown_tags and len(kwargs_dict) > 0:
             raise MetaDataError(f'Unknown keyword arguments {kwargs_dict}. Metadata schema is {schema}.')
 
-        return self._update_metadata(meta=copy(meta), **requested_meta)
+        return cls._update_metadata(meta=copy(meta), **requested_meta)
 
-    def _validate_schema(self, schema: List[MetaField]):
+    @classmethod
+    def _validate_schema(cls, schema: List[MetaField]):
         tags, properties, parameters = list(
             zip(*[[field.metatag, field.property_name, field.parameter_name] for field in schema])
         )
@@ -74,7 +77,8 @@ class HasMeta(abc.ABC):
             if len(set(l)) != len(l):
                 raise MetaDataError(f'Found multiple meta fields with identical {name} in schema: {schema}.')
 
-    def _update_metadata(self, meta: Optional[dict], **kwargs) -> dict:
+    @classmethod
+    def _update_metadata(cls, meta: Optional[dict], **kwargs) -> Optional[dict]:
         if meta is None:
             meta = dict()
 
@@ -82,10 +86,13 @@ class HasMeta(abc.ABC):
             if v is not None:
                 if (existing_v := meta.get(k, None)) is not None:
                     logger.debug(
-                        f'{k} (set to {existing_v}) in the metadata of {self.__class__.__name__} is '
+                        f'{k} (set to {existing_v}) in the metadata of {cls.__name__} is '
                         f'overwritten by the newly provided value {v}.'
                     )
                 meta[k] = v
+
+        if len(meta) == 0:
+            return None
 
         return meta
 

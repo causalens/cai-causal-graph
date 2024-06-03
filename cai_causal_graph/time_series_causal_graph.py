@@ -20,7 +20,7 @@ import logging
 from collections import defaultdict
 from copy import deepcopy
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union, cast
 
 import networkx
 import numpy
@@ -617,33 +617,17 @@ class TimeSeriesCausalGraph(CausalGraph):
         :param node: The node to add.
         :return: The added node.
         """
-        if node is not None:
-            assert (
-                identifier is None
-                and variable_name is None
-                and time_lag is None
-                and variable_type == NodeVariableType.UNSPECIFIED
-                and meta is None
-            ), 'If specifying `node` argument, all other arguments should not be specified.'
-            identifier = node.identifier
-            variable_type = node.variable_type
-            meta = deepcopy(node.meta)
-        else:
-            # either identifier or (variable_name and time_lag) must be provided
-            assert identifier is not None or (
-                variable_name is not None and time_lag is not None
-            ), 'Either identifier or (variable_name and time_lag) must be provided.'
+        # TODO: if we want older behaviour, could just construct the node here and add it that way
+        meta = self._NodeCls._process_meta(meta=meta, kwargs_dict=dict(variable_name=variable_name, time_lag=time_lag))
 
-        node = self._NodeCls(
-            identifier=identifier,
-            time_lag=time_lag,
-            variable_name=variable_name,
-            variable_type=variable_type,
-            meta=meta,
+        if identifier is None and variable_name is not None and time_lag is not None:
+            identifier = get_name_with_lag(variable_name, time_lag)
+
+        node = cast(
+            TimeSeriesNode,
+            super().add_node(identifier=identifier, variable_type=variable_type, meta=meta, node=node),
         )
 
-        identifier = self._check_node_exists(node)
-        self._nodes_by_identifier[identifier] = node
         self._add_node_to_cache(node)
 
         return node

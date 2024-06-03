@@ -1770,6 +1770,7 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
         with self.assertRaises(AssertionError):
             cg.add_node(None, None, -2)
 
+        # TODO: currently fails because of the `TSCG.add_node` implementation
         with self.assertRaises(AssertionError):
             cg.add_node(identifier, 'apple', None)
 
