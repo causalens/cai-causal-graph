@@ -77,6 +77,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         input_list: Optional[List[NodeLike]] = None,
         output_list: Optional[List[NodeLike]] = None,
         fully_connected: bool = False,
+        meta: Optional[dict] = None,
     ):
         """
         Initialize the time series causal graph.
@@ -117,7 +118,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         # Initialize caches for fast lookups
         self._lag_to_nodes = defaultdict(list)
         self._variable_name_to_nodes = defaultdict(list)
-        super().__init__(input_list, output_list, fully_connected)
+        super().__init__(input_list=input_list, output_list=output_list, fully_connected=fully_connected, meta=meta)
 
         # list of variables in the graph, i.e. discarding the lags (X1(t-1) and X1 are the same variable)
         self._variables: Optional[List[str]] = None
@@ -1022,6 +1023,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         :param causal_graph: The causal graph as a `cai_causal_graph.causal_graph.CausalGraph` object.
         :return: A `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` object.
         """
+        # TODO: this whole method should be simplified?
         if isinstance(causal_graph, cls):
             return causal_graph
 

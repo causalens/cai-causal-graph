@@ -610,18 +610,6 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """Return the graph identifier."""
         return self.identifier
 
-    @property
-    def metadata(self) -> dict:
-        """Return metadata of the `cai_causal_graph.causal_graph.CausalGraph` instance."""
-        return dict(
-            **{node.identifier: node.get_metadata for node in self.get_nodes()},
-            **{edge.identifier: edge.get_metadata for edge in self.get_edges()},
-        )
-
-    def get_metadata(self) -> dict:
-        """Return metadata of the `cai_causal_graph.causal_graph.CausalGraph` instance."""
-        return self.metadata
-
     def is_dag(self) -> bool:
         """Check whether the `cai_causal_graph.causal_graph.CausalGraph` instance is a Directed Acyclic Graph (DAG)."""
         return networkx.is_directed_acyclic_graph(self.to_networkx()) if self._is_fully_directed() else False
@@ -1902,7 +1890,12 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
                 edges[source] = dict()
             edges[source][destination] = edge.to_dict(include_meta=include_meta)
 
-        return {'nodes': nodes, 'edges': edges, 'version': CAUSAL_GRAPH_VERSION, 'meta': self.meta}
+        d = {'nodes': nodes, 'edges': edges, 'version': CAUSAL_GRAPH_VERSION}
+
+        if include_meta:
+            d['meta'] = self.meta
+
+        return d
 
     def to_networkx(self) -> networkx.Graph:
         """
@@ -1989,7 +1982,9 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             any cycles are introduced to the graph by adding the edge. This should only be disabled to speed up
             this method in situations where it is known that the serialized graph is valid. Default is `True`.
         """
-        graph = cls()
+        # deepcopy the metadata if provided in the dict. This is consistent with metadata in nodes/edges which
+        # is deepcopied by the `add_node`/`add_edge` methods.
+        graph = cls(meta=deepcopy(d.get('meta', None)))
 
         for identifier, node_dict in d['nodes'].items():
             node = cls._NodeCls.from_dict(node_dict)
