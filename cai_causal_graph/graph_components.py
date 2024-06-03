@@ -681,5 +681,16 @@ class TimeSeriesEdge(Edge):
         if not isinstance(destination, TimeSeriesNode):
             destination = TimeSeriesNode.from_dict(destination.to_dict(include_meta=True))
 
-        assert source.time_lag <= destination.time_lag
+        # If edge type is not directed, swap source and destination to respect time
+        if edge_type != EdgeType.DIRECTED_EDGE:
+            if source.time_lag > destination.time_lag:
+                _destination = source
+                source = destination
+                destination = _destination
+
+        if source.time_lag > destination.time_lag:
+            raise ValueError(
+                f'Cannot add a directed edge between {source} and {destination} because this does not respect time.'
+            )
+
         super().__init__(source=source, destination=destination, edge_type=edge_type, meta=meta)

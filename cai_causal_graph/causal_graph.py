@@ -678,12 +678,12 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             )
         return source_nodes[0], destination_nodes[0]
 
-    def _set_edge(self, source: NodeLike, destination: NodeLike, edge: Edge, validate: bool = True):
+    def _set_edge(self, edge: Edge, validate: bool = True):
         """Set the edge in the graph."""
-        if isinstance(source, HasIdentifier):
-            source = source.identifier
-        if isinstance(destination, HasIdentifier):
-            destination = destination.identifier
+        source, destination = self._NodeCls.identifier_from(edge.source), self._NodeCls.identifier_from(
+            edge.destination
+        )
+
         self._edges_by_source[source][destination] = edge
         self._edges_by_destination[destination][source] = edge
 
@@ -1191,7 +1191,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         if meta is not None:
             edge.meta = meta
 
-        self._set_edge(source, destination, edge, validate=validate)
+        self._set_edge(edge=edge, validate=validate)
         return edge
 
     def add_edges_from(self, pairs: List[Tuple[NodeLike, NodeLike]], validate: bool = True):
