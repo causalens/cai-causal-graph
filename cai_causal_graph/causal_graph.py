@@ -380,6 +380,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         input_list: Optional[List[NodeLike]] = None,
         output_list: Optional[List[NodeLike]] = None,
         fully_connected: bool = True,
+        meta: Optional[dict] = None,
     ):
         """
         The `cai_causal_graph.causal_graph.CausalGraph` class manages and defines the state of a causal graph.
@@ -465,6 +466,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         # construct the skeleton and separation sets
         self._skeleton = Skeleton(graph=self)
         self._sepsets: dict = dict()
+
+        super().__init__(meta=meta)
 
     def __copy__(self) -> CausalGraph:
         """Copy a `cai_causal_graph.causal_graph.CausalGraph` instance."""
@@ -1899,11 +1902,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
                 edges[source] = dict()
             edges[source][destination] = edge.to_dict(include_meta=include_meta)
 
-        return {
-            'nodes': nodes,
-            'edges': edges,
-            'version': CAUSAL_GRAPH_VERSION,
-        }
+        return {'nodes': nodes, 'edges': edges, 'version': CAUSAL_GRAPH_VERSION, 'meta': self.meta}
 
     def to_networkx(self) -> networkx.Graph:
         """
