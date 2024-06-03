@@ -27,7 +27,7 @@ import numpy
 from mypy_extensions import Arg, DefaultArg
 
 from cai_causal_graph import CausalGraph, Skeleton
-from cai_causal_graph.graph_components import Edge, Node, TimeSeriesNode
+from cai_causal_graph.graph_components import Edge, Node, TimeSeriesEdge, TimeSeriesNode
 from cai_causal_graph.interfaces import HasIdentifier, HasMetadata
 from cai_causal_graph.type_definitions import TIME_LAG, VARIABLE_NAME, EdgeType, NodeLike, NodeVariableType
 from cai_causal_graph.utils import get_name_with_lag, get_variable_name_and_lag
@@ -67,7 +67,7 @@ class TimeSeriesCausalGraph(CausalGraph):
     """
 
     _NodeCls: Type[TimeSeriesNode] = TimeSeriesNode
-    _EdgeCls: Type[Edge] = Edge
+    _EdgeCls: Type[Edge] = TimeSeriesEdge
     _SummaryGraphCls: Type[CausalGraph] = CausalGraph
     _lag_to_nodes: Dict[int, List[TimeSeriesNode]]
     _variable_name_to_nodes: Dict[str, List[TimeSeriesNode]]
@@ -649,27 +649,26 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         See `cai_causal_graph.causal_graph.CausalGraph.replace_node` for more details.
         """
-        # TODO: this is actually wrong - should enable editting original node inplace. See same method on CausalGraph
-        # either new_node_id or (variable_name and time_lag) must be provided
-        assert new_node_id is not None or (
-            variable_name is not None and time_lag is not None
-        ), 'Either new_node_id or (variable_name and time_lag) must be provided.'
+        # either new_node_id or (time_lag and variable_name) must be provided, but not both
+        if new_node_id is not None:
+            # If new node id is provided, then it must set variable name and time lag, hence these must be None
+            assert (
+                time_lag is None and variable_name is None
+            ), f'Cannot provide both a new_node_id and (time_lag and variable_name).'
+        elif time_lag is not None or variable_name is not None:
+            # if new_node_id is not provided, but variable name or time lag is, then construct a new node id
+            # if one of variable name or time lag is not provided, infer it from existing node id. This enables
+            # changing the node variable name/time lag
+            derived_variable_name, derived_time_lag = get_variable_name_and_lag(node_id)
+            if time_lag is None:
+                time_lag = derived_time_lag
 
-        if new_node_id is None:
-            # update name from the variable name and time lag
-            new_node_id = get_name_with_lag(variable_name, time_lag)  # type: ignore
-        else:
-            new_node_id = Node.identifier_from(new_node_id)
-            variable_name, time_lag = get_variable_name_and_lag(Node.identifier_from(new_node_id))
+            if variable_name is None:
+                variable_name = derived_variable_name
 
-        if meta is not None:
-            meta = meta.copy()
-            meta.update({VARIABLE_NAME: variable_name, TIME_LAG: time_lag})
-        else:
-            # TODO: this does not copy the meta from the old node
-            meta = {VARIABLE_NAME: variable_name, TIME_LAG: time_lag}
+            new_node_id = get_name_with_lag(variable_or_node_name=variable_name, lag=time_lag)
 
-        super().replace_node(node_id, new_node_id, variable_type=variable_type, meta=meta)
+        super().replace_node(node_id=node_id, new_node_id=new_node_id, variable_type=variable_type, meta=meta)
 
     @_reset_ts_graph_attributes
     def delete_node(self, identifier: NodeLike):
@@ -690,7 +689,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         See `cai_causal_graph.causal_graph.CausalGraph.delete_edge` for more details.
         """
-        super().delete_edge(source, destination, edge_type=edge_type)
+        super().delete_edge(source=source, destination=destination, edge_type=edge_type)
 
     def _check_nodes_and_edge(
         self,
@@ -763,6 +762,7 @@ class TimeSeriesCausalGraph(CausalGraph):
     ) -> Edge:
         """
         Add an edge from a source to a destination node with a specific edge type.
+
         In addition to the `cai_causal_graph.causal_graph.CausalGraph.add_edge` method, this method also populates the
         metadata of the nodes with the variable name and the time lag.
 

@@ -654,3 +654,28 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
             edge_dict['meta'] = self.meta
 
         return edge_dict
+
+
+class TimeSeriesEdge(Edge):
+    _NodeClassDict = Edge._NodeClassDict.copy()
+    _NodeClassDict.update({TimeSeriesNode.__name__: TimeSeriesNode})
+
+    def __init__(
+        self,
+        source: TimeSeriesNode,
+        destination: TimeSeriesNode,
+        edge_type: EdgeType = EdgeType.DIRECTED_EDGE,
+        meta: Optional[Dict[str, Any]] = None,
+    ):
+        """
+        :param source: The `cai_causal_graph.graph_components.Node` from which the edge will originate.
+        :param destination: The `cai_causal_graph.graph_components.Node` at which the edge will terminate.
+        :param edge_type: The type of the edge to be added. Default is
+            `cai_causal_graph.type_definitions.EdgeType.DIRECTED_EDGE`. See `cai_causal_graph.type_definitions.EdgeType`
+            for the list of possible edge types.
+        :param meta: The meta values for the node.
+        """
+        if not isinstance(source, TimeSeriesNode) or not isinstance(destination, TimeSeriesNode):
+            raise TypeError()
+        assert source.time_lag >= destination.time_lag
+        super().__init__(source=source, destination=destination, edge_type=edge_type, meta=meta)
