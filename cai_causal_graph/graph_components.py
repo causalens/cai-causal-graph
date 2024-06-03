@@ -662,8 +662,8 @@ class TimeSeriesEdge(Edge):
 
     def __init__(
         self,
-        source: TimeSeriesNode,
-        destination: TimeSeriesNode,
+        source: Node,
+        destination: Node,
         edge_type: EdgeType = EdgeType.DIRECTED_EDGE,
         meta: Optional[Dict[str, Any]] = None,
     ):
@@ -675,7 +675,11 @@ class TimeSeriesEdge(Edge):
             for the list of possible edge types.
         :param meta: The meta values for the node.
         """
-        if not isinstance(source, TimeSeriesNode) or not isinstance(destination, TimeSeriesNode):
-            raise TypeError()
-        assert source.time_lag >= destination.time_lag
+        if not isinstance(source, TimeSeriesNode):
+            source = TimeSeriesNode.from_dict(source.to_dict(include_meta=True))
+
+        if not isinstance(destination, TimeSeriesNode):
+            destination = TimeSeriesNode.from_dict(destination.to_dict(include_meta=True))
+
+        assert source.time_lag <= destination.time_lag
         super().__init__(source=source, destination=destination, edge_type=edge_type, meta=meta)
