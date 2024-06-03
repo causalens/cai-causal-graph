@@ -504,7 +504,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         :param deep: If `True`, also does deep equality checks on all the nodes and edges. Default is `False`.
         :return: `True` if equal, `False` otherwise.
         """
-        if not isinstance(other, CausalGraph):
+        if not isinstance(other, self.__class__):
             return False
 
         # Check that the number of nodes and edges agrees

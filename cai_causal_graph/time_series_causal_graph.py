@@ -72,6 +72,18 @@ class TimeSeriesCausalGraph(CausalGraph):
     _lag_to_nodes: Dict[int, List[TimeSeriesNode]]
     _variable_name_to_nodes: Dict[str, List[TimeSeriesNode]]
 
+    # Overwrite type annotations for linting and code completion.
+    from_adjacency_matrix: Callable[  # type: ignore
+        [
+            Arg(numpy.ndarray, 'adjacency'),
+            DefaultArg(Optional[List[Union[NodeLike, int]]], 'node_names'),
+        ],
+        TimeSeriesCausalGraph,
+    ]
+    from_skeleton: Callable[[Arg(Skeleton, 'skeleton')], TimeSeriesCausalGraph]  # type: ignore
+    from_networkx: Callable[[Arg(networkx.Graph, 'g')], TimeSeriesCausalGraph]  # type: ignore
+    from_gml_string: Callable[[Arg(str, 'gml')], TimeSeriesCausalGraph]  # type: ignore
+
     def __init__(
         self,
         input_list: Optional[List[NodeLike]] = None,
@@ -125,51 +137,6 @@ class TimeSeriesCausalGraph(CausalGraph):
         self._summary_graph: Optional[CausalGraph] = None
         self._stationary_graph: Optional[TimeSeriesCausalGraph] = None
         self._minimal_graph: Optional[TimeSeriesCausalGraph] = None
-
-    # Overwrite type annotations for linting and code completion.
-    from_adjacency_matrix: Callable[  # type: ignore
-        [
-            Arg(numpy.ndarray, 'adjacency'),
-            DefaultArg(Optional[List[Union[NodeLike, int]]], 'node_names'),
-        ],
-        TimeSeriesCausalGraph,
-    ]
-    from_skeleton: Callable[[Arg(Skeleton, 'skeleton')], TimeSeriesCausalGraph]  # type: ignore
-    from_networkx: Callable[[Arg(networkx.Graph, 'g')], TimeSeriesCausalGraph]  # type: ignore
-    from_gml_string: Callable[[Arg(str, 'gml')], TimeSeriesCausalGraph]  # type: ignore
-
-    def __eq__(self, other: object, deep: bool = False) -> bool:
-        """
-        Return True if the graphs are equal.
-
-        Two graphs are equal if they have the same nodes and edges with the same time-specific metadata.
-
-        :param other: The other graph to compare to.
-        :param deep: If `True`, also does deep equality checks on all the nodes and edges. Default is `False`.
-        :return: `True` if the graphs are equal, `False` otherwise.
-        """
-        if not isinstance(other, TimeSeriesCausalGraph):
-            return False
-
-        # now check if the graphs are equal. Since TimeSeriesCausalGraph is a subclass of CausalGraph,
-        # we can use the CausalGraph.__eq__ method and then check for the metadata
-        if not super().__eq__(other, deep):
-            return False
-
-        # now check the metadata timedelta in the nodes
-        for node in self.get_nodes():
-            other_node = other.get_node(node.identifier)
-            assert isinstance(other_node, TimeSeriesNode)  # for linting
-
-            # check the variable name
-            if node.variable_name != other_node.variable_name:
-                return False
-
-            # check the time delta
-            if node.time_lag != other_node.time_lag:
-                return False
-
-        return True
 
     def __ne__(self, other: object) -> bool:
         """Check if the graph is not equal to another graph."""
@@ -228,7 +195,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         :return: The minimal graph as a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` object.
         """
-        minimal_cg = self.__class__()
+        minimal_cg = self.__class__(meta=deepcopy(self.meta))
 
         for edge in self.get_edges():
             # copy edge
@@ -320,19 +287,6 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         return minimal_cg
 
-    def _get_time_topological_order(self, ordered_nodes: List[str]) -> List[str]:
-        """Return the provided list if it is ordered in time; otherwise, an empty list is returned."""
-        # Iterate through the list to ensure it respects the time ordering.
-        for j, node in enumerate(ordered_nodes):
-            if j == 0:
-                continue
-            assert isinstance(node, str)  # for linting
-            # check if the time delta is correct
-            if self.get_node(ordered_nodes[j - 1]).time_lag > self.get_node(ordered_nodes[j]).time_lag:  # type: ignore
-                return []
-
-        return ordered_nodes
-
     def get_topological_order(
         self, return_all: bool = False, respect_time_ordering: bool = True
     ) -> Union[List[str], List[List[str]]]:
@@ -409,7 +363,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         :return: The summary graph as a `cai_causal_graph.causal_graph.CausalGraph` object.
         """
         if self._summary_graph is None:
-            summary_graph = self._SummaryGraphCls()
+            summary_graph = self._SummaryGraphCls(meta=deepcopy(self.meta))
             # now check as described above (assume edges are already directed)
             edges = self.get_edges()
 
@@ -630,69 +584,12 @@ class TimeSeriesCausalGraph(CausalGraph):
         return sorted(var_names)
 
     def get_all_variable_names(self) -> List[str]:
-        return list(set(self.get_variable_names_from_node_names(node_names=self.get_node_names())))
-
-    # TODO: `lag` should default to 0
-    def _get_lagged_node(
-        self, identifier: Optional[NodeLike] = None, node: Optional[TimeSeriesNode] = None, lag: Optional[int] = None
-    ) -> TimeSeriesNode:
         """
-        Return the lagged node of a node with a given lag. Lag is overwritten if the node is already lagged.
+        Return all variable names in the provided causal graph.
 
-        For example, if the node is X and the lag is -1, the node will be X lag(n=1).
-        If the node is X lag(n=1) and the lag is -2, the node will be X lag(n=2).
-
-        Moreover, if you want to make sure to copy all the metadata from the original node, you have to provide the
-        node instance and not the identifier.
-
-        :param identifier: The identifier of the node. Default is None.
-        :param node: The node. If provided, the identifier is ignored. Default is None.
-        :param lag: The lag of the node. Default is None. If None, the lag is set to 0.
-        :return: The lagged node.
+        The returned list is sorted by variable name.
         """
-        # either identifier or node must be provided
-        assert identifier is not None or node is not None, 'Either identifier or node must be provided.'
-
-        if lag is None:
-            lag = 0
-
-        if node is not None:
-            identifier = node.identifier
-
-        # TODO: why is this elif needed?
-        elif isinstance(identifier, HasIdentifier):
-            identifier = identifier.identifier
-
-        assert isinstance(identifier, str), 'The identifier must be a string. Got %s.' % type(identifier)
-
-        variable_type = None
-
-        # TODO: So if node is none, meta is not copied even if node with provided identifier exists?
-        if node is None:
-            # extract the variable name from the identifier
-            variable_name, _ = get_variable_name_and_lag(identifier)
-
-            meta = {
-                VARIABLE_NAME: variable_name,
-                TIME_LAG: lag,
-            }
-        else:
-            # modify the identifier of the provided node
-            # update the meta information
-            meta = node.meta.copy()
-            variable_type = node.variable_type
-
-        # TODO: this
-        assert node is not None, 'The node must be valid. Got None.'
-
-        node = self._NodeCls(
-            variable_name=node.variable_name,
-            time_lag=lag,
-            meta=meta,
-            # TODO: should not specify default here
-            variable_type=variable_type if variable_type is not None else NodeVariableType.UNSPECIFIED,
-        )
-        return node
+        return self.get_variable_names_from_node_names(node_names=self.get_node_names())
 
     @_reset_ts_graph_attributes
     def add_node(
@@ -1363,6 +1260,42 @@ class TimeSeriesCausalGraph(CausalGraph):
         assert isinstance(node, TimeSeriesNode), 'The node must be a `TimeSeriesNode`.'
         cont_nodes = self.get_nodes_at_lag(node.time_lag)
         return [n for n in cont_nodes if n != node]
+
+    def _get_time_topological_order(self, ordered_nodes: List[str]) -> List[str]:
+        """Return the provided list if it is ordered in time; otherwise, an empty list is returned."""
+        # Iterate through the list to ensure it respects the time ordering.
+        for j, node in enumerate(ordered_nodes):
+            if j == 0:
+                continue
+            assert isinstance(node, str)  # for linting
+            # check if the time delta is correct
+            if self.get_node(ordered_nodes[j - 1]).time_lag > self.get_node(ordered_nodes[j]).time_lag:  # type: ignore
+                return []
+
+        return ordered_nodes
+
+    def _get_lagged_node(self, node: TimeSeriesNode, lag: int = 0) -> TimeSeriesNode:
+        """
+        Return a version of a node with a given lag.
+
+        For example, if the node is X and the lag is -1, the node will be X lag(n=1).
+        If the node is X lag(n=1) and the lag is -2, the node will be X lag(n=2).
+
+        Metadata of the provided node will be shallow-copied to the newly constructed node. It is not deepcopied here
+        because metadata will be deepcopied when adding a node as a node of a causal graph.
+
+        Even if the provided lag matches existing lag of a node, a new instance of a node is constructed and returned.
+
+        :param node: Original node used to construct a lagged copy.
+        :param lag: The lag of the node. Default is zero.
+        :return: The lagged node.
+        """
+        return self._NodeCls(
+            variable_name=node.variable_name,
+            time_lag=lag,
+            meta=node.meta,  # meta is shallow copied by the node constructor
+            variable_type=node.variable_type,
+        )
 
     def __hash__(self) -> int:
         """

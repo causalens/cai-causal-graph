@@ -2049,3 +2049,9 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
 
         self.assertIn('foo', cg_copy.meta)
         self.assertNotEqual(cg_copy.meta['foo'], cg.meta['foo'])
+
+    def test_get_minimal_deepcopies_meta(self):
+        ...
+
+    def test_get_stationary_deepcopies_meta(self):
+        ...

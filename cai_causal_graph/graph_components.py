@@ -454,7 +454,7 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         self._destination = destination
         self._edge_type = edge_type
 
-        self.meta = dict() if meta is None else meta
+        super().__init__(meta=meta)
 
         # Switches to False if the edge is deleted
         self._valid: bool = True
