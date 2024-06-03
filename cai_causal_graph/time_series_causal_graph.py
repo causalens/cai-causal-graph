@@ -780,15 +780,17 @@ class TimeSeriesCausalGraph(CausalGraph):
                 time 2.
         """
 
-        assert source_variable is not None
-        assert source_time is not None
-        assert destination_variable is not None
-        assert destination_time is not None
+        assert (
+            source_variable is not None
+            and source_time is not None
+            and destination_variable is not None
+            and destination_time is not None
+        ), f'When adding an edge source and destination variable and time lags must be specified.'
 
         source = get_name_with_lag(source_variable, source_time)
         destination = get_name_with_lag(destination_variable, destination_time)
 
-        return self.add_edge(source, destination, meta=meta, validate=validate)
+        return self.add_edge(source=source, destination=destination, meta=meta, validate=validate)
 
     @classmethod
     def from_causal_graph(cls, causal_graph: CausalGraph) -> TimeSeriesCausalGraph:
@@ -809,25 +811,8 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         sepsets = deepcopy(causal_graph._sepsets)
 
-        # copy nodes and make them TimeSeriesNodes
-        ts_cg = cls()
-        for node in causal_graph.get_nodes():
-            meta = deepcopy(node.meta)
-            # get the variable name and lag from the node name
-            variable_name, lag = get_variable_name_and_lag(node.identifier)
-            node = TimeSeriesNode(variable_name=variable_name, time_lag=lag, meta=meta)
-            ts_cg.add_node(node=node)
-
-        # copy edges
-        for edge in causal_graph.get_edges():
-            source = ts_cg.get_node(edge.source)
-            destination = ts_cg.get_node(edge.destination)
-            assert isinstance(source, TimeSeriesNode)  # for linting
-            assert isinstance(destination, TimeSeriesNode)  # for linting
-
-            # No need to validate, the new graph will be as valid as the input graph
-            ts_cg.add_edge(source, destination, meta=edge.meta, edge_type=edge.get_edge_type(), validate=False)
-
+        # This also deepcopies all the metadata
+        ts_cg = cls.from_dict(d=causal_graph.to_dict(include_meta=True), validate=False)
         ts_cg._sepsets = sepsets
 
         return ts_cg
