@@ -21,6 +21,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 from cai_causal_graph.exceptions import CausalGraphErrors
 from cai_causal_graph.interfaces import CanDictSerialize, HasIdentifier, HasMetadata
+from cai_causal_graph.metadata_handler import MetaField
 from cai_causal_graph.type_definitions import TIME_LAG, VARIABLE_NAME, EdgeType, NodeLike, NodeVariableType
 from cai_causal_graph.utils import get_name_with_lag, get_variable_name_and_lag
 
@@ -48,10 +49,7 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         self._identifier = identifier
 
         self.variable_type: NodeVariableType = variable_type
-        self.meta = dict() if meta is None else meta
-        assert isinstance(self.meta, dict) and all(
-            isinstance(k, str) for k in self.meta
-        ), 'Metadata must be provided as a dictionary with strings as keys.'
+        super().__init__(meta=meta)
 
         self._inbound_edges: List[Edge] = []
         self._outbound_edges: List[Edge] = []
@@ -292,33 +290,42 @@ class TimeSeriesNode(Node):
                 'series node.'
             )
 
-        # populate the metadata for each node
-        if meta is not None:
-            # TODO: should use `update_meta` here?
-            # need to copy it as we update it below; don't want to change dict outside scope of this constructor
-            meta = copy(meta)
-            meta_time_lag = meta.get(TIME_LAG)
-            meta_variable_name = meta.get(VARIABLE_NAME)
-            if meta_time_lag is not None and meta_time_lag != time_lag:
-                logger.info(
-                    'The current time lag in the meta (%d) for node %s will be overwritten to the newly provided value (%d).',
-                    meta_time_lag,
-                    identifier,
-                    time_lag,
-                )
-            if meta_variable_name is not None and meta_variable_name != variable_name:
-                logger.info(
-                    'The current variable name in the meta (%s) for node %s will be overwritten to the newly provided value (%s).',
-                    meta_variable_name,
-                    identifier,
-                    variable_name,
-                )
-            meta.update({TIME_LAG: time_lag, VARIABLE_NAME: variable_name})
-        else:
-            meta = {TIME_LAG: time_lag, VARIABLE_NAME: variable_name}
+        # # populate the metadata for each node
+        # if meta is not None:
+        #     # TODO: should use `update_meta` here?
+        #     # need to copy it as we update it below; don't want to change dict outside scope of this constructor
+        #     meta = copy(meta)
+        #     meta_time_lag = meta.get(TIME_LAG)
+        #     meta_variable_name = meta.get(VARIABLE_NAME)
+        #     if meta_time_lag is not None and meta_time_lag != time_lag:
+        #         logger.info(
+        #             'The current time lag in the meta (%d) for node %s will be overwritten to the newly provided value (%d).',
+        #             meta_time_lag,
+        #             identifier,
+        #             time_lag,
+        #         )
+        #     if meta_variable_name is not None and meta_variable_name != variable_name:
+        #         logger.info(
+        #             'The current variable name in the meta (%s) for node %s will be overwritten to the newly provided value (%s).',
+        #             meta_variable_name,
+        #             identifier,
+        #             variable_name,
+        #         )
+        #     meta.update({TIME_LAG: time_lag, VARIABLE_NAME: variable_name})
+        # else:
+        #     meta = {TIME_LAG: time_lag, VARIABLE_NAME: variable_name}
+
+        meta = self._process_meta(meta=meta, kwargs_dict=dict(variable_name=variable_name, time_lag=time_lag))
 
         # populate the metadata for the node
-        super().__init__(identifier, meta, variable_type)
+        super().__init__(identifier=identifier, meta=meta, variable_type=variable_type)
+
+    @classmethod
+    def get_metadata_schema(cls) -> List[MetaField]:
+        return super().get_metadata_schema() + [
+            MetaField(metatag=TIME_LAG, property_name='time_lag'),
+            MetaField(metatag=VARIABLE_NAME, property_name='variable_name'),
+        ]
 
     @property
     def time_lag(self) -> int:

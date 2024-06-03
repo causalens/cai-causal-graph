@@ -25,8 +25,11 @@ class MetaField:
 
 
 class HasMeta(abc.ABC):
-    def __init__(self, meta: dict):
-        self.meta = meta
+    def __init__(self, meta: Optional[dict]):
+        self.meta = meta.copy() if meta is not None else dict()
+        assert isinstance(self.meta, dict) and all(
+            isinstance(k, str) for k in self.meta
+        ), 'Metadata must be provided as a dictionary with strings as keys.'
 
     @classmethod
     def get_metadata_schema(cls) -> List[MetaField]:
@@ -77,7 +80,7 @@ class HasMeta(abc.ABC):
                 if (existing_v := meta.get(k, None)) is not None:
                     if existing_v != v:
                         raise MetaDataError(
-                            f'Cannot set {k} in metadata of {self}, because it already exists in provided '
+                            f'Cannot set {k} in metadata of {self.__class__}, because it already exists in provided '
                             f'metadata as {existing_v}.'
                         )
                 meta[k] = v

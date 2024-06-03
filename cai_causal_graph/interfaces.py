@@ -18,6 +18,8 @@ from __future__ import annotations
 import abc
 from typing import Optional
 
+from cai_causal_graph.metadata_handler import HasMeta
+
 
 class CanDictSerialize(abc.ABC):
     """An interface for an object that can be represented as a dictionary."""
@@ -52,13 +54,13 @@ class HasIdentifier(abc.ABC):
         return self.identifier
 
 
-class HasMetadata(abc.ABC):
+class HasMetadata(HasMeta):
     """An interface for an object that has metadata."""
 
     @property
     def metadata(self) -> Optional[dict]:
         """A metadata property."""
-        return None
+        return self.meta
 
     def get_metadata(self) -> Optional[dict]:
         """Return metadata that is a dictionary."""
