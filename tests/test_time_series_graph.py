@@ -15,6 +15,7 @@ limitations under the License.
 """
 import json
 import unittest
+from copy import copy, deepcopy
 
 import networkx
 import numpy
@@ -2001,3 +2002,50 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
         self.assertEqual(floating_cont_node.meta['some cont'], 'metadata')
         self.assertEqual(floating_cont_node.variable_type, NodeVariableType.CONTINUOUS)
         self.assertEqual(floating_cont_node.time_lag, 0)
+
+    def test_deepcopy_with_metadata(self):
+        o = object()
+
+        cg = TimeSeriesCausalGraph()
+        cg.meta['foo'] = o
+
+        cg_copy = deepcopy(cg)
+
+        self.assertIn('foo', cg_copy.meta)
+        self.assertNotEqual(cg_copy.meta['foo'], cg.meta['foo'])
+
+    def test_metadata_in_constructor(self):
+        o = object()
+        meta = {'foo': 'bar', 'o': o}
+
+        cg = TimeSeriesCausalGraph(meta=meta)
+
+        self.assertEqual(len(cg.meta), 2)
+        self.assertEqual(cg.meta['o'], o)
+        self.assertEqual(cg.meta['foo'], 'bar')
+
+    def test_set_metadata(self):
+        o = object()
+        meta = {'foo': 'bar', 'o': o}
+
+        cg = TimeSeriesCausalGraph()
+        cg.meta = meta
+
+        # no shallow copy
+        meta['bar'] = 'foo'
+
+        self.assertEqual(len(cg.meta), 3)
+        self.assertEqual(cg.meta['o'], o)
+        self.assertEqual(cg.meta['foo'], 'bar')
+        self.assertEqual(cg.meta['bar'], 'foo')
+
+    def test_copy_with_metadata(self):
+        o = object()
+
+        cg = TimeSeriesCausalGraph()
+        cg.meta['foo'] = o
+
+        cg_copy = copy(cg)
+
+        self.assertIn('foo', cg_copy.meta)
+        self.assertNotEqual(cg_copy.meta['foo'], cg.meta['foo'])
