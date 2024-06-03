@@ -2,10 +2,13 @@
 Copyright (c) 2024 by Impulse Innovations Ltd. Private and confidential. Part of the causaLens product.
 """
 import abc
+import logging
 from copy import copy
 from dataclasses import dataclass
 from functools import wraps
 from typing import Any, Callable, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class MetaDataError(Exception):
@@ -78,11 +81,10 @@ class HasMeta(abc.ABC):
         for k, v in kwargs.items():
             if v is not None:
                 if (existing_v := meta.get(k, None)) is not None:
-                    if existing_v != v:
-                        raise MetaDataError(
-                            f'Cannot set {k} in metadata of {self.__class__}, because it already exists in provided '
-                            f'metadata as {existing_v}.'
-                        )
+                    logger.debug(
+                        f'{k} (set to {existing_v}) in the metadata of {self.__class__.__name__} is '
+                        f'overwritten by the newly provided value {v}.'
+                    )
                 meta[k] = v
 
         return meta
