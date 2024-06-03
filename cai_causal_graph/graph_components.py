@@ -660,6 +660,9 @@ class TimeSeriesEdge(Edge):
     _NodeClassDict = Edge._NodeClassDict.copy()
     _NodeClassDict.update({TimeSeriesNode.__name__: TimeSeriesNode})
 
+    source: TimeSeriesNode
+    destination: TimeSeriesNode
+
     def __init__(
         self,
         source: Node,

@@ -84,6 +84,11 @@ class TimeSeriesCausalGraph(CausalGraph):
     from_networkx: Callable[[Arg(networkx.Graph, 'g')], TimeSeriesCausalGraph]  # type: ignore
     from_gml_string: Callable[[Arg(str, 'gml')], TimeSeriesCausalGraph]  # type: ignore
 
+    node: TimeSeriesNode
+    nodes: List[TimeSeriesNode]
+    edge: TimeSeriesEdge
+    edges: List[TimeSeriesEdge]
+
     def __init__(
         self,
         input_list: Optional[List[NodeLike]] = None,
@@ -953,15 +958,15 @@ class TimeSeriesCausalGraph(CausalGraph):
             # get the source and destination of the edge
             # extract the variable name and lag from the node attributes
             source_variable_name, source_lag = (
-                edge.source.meta[VARIABLE_NAME],
-                edge.source.meta[TIME_LAG],
+                edge.source.variable_name,
+                edge.source.time_lag,
             )
             if source_lag not in adjacency_matrices:
                 adjacency_matrices[source_lag] = numpy.zeros((len(graph.variables), len(graph.variables)))
 
             destination_variable_name, _ = (
-                edge.destination.meta[VARIABLE_NAME],
-                edge.destination.meta[TIME_LAG],
+                edge.destination.variable_name,
+                edge.destination.time_lag,
             )
 
             if edge.get_edge_type() == EdgeType.DIRECTED_EDGE:
@@ -1044,20 +1049,6 @@ class TimeSeriesCausalGraph(CausalGraph):
             self._variables = sorted(list(set(variables)))
         return self._variables
 
-    def get_nodes(  # type: ignore
-        self, identifier: Optional[Union[NodeLike, List[NodeLike]]] = None
-    ) -> List[TimeSeriesNode]:  # type: ignore
-        """
-        Return the time series nodes in the graph.
-
-        :param identifier: The identifier of the node(s) to return.
-        :return: A list of nodes.
-        """
-        nodes = super().get_nodes(identifier)
-        # check all nodes are TimeSeriesNode
-        assert all(isinstance(node, TimeSeriesNode) for node in nodes)
-        return nodes  # type: ignore
-
     def to_numpy_by_lag(self) -> Tuple[Dict[int, numpy.ndarray], List[str]]:
         """
         Return the adjacency matrices of the minimal time series causal graph ordered by the time delta.
@@ -1075,6 +1066,32 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         assert graph.variables is not None
         return adjacency_matrices, graph.variables
+
+    def get_nodes_at_lag(self, time_lag: int = 0) -> List[TimeSeriesNode]:
+        """
+        Return all nodes at time delta `time_lag`.
+
+        :param time_lag: Time lag to return nodes for. Default is `0`.
+        """
+        return self._lag_to_nodes[time_lag]
+
+    def get_nodes_for_variable_name(self, variable_name: str) -> List[TimeSeriesNode]:
+        """
+        Return all nodes for the variable `variable_name`.
+
+        :param variable_name: Variable name to return nodes for.
+        """
+        return self._variable_name_to_nodes[variable_name]
+
+    def get_contemporaneous_nodes(self, node: NodeLike) -> List[TimeSeriesNode]:
+        """Return all nodes that are contemporaneous (i.e. have the same time_lag) to the provided node."""
+        assert node is not None, 'The `node` cannot be None.'
+        if isinstance(node, str):
+            node = self.get_node(node)
+
+        assert isinstance(node, TimeSeriesNode), 'The node must be a `TimeSeriesNode`.'
+        cont_nodes = self.get_nodes_at_lag(node.time_lag)
+        return [n for n in cont_nodes if n != node]
 
     def _add_node_to_cache(self, node: TimeSeriesNode):
         """Add a node to node caches."""
@@ -1102,32 +1119,6 @@ class TimeSeriesCausalGraph(CausalGraph):
                 f'Tried to remove node {node.identifier} from `TimeSeriesCausalGraph.variable_name_to_nodes` cache '
                 f'but the node was not found!'
             ) from e
-
-    def get_nodes_at_lag(self, time_lag: int = 0) -> List[TimeSeriesNode]:
-        """
-        Return all nodes at time delta `time_lag`.
-
-        :param time_lag: Time lag to return nodes for. Default is `0`.
-        """
-        return self._lag_to_nodes[time_lag]
-
-    def get_nodes_for_variable_name(self, variable_name: str) -> List[TimeSeriesNode]:
-        """
-        Return all nodes for the variable `variable_name`.
-
-        :param variable_name: Variable name to return nodes for.
-        """
-        return self._variable_name_to_nodes[variable_name]
-
-    def get_contemporaneous_nodes(self, node: NodeLike) -> List[TimeSeriesNode]:
-        """Return all nodes that are contemporaneous (i.e. have the same time_lag) to the provided node."""
-        assert node is not None, 'The `node` cannot be None.'
-        if isinstance(node, str):
-            node = self.get_node(node)
-
-        assert isinstance(node, TimeSeriesNode), 'The node must be a `TimeSeriesNode`.'
-        cont_nodes = self.get_nodes_at_lag(node.time_lag)
-        return [n for n in cont_nodes if n != node]
 
     def _get_time_topological_order(self, ordered_nodes: List[str]) -> List[str]:
         """Return the provided list if it is ordered in time; otherwise, an empty list is returned."""
@@ -1164,9 +1155,3 @@ class TimeSeriesCausalGraph(CausalGraph):
             meta=node.meta,  # meta is shallow copied by the node constructor
             variable_type=node.variable_type,
         )
-
-    def __hash__(self) -> int:
-        """
-        Return a hash representation of the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` instance.
-        """
-        return super().__hash__()
