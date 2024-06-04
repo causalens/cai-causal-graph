@@ -2,6 +2,9 @@
 
 ## NEXT
 
+> **_NOTE:_**  **Backwards compatibility warning!** Global metadata to `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` 
+> and `cai_causal_graph.causal_graph.CausalGraph`, which means their serialized state has changed.
+
 - Added metadata handling system to the `cai_causal_graph.interfaces.HasMetadata` class. All extending classes should use
   this system to parse and set their metadata.
 - Added `cai_causal_graph.graph_components.TimeSeriesEdge` class, which is used as an edge class by `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`.
