@@ -114,16 +114,13 @@ class HasMetadata:
     tags with default values.
     """
 
-    def __init__(self, *args, meta: Optional[dict] = None, **kwargs):
+    def __init__(self, meta: Optional[dict] = None):
         """
         Construct a `HasMetadata` instance with the provided meta.
 
-        :param args: Any positional arguments.
         :param meta: Optional metadata dictionary. If provided, the dictionary is shallow-copied. If `None`, then
             an empty dictionary is created.
-        :param kwargs: Any keyword arguments.
         """
-        super().__init__(*args, **kwargs)
         self.meta = meta.copy() if meta is not None else dict()
         assert isinstance(self.meta, dict) and all(
             isinstance(k, str) for k in self.meta
