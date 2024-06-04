@@ -119,12 +119,13 @@ class TestHasMetaManual(TestCase):
             model=10,
         )
 
-        with self.assertRaises(MetaDataError):
-            ManualHasMeta(
-                meta=meta,
-                model=11,
-                foo='barfoo',
-            )
+        o = ManualHasMeta(
+            meta=meta,
+            model=11,
+            foo='barfoo',
+        )
+
+        self.assertEqual(o.meta['model'], 11)
 
         # passing model which equals to the one in meta, should pass
         o = ManualHasMeta(
