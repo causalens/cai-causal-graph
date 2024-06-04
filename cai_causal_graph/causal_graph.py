@@ -840,7 +840,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             parameter is specified.
         :param variable_type: The variable type that the node represents. The choices are available through the
             `cai_causal_graph.type_definitions.NodeVariableType` enum.
-        :param meta: The meta values for the node.
+        :param meta: The meta values for the node. If passed explicitly, this metadata is not deepcopied.
         :param node: A `cai_causal_graph.graph_components.Node` node to be used to construct a new node. All the
             properties of the provided node will be deep copied to the constructed node, including metadata and
             variable type. If provided, then all other parameters to the method must not be specified. Default is
@@ -1160,7 +1160,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         :param edge_type: The type of the edge to be added. Default is
             `cai_causal_graph.type_definitions.EdgeType.DIRECTED_EDGE`. See `cai_causal_graph.type_definitions.EdgeType`
             for the list of possible edge types.
-        :param meta: The meta values for the edge.
+        :param meta: The meta values for the edge. If passed explicitly, this metadata is not deepcopied.
         :param edge: A `cai_causal_graph.graph_components.Edge` edge to be used to construct a new edge. All the
             properties of the provided edge will be deep copied to the constructed edge, including metadata. If
             provided, then all other parameters to the method must not be specified. Default is `None`.
@@ -1978,6 +1978,9 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
     def from_dict(cls, d: dict, validate: bool = True) -> CausalGraph:
         """
         Construct a `cai_causal_graph.causal_graph.CausalGraph` instance from a Python dictionary.
+
+        The contents of the passed dictionary are deepcopied when constructing a new `CausalGraph` instance. This
+        includes metadata of each node and edge, as well as the graph itself.
 
         :param d: Dictionary to build a graph from.
         :param validate: Whether to perform validation checks. The validation checks will raise if
