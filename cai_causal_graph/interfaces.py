@@ -20,7 +20,7 @@ import logging
 from copy import copy
 from typing import List, Optional
 
-from cai_causal_graph.metadata_handler import HasMeta, MetaDataError, MetaField
+from cai_causal_graph.metadata_handler import MetaDataError, MetaField
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ class HasIdentifier(abc.ABC):
         return self.identifier
 
 
-class HasMetadata(HasMeta):
+class HasMetadata:
     """
     An interface for an object that has metadata.
 
