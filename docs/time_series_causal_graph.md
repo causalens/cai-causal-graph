@@ -256,7 +256,7 @@ minimal_graph: TimeSeriesCausalGraph = ts_cg.get_minimal_graph()
 
 ## Summary graph
 You can collapse the graph in time into a single node per variable (column name).
-This can become cyclic and bi-directed as X(t-1) -> Y and Y(t-1) -> X would become X <-> Y.
+This can become cyclic and bi-directed as `X(t-1) -> Y` and `Y(t-1) -> X` would become `X <-> Y`.
 Note that the summary graph is a `cai_causal_graph.causal_graph.CausalGraph` object.
 
 ```python

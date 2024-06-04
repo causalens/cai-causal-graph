@@ -20,6 +20,10 @@
 - Generalized `cai_causal_graph.causal_graph.CausalGraph.__eq__` to check for the class of the instance itself, enabling
   to reuse this method by extending classes.
 
+## 0.4.10
+
+- Improved documentation by cleaning up a few syntax issues to support the new docs building process.
+
 ## 0.4.9
 
 - Fixed a bug where metadata on floating nodes would not be correctly carried over to the minimal graph when calling
