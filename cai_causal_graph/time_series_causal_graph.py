@@ -155,7 +155,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         Check if the graph is stationary. That is, if the graph is time invariant.
 
-        If there exists the edge X(t-1) -> X(t), then there must be the same edge X(t-2) -> X(t-1), etc.
+        If there exists the edge `X(t-1) -> X(t)`, then there must be the same edge `X(t-2) -> X(t-1)`, etc.
 
         :return: True if the graph is stationary, False otherwise.
         """
@@ -172,7 +172,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         Make the graph stationary by adding the missing edges if needed.
 
-        If there exists the edge X(t-1) -> X(t), then there must be the edge X(t-2) -> X(t-1), etc.
+        If there exists the edge `X(t-1) -> X(t)`, then there must be the edge `X(t-2) -> X(t-1)`, etc.
         """
         if self._stationary_graph is not None:
             return self._stationary_graph
@@ -360,7 +360,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         Return a summary graph.
 
         Collapse graph in time into a single node per variable (column name).
-        This can become cyclic and bi-directed as X-1 -> Y and Y-1 -> X would become X <-> Y.
+        This can become cyclic and bi-directed as `X(t-1) -> Y` and `Y(t-1) -> X` would become `X <-> Y`.
 
         There are several cases to consider. Assume the edge in consideration is called B.
         - if the edge is not in the summary graph, add it
@@ -865,7 +865,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`.
 
         For example, the adjacency matrix with time delta -1 is stored in adjacency_matrices[-1] and would correspond
-        to X-1 -> X, where X is the set of nodes.
+        to `X(t-1) -> X`, where `X` is the set of nodes.
 
         Example:
         >>> import numpy
