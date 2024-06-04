@@ -218,7 +218,7 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
             'node_class': self.__class__.__name__,
         }
         if include_meta:
-            node_dict['meta'] = self.meta  # type: ignore
+            node_dict['meta'] = self.meta.copy()  # type: ignore
 
         return node_dict
 
@@ -650,7 +650,7 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         }
 
         if include_meta:
-            edge_dict['meta'] = self.meta
+            edge_dict['meta'] = self.meta.copy()
 
         return edge_dict
 

@@ -28,7 +28,7 @@ class MetaField:
 
 
 class HasMeta(abc.ABC):
-    def __init__(self, meta: Optional[dict]):
+    def __init__(self, meta: Optional[dict] = None):
         self.meta = meta.copy() if meta is not None else dict()
         assert isinstance(self.meta, dict) and all(
             isinstance(k, str) for k in self.meta

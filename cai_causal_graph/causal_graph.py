@@ -1893,7 +1893,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         d = {'nodes': nodes, 'edges': edges, 'version': CAUSAL_GRAPH_VERSION}
 
         if include_meta:
-            d['meta'] = self.meta
+            d['meta'] = self.meta.copy()
 
         return d
 
