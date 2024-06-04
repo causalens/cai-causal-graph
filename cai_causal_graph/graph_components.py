@@ -16,7 +16,6 @@ limitations under the License.
 from __future__ import annotations
 
 import logging
-from copy import copy, deepcopy
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from cai_causal_graph.exceptions import CausalGraphErrors
@@ -297,6 +296,12 @@ class TimeSeriesNode(Node):
 
     @classmethod
     def get_metadata_schema(cls) -> List[MetaField]:
+        """
+        Return the metadata schema of `TimeSeriesNode`.
+
+        See `cai_causal_graph.interfaces.HasMetadata.get_metadata_schema` for more information on the how the
+        metadata schema is used.
+        """
         return super().get_metadata_schema() + [
             MetaField(metatag=TIME_LAG, property_name='time_lag'),
             MetaField(metatag=VARIABLE_NAME, property_name='variable_name'),
@@ -352,81 +357,6 @@ class TimeSeriesNode(Node):
         # add the time lag and variable name to the dictionary
         dictionary.update({TIME_LAG: self.time_lag, VARIABLE_NAME: self.variable_name})
         return dictionary
-
-    # @classmethod
-    # def from_dict(cls, dictionary: dict) -> TimeSeriesNode:
-    #     """
-    #     Return a `cai_causal_graph.graph_components.TimeSeriesNode` instance from a dictionary.
-    #
-    #     :param dictionary: The dictionary from which to create the time series node.
-    #     :return: The time series node created from the dictionary.
-    #     """
-    #     assert 'identifier' in dictionary, 'The dictionary must contain the `identifier` key.'
-    #     if dictionary.get('node_class', 'TimeSeriesNode') != 'TimeSeriesNode':
-    #         logger.debug(
-    #             f'The node class in the dictionary is {dictionary.get("node_class")}, but the class is '
-    #             f'`cai_causal_graph.graph_components.TimeSeriesNode`. The node class will be overwritten to '
-    #             '`TimeSeriesNode`.'
-    #         )
-    #
-    #     # TODO: validation should probably be done just within the constructor
-    #     # check the meta for the time lag and variable name match the ones in the dictionary
-    #     time_lag = dictionary.get(TIME_LAG, None)
-    #     variable_name = dictionary.get(VARIABLE_NAME, None)
-    #
-    #     meta = dictionary.get('meta', {})
-    #
-    #     if time_lag is None:
-    #         time_lag = meta.get(TIME_LAG, None)
-    #     else:
-    #         # check that the time lag in the meta matches the time lag in the dictionary
-    #         time_lag_meta = meta.get(TIME_LAG, None)
-    #
-    #         if time_lag != time_lag_meta:
-    #             meta[TIME_LAG] = time_lag
-    #             logger.warning(
-    #                 f'The time lag in the meta ({time_lag_meta}) does not match the time lag in the dictionary ({time_lag}).'
-    #             )
-    #
-    #     if variable_name is None:
-    #         variable_name = meta.get(VARIABLE_NAME, None)
-    #     else:
-    #         # check that the variable name in the meta matches the variable name in the dictionary
-    #         variable_name_meta = meta.get(VARIABLE_NAME, None)
-    #
-    #         if variable_name != variable_name_meta:
-    #             meta[VARIABLE_NAME] = variable_name
-    #             logger.warning(
-    #                 f'The variable name in the meta ({variable_name_meta}) does not match the variable name in the '
-    #                 f'dictionary ({variable_name}).'
-    #             )
-    #
-    #     variable_name_identifier, time_lag_identifier = get_variable_name_and_lag(dictionary['identifier'])
-    #
-    #     if time_lag is not None:
-    #         # now if time lag and variable name are not None, check they match the identifier
-    #         assert (
-    #             time_lag == time_lag_identifier
-    #         ), f'The time lag in the identifier ({time_lag_identifier}) does not match the time lag in the dictionary '
-    #         f'({time_lag}).'
-    #     else:
-    #         time_lag = time_lag_identifier
-    #
-    #     if variable_name is not None:
-    #         assert variable_name == variable_name_identifier, (
-    #             f'The variable name in the identifier ({variable_name_identifier}) does not match the variable name in '
-    #             f'the dictionary ({variable_name}).'
-    #         )
-    #     else:
-    #         variable_name = variable_name_identifier
-    #
-    #     return cls(
-    #         identifier=dictionary['identifier'],
-    #         time_lag=time_lag,
-    #         variable_name=variable_name,
-    #         meta=meta,
-    #         variable_type=dictionary.get('variable_type', NodeVariableType.UNSPECIFIED),
-    #     )
 
 
 class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
@@ -656,6 +586,17 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
 
 
 class TimeSeriesEdge(Edge):
+    """
+    Class defining a time-series edge.
+
+    Time series edge is equivalent to a `cai_causal_graph.graph_components.Edge` class, except that it only
+    ensures that the destination of an edge is at the same or later time than its source.
+
+    This means that it is not possible to construct a directed time-series edge which does not respect time. Moreover,
+    if an undirected edge is constructed by passing a source which is at a later time than the destination, the source
+    and destination are swapped.
+    """
+
     _NodeClassDict = Edge._NodeClassDict.copy()
     _NodeClassDict.update({TimeSeriesNode.__name__: TimeSeriesNode})
 
@@ -670,6 +611,8 @@ class TimeSeriesEdge(Edge):
         meta: Optional[Dict[str, Any]] = None,
     ):
         """
+        Construct a `TimeSeriesEdge`.
+
         :param source: The `cai_causal_graph.graph_components.Node` from which the edge will originate.
         :param destination: The `cai_causal_graph.graph_components.Node` at which the edge will terminate.
         :param edge_type: The type of the edge to be added. Default is
