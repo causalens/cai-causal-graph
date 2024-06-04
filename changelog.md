@@ -1,5 +1,22 @@
 # Changelog
 
+## NEXT
+
+- Added metadata handling system to the `cai_causal_graph.interfaces.HasMetadata` class. All extending classes should use
+  this system to parse and set their metadata.
+- Added `cai_causal_graph.graph_components.TimeSeriesEdge` class, which is used as an edge class by `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`.
+- Added metadata to `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` and `cai_causal_graph.causal_graph.CausalGraph`.
+- Ensured consistent metadata handling. Metadata passed at construction to `cai_causal_graph.graph_components.TimeSeriesNode`,
+  `cai_causal_graph.graph_components.Node`, `cai_causal_graph.graph_components.TimeSeriesEdge`, `cai_causal_graph.graph_components.Edge`,
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` and `cai_causal_graph.causal_graph.CausalGraph` is shallow-copied. Any
+  metadata is deepcopied when constructing `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` and `cai_causal_graph.causal_graph.CausalGraph`
+  from dictionary.
+- Ensured that `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.replace_node` performs similarly to
+  `cai_causal_graph.causal_graph.CausalGraph.replace_node`, meaning that if any additional information (such as metadata)
+  is specified, it is used to overwrite corresponding information in the constructed node.
+- Generalized `cai_causal_graph.causal_graph.CausalGraph.__eq__` to check for the class of the instance itself, enabling
+  to reuse this method by extending classes.
+
 ## 0.4.9
 
 - Fixed a bug where metadata on floating nodes would not be correctly carried over to the minimal graph when calling
