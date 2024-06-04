@@ -643,9 +643,10 @@ class TimeSeriesCausalGraph(CausalGraph):
                     # In case more complex errors are raised, raise them directly.
                     raise e
 
+            # Add explicitly rather than a node to ensure metadata is not deepcopied
             node = cast(
                 TimeSeriesNode,
-                super().add_node(node=node),
+                super().add_node(identifier=node.identifier, meta=node.meta, variable_type=node.variable_type),
             )
         else:
             assert (
