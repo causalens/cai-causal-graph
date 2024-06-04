@@ -131,6 +131,8 @@ class TimeSeriesCausalGraph(CausalGraph):
             inputs connected to all outputs. If no `input_list` and no `output_list` is provided, an empty graph will
             be created. If either or both are provided, but this is `False` (default), then the nodes will be added but
             not connected by edges.
+        :param meta: Any metadata defined on the graph. The keys must be strings, but no requirement is placed on the
+            values of the dictionary.
         """
         # Initialize caches for fast lookups
         self._lag_to_nodes = defaultdict(list)
@@ -622,7 +624,6 @@ class TimeSeriesCausalGraph(CausalGraph):
         :param node: The node to add.
         :return: The added node.
         """
-        # TODO: if we want older behaviour, could just construct the node here and add it that way
         meta = self._NodeCls._process_meta(meta=meta, kwargs_dict=dict(variable_name=variable_name, time_lag=time_lag))
 
         if identifier is None and variable_name is not None and time_lag is not None:
@@ -810,7 +811,6 @@ class TimeSeriesCausalGraph(CausalGraph):
         :param causal_graph: The causal graph as a `cai_causal_graph.causal_graph.CausalGraph` object.
         :return: A `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` object.
         """
-        # TODO: this whole method should be simplified?
         if isinstance(causal_graph, cls):
             return causal_graph
 
