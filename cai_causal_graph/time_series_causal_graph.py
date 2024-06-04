@@ -626,15 +626,40 @@ class TimeSeriesCausalGraph(CausalGraph):
         :param node: The node to add.
         :return: The added node.
         """
-        meta = self._NodeCls._process_meta(meta=meta, kwargs_dict=dict(variable_name=variable_name, time_lag=time_lag))
+        if node is None:
+            try:
+                node = self._NodeCls(
+                    identifier=identifier,
+                    variable_name=variable_name,
+                    time_lag=time_lag,
+                    variable_type=variable_type,
+                    meta=meta,
+                )
+            except Exception as e:
+                # Raise matching error type, and point to the original error
+                if isinstance(e, (ValueError, AssertionError)):
+                    raise e.__class__(f'Cannot add a node using the specified parameters.') from e
+                else:
+                    # In case more complex errors are raised, raise them directly.
+                    raise e
 
-        if identifier is None and variable_name is not None and time_lag is not None:
-            identifier = get_name_with_lag(variable_name, time_lag)
+            node = cast(
+                TimeSeriesNode,
+                super().add_node(node=node),
+            )
+        else:
+            assert (
+                identifier is None
+                and variable_name is None
+                and time_lag is None
+                and meta is None
+                and variable_type is NodeVariableType.UNSPECIFIED
+            ), 'If specifying `node` argument, all other arguments should not be specified.'
 
-        node = cast(
-            TimeSeriesNode,
-            super().add_node(identifier=identifier, variable_type=variable_type, meta=meta, node=node),
-        )
+            node = cast(
+                TimeSeriesNode,
+                super().add_node(node=node),
+            )
 
         self._add_node_to_cache(node)
 

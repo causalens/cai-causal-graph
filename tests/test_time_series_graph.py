@@ -1758,27 +1758,26 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
         cg = TimeSeriesCausalGraph()
         node = cg.add_node(identifier=identifier)
 
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             cg.add_node()
 
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             cg.add_node(None, None, None)
 
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             cg.add_node(None, 'apple', None)
 
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             cg.add_node(None, None, -2)
 
-        # TODO: currently fails because of the `TSCG.add_node` implementation
-        # with self.assertRaises(AssertionError):
-        #     cg.add_node(identifier, 'apple', None)
+        with self.assertRaises(AssertionError):
+            cg.add_node(identifier, 'apple', None)
 
-        # with self.assertRaises(AssertionError):
-        #     cg.add_node('apple lag(n=2)', None, -2)
+        with self.assertRaises(AssertionError):
+            cg.add_node('apple lag(n=2)', None, -2)
 
-        # with self.assertRaises(AssertionError):
-        #     cg.add_node('apple lag(n=3)', 'apple', -2)
+        with self.assertRaises(AssertionError):
+            cg.add_node('apple lag(n=3)', 'apple', -2)
 
         with self.assertRaises(CausalGraphErrors.NodeDuplicatedError):
             cg.add_node(node=node)
