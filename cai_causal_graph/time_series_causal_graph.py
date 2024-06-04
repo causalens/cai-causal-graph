@@ -132,7 +132,7 @@ class TimeSeriesCausalGraph(CausalGraph):
             be created. If either or both are provided, but this is `False` (default), then the nodes will be added but
             not connected by edges.
         :param meta: Any metadata defined on the graph. The keys must be strings, but no requirement is placed on the
-            values of the dictionary.
+            values of the dictionary. Default is `None`. If passed, meta is shallow-copied.
         """
         # Initialize caches for fast lookups
         self._lag_to_nodes = defaultdict(list)

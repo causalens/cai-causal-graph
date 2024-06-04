@@ -448,7 +448,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             be created. If either or both are provided, but this is `False`, then the nodes will be added but not
             connected by edges.
         :param meta: Any metadata defined on the graph. The keys must be strings, but no requirement is placed on the
-            values of the dictionary.
+            values of the dictionary. Default is `None`. If passed, meta is shallow-copied.
         """
         self._nodes_by_identifier: Dict[str, Node] = dict()
         self._edges_by_source: Dict[str, Dict[str, Edge]] = defaultdict(dict)

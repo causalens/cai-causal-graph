@@ -38,7 +38,7 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
     ):
         """
         :param identifier: String that uniquely identifies the node within the causal graph.
-        :param meta: The metadata of the node. Default is None.
+        :param meta: The metadata of the node. Default is None. If passed, meta is shallow-copied.
         :param variable_type: The variable type that the node represents. The choices are available through the
             `cai_causal_graph.type_definitions.NodeVariableType` enum. Default is `NodeVariableType.UNSPECIFIED`.
         """
@@ -263,7 +263,7 @@ class TimeSeriesNode(Node):
         :param variable_name: The variable name of the node. If `variable_name` is provided, then `time_lag` must be
             provided to set the identifier. If both `time_lag` and `variable_name` are provided, the `identifier` must
             be `None`. Default is `None`.
-        :param meta: The metadata of the node. Default is `None`.
+        :param meta: The metadata of the node. Default is `None`. If passed, meta is shallow-copied.
         :param variable_type: The variable type that the node represents. The choices are available through the
             `cai_causal_graph.type_definitions.NodeVariableType` enum. Default is `NodeVariableType.UNSPECIFIED`.
         """
@@ -377,7 +377,7 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         :param edge_type: The type of the edge to be added. Default is
             `cai_causal_graph.type_definitions.EdgeType.DIRECTED_EDGE`. See `cai_causal_graph.type_definitions.EdgeType`
             for the list of possible edge types.
-        :param meta: The meta values for the node.
+        :param meta: The meta values for the edge. Default is `None`. If passed, meta is shallow-copied.
         """
         self._source = source
         self._destination = destination
@@ -618,7 +618,7 @@ class TimeSeriesEdge(Edge):
         :param edge_type: The type of the edge to be added. Default is
             `cai_causal_graph.type_definitions.EdgeType.DIRECTED_EDGE`. See `cai_causal_graph.type_definitions.EdgeType`
             for the list of possible edge types.
-        :param meta: The meta values for the node.
+        :param meta: The meta values for the edge. Default is `None`. If passed, meta is shallow-copied.
         """
         if not isinstance(source, TimeSeriesNode):
             source = TimeSeriesNode.from_dict(source.to_dict(include_meta=True))
