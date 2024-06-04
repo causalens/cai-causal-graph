@@ -27,9 +27,9 @@ import numpy
 from mypy_extensions import Arg, DefaultArg
 
 from cai_causal_graph import CausalGraph, Skeleton
-from cai_causal_graph.graph_components import Edge, Node, TimeSeriesEdge, TimeSeriesNode
+from cai_causal_graph.graph_components import Edge, TimeSeriesEdge, TimeSeriesNode
 from cai_causal_graph.interfaces import HasIdentifier, HasMetadata
-from cai_causal_graph.type_definitions import TIME_LAG, VARIABLE_NAME, EdgeType, NodeLike, NodeVariableType
+from cai_causal_graph.type_definitions import TIME_LAG, EdgeType, NodeLike, NodeVariableType
 from cai_causal_graph.utils import get_name_with_lag, get_variable_name_and_lag
 
 logger = logging.getLogger(__name__)
