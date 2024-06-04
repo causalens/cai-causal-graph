@@ -208,6 +208,8 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         """
         Serialize a `cai_causal_graph.graph_components.Node` instance to a dictionary.
 
+        Returned dictionary contains a shallow-copy of the metadata of this node (if `include_meta` is `True`).
+
         :param include_meta: Whether to include meta information about the node in the dictionary. Default is `True`.
         :return: The dictionary representation of the `cai_causal_graph.graph_components.Node` instance.
         """
@@ -569,6 +571,8 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
     def to_dict(self, include_meta: bool = True) -> dict:
         """
         Serialize a `cai_causal_graph.graph_components.Edge` instance to a dictionary.
+
+        Returned dictionary contains a shallow-copy of the metadata of this edge (if `include_meta` is `True`).
 
         :param include_meta: Whether to include meta information about the edge in the dictionary. Default is `True`.
         :return: The dictionary representation of the `cai_causal_graph.graph_components.Edge` instance.
