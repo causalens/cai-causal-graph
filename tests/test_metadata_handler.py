@@ -4,10 +4,11 @@ Copyright (c) 2024 by Impulse Innovations Ltd. Private and confidential. Part of
 from typing import List, Optional
 from unittest import TestCase
 
-from cai_causal_graph.metadata_handler import HasMeta, MetaDataError, MetaField, access_meta
+from cai_causal_graph.interfaces import HasMetadata
+from cai_causal_graph.metadata_handler import MetaDataError, MetaField
 
 
-class ManualHasMeta(HasMeta):
+class ManualHasMeta(HasMetadata):
     def __init__(self, meta: Optional[dict] = None, **kwargs):
         super().__init__(meta=self._process_meta(meta=meta, kwargs_dict=kwargs, raise_if_unknown_tags=True))
 
@@ -17,16 +18,6 @@ class ManualHasMeta(HasMeta):
             MetaField(metatag='model', property_name='model'),
             MetaField(metatag='foo_tag', property_name='_foo', parameter_name='foo', default_value='bar'),
         ]
-
-
-class AutoHasMeta(ManualHasMeta):
-    @access_meta
-    def model(self) -> int:
-        pass
-
-    @access_meta
-    def _foo(self) -> str:
-        pass
 
 
 class ChildManualHasMeta(ManualHasMeta):
@@ -218,50 +209,3 @@ class TestHasMetaManual(TestCase):
         self.assertEqual(o.meta['hello'], 'bye')
         self.assertEqual(o.meta['cool'], True)
         self.assertEqual(len(o.meta), 4)
-
-
-class TestAutomaticProperties(TestCase):
-    def test_handle_only_kwargs(self):
-        o = AutoHasMeta(model=10, foo='barfoo')
-
-        self.assertTrue(hasattr(o, 'model'))
-        self.assertFalse(callable(o.model))
-
-        self.assertTrue(hasattr(o, '_foo'))
-        self.assertFalse(callable(o._foo))
-
-        self.assertEqual(o.model, 10)
-        self.assertEqual(o._foo, 'barfoo')
-        self.assertEqual(len(o.meta), 2)
-
-        o.model = 20
-        self.assertEqual(o.model, 20)
-        o.model = None
-        self.assertIsNone(o.model)
-
-        o._foo = 'rab'
-        self.assertEqual(o._foo, 'rab')
-
-    def test_handle_meta_and_kwargs(self):
-        meta = {'hello': 'bye'}
-
-        o = AutoHasMeta(
-            meta=meta,
-            model=10,
-            foo='barfoo',
-        )
-
-        # test for shallow copy of meta
-        meta['bye'] = 'hello'
-
-        self.assertEqual(o.model, 10)
-        self.assertEqual(o._foo, 'barfoo')
-        self.assertEqual(o.meta['hello'], 'bye')
-        self.assertEqual(len(o.meta), 3)
-
-    def test_handle_empty(self):
-        o = AutoHasMeta()
-        # should add the default value in
-        self.assertEqual(len(o.meta), 1)
-        self.assertEqual(o._foo, 'bar')
-        self.assertDictEqual(o.meta, {'foo_tag': 'bar'})
