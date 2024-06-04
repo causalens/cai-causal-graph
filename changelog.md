@@ -2,7 +2,7 @@
 
 ## NEXT
 
-> **_NOTE:_**  **Backwards compatibility warning!** Global metadata to `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` 
+> **_NOTE:_**  **Backwards compatibility warning!** Global metadata to `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`
 > and `cai_causal_graph.causal_graph.CausalGraph`, which means their serialized state has changed.
 
 - Added metadata handling system to the `cai_causal_graph.interfaces.HasMetadata` class. All extending classes should use
