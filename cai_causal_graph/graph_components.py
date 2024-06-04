@@ -623,8 +623,12 @@ class TimeSeriesEdge(Edge):
         if not isinstance(source, TimeSeriesNode):
             source = TimeSeriesNode.from_dict(source.to_dict(include_meta=True))
 
+        assert isinstance(source, TimeSeriesNode)   # for lint
+
         if not isinstance(destination, TimeSeriesNode):
             destination = TimeSeriesNode.from_dict(destination.to_dict(include_meta=True))
+
+        assert isinstance(destination, TimeSeriesNode)   # for lint
 
         # If edge type is not directed, swap source and destination to respect time
         if edge_type != EdgeType.DIRECTED_EDGE:

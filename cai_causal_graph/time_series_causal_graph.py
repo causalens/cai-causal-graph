@@ -84,10 +84,12 @@ class TimeSeriesCausalGraph(CausalGraph):
     from_networkx: Callable[[Arg(networkx.Graph, 'g')], TimeSeriesCausalGraph]  # type: ignore
     from_gml_string: Callable[[Arg(str, 'gml')], TimeSeriesCausalGraph]  # type: ignore
 
-    node: TimeSeriesNode
-    nodes: List[TimeSeriesNode]
-    edge: TimeSeriesEdge
-    edges: List[TimeSeriesEdge]
+    nodes: List[TimeSeriesNode]   # type: ignore
+    edges: List[TimeSeriesEdge]   # type: ignore
+    get_nodes: Callable[  # type: ignore
+        [DefaultArg(Optional[Union[NodeLike, List[NodeLike]]], 'identifier')], List[TimeSeriesNode]
+    ]
+    get_node: Callable[[Arg(Optional[Union[NodeLike, List[NodeLike]]], 'identifier')], TimeSeriesNode]  # type: ignore
 
     def __init__(
         self,
@@ -817,7 +819,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         sepsets = deepcopy(causal_graph._sepsets)
 
         # This also deepcopies all the metadata
-        ts_cg = cls.from_dict(d=causal_graph.to_dict(include_meta=True), validate=False)
+        ts_cg = cast(TimeSeriesCausalGraph, cls.from_dict(d=causal_graph.to_dict(include_meta=True), validate=False))
         ts_cg._sepsets = sepsets
 
         return ts_cg
