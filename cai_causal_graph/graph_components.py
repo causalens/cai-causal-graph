@@ -635,13 +635,11 @@ class TimeSeriesEdge(Edge):
         assert isinstance(destination, TimeSeriesNode)   # for lint
 
         # If edge type is not directed, swap source and destination to respect time
-        if edge_type != EdgeType.DIRECTED_EDGE:
-            if source.time_lag > destination.time_lag:
-                _destination = source
-                source = destination
-                destination = _destination
-
-        if source.time_lag > destination.time_lag:
+        if edge_type != EdgeType.DIRECTED_EDGE and source.time_lag > destination.time_lag:
+            _destination = source
+            source = destination
+            destination = _destination
+        elif source.time_lag > destination.time_lag:
             raise ValueError(
                 f'Cannot add a directed edge between {source} and {destination} because this does not respect time.'
             )
