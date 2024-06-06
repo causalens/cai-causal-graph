@@ -380,6 +380,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         input_list: Optional[List[NodeLike]] = None,
         output_list: Optional[List[NodeLike]] = None,
         fully_connected: bool = True,
+        meta: Optional[dict] = None,
     ):
         """
         The `cai_causal_graph.causal_graph.CausalGraph` class manages and defines the state of a causal graph.
@@ -446,6 +447,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             inputs connected to all outputs. If no `input_list` and no `output_list` is provided, an empty graph will
             be created. If either or both are provided, but this is `False`, then the nodes will be added but not
             connected by edges.
+        :param meta: Any metadata defined on the graph. The keys must be strings, but no requirement is placed on the
+            values of the dictionary. Default is `None`. If passed, meta is shallow-copied.
         """
         self._nodes_by_identifier: Dict[str, Node] = dict()
         self._edges_by_source: Dict[str, Dict[str, Edge]] = defaultdict(dict)
@@ -465,6 +468,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         # construct the skeleton and separation sets
         self._skeleton = Skeleton(graph=self)
         self._sepsets: dict = dict()
+
+        super(HasIdentifier, self).__init__(meta=meta)
 
     def __copy__(self) -> CausalGraph:
         """Copy a `cai_causal_graph.causal_graph.CausalGraph` instance."""
@@ -501,7 +506,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         :param deep: If `True`, also does deep equality checks on all the nodes and edges. Default is `False`.
         :return: `True` if equal, `False` otherwise.
         """
-        if not isinstance(other, CausalGraph):
+        if not isinstance(other, self.__class__):
             return False
 
         # Check that the number of nodes and edges agrees
@@ -607,18 +612,6 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """Return the graph identifier."""
         return self.identifier
 
-    @property
-    def metadata(self) -> dict:
-        """Return metadata of the `cai_causal_graph.causal_graph.CausalGraph` instance."""
-        return dict(
-            **{node.identifier: node.get_metadata for node in self.get_nodes()},
-            **{edge.identifier: edge.get_metadata for edge in self.get_edges()},
-        )
-
-    def get_metadata(self) -> dict:
-        """Return metadata of the `cai_causal_graph.causal_graph.CausalGraph` instance."""
-        return self.metadata
-
     def is_dag(self) -> bool:
         """Check whether the `cai_causal_graph.causal_graph.CausalGraph` instance is a Directed Acyclic Graph (DAG)."""
         return networkx.is_directed_acyclic_graph(self.to_networkx()) if self._is_fully_directed() else False
@@ -687,12 +680,12 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             )
         return source_nodes[0], destination_nodes[0]
 
-    def _set_edge(self, source: NodeLike, destination: NodeLike, edge: Edge, validate: bool = True):
+    def _set_edge(self, edge: Edge, validate: bool = True):
         """Set the edge in the graph."""
-        if isinstance(source, HasIdentifier):
-            source = source.identifier
-        if isinstance(destination, HasIdentifier):
-            destination = destination.identifier
+        source, destination = self._NodeCls.identifier_from(edge.source), self._NodeCls.identifier_from(
+            edge.destination
+        )
+
         self._edges_by_source[source][destination] = edge
         self._edges_by_destination[destination][source] = edge
 
@@ -847,7 +840,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             parameter is specified.
         :param variable_type: The variable type that the node represents. The choices are available through the
             `cai_causal_graph.type_definitions.NodeVariableType` enum.
-        :param meta: The meta values for the node.
+        :param meta: The meta values for the node. If passed explicitly, this metadata is not deepcopied.
         :param node: A `cai_causal_graph.graph_components.Node` node to be used to construct a new node. All the
             properties of the provided node will be deep copied to the constructed node, including metadata and
             variable type. If provided, then all other parameters to the method must not be specified. Default is
@@ -1167,7 +1160,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         :param edge_type: The type of the edge to be added. Default is
             `cai_causal_graph.type_definitions.EdgeType.DIRECTED_EDGE`. See `cai_causal_graph.type_definitions.EdgeType`
             for the list of possible edge types.
-        :param meta: The meta values for the edge.
+        :param meta: The meta values for the edge. If passed explicitly, this metadata is not deepcopied.
         :param edge: A `cai_causal_graph.graph_components.Edge` edge to be used to construct a new edge. All the
             properties of the provided edge will be deep copied to the constructed edge, including metadata. If
             provided, then all other parameters to the method must not be specified. Default is `None`.
@@ -1200,7 +1193,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         if meta is not None:
             edge.meta = meta
 
-        self._set_edge(source, destination, edge, validate=validate)
+        self._set_edge(edge=edge, validate=validate)
         return edge
 
     def add_edges_from(self, pairs: List[Tuple[NodeLike, NodeLike]], validate: bool = True):
@@ -1899,11 +1892,12 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
                 edges[source] = dict()
             edges[source][destination] = edge.to_dict(include_meta=include_meta)
 
-        return {
-            'nodes': nodes,
-            'edges': edges,
-            'version': CAUSAL_GRAPH_VERSION,
-        }
+        d = {'nodes': nodes, 'edges': edges, 'version': CAUSAL_GRAPH_VERSION}
+
+        if include_meta:
+            d['meta'] = self.meta.copy()
+
+        return d
 
     def to_networkx(self) -> networkx.Graph:
         """
@@ -1985,12 +1979,17 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """
         Construct a `cai_causal_graph.causal_graph.CausalGraph` instance from a Python dictionary.
 
+        The contents of the passed dictionary are deepcopied when constructing a new `CausalGraph` instance. This
+        includes metadata of each node and edge, as well as the graph itself.
+
         :param d: Dictionary to build a graph from.
         :param validate: Whether to perform validation checks. The validation checks will raise if
             any cycles are introduced to the graph by adding the edge. This should only be disabled to speed up
             this method in situations where it is known that the serialized graph is valid. Default is `True`.
         """
-        graph = cls()
+        # deepcopy the metadata if provided in the dict. This is consistent with metadata in nodes/edges which
+        # is deepcopied by the `add_node`/`add_edge` methods.
+        graph = cls(meta=deepcopy(d.get('meta', None)))
 
         for identifier, node_dict in d['nodes'].items():
             node = cls._NodeCls.from_dict(node_dict)

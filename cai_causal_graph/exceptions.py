@@ -69,3 +69,9 @@ class CausalKnowledgeErrors:
 
     class InvalidTiersError(Exception):
         """Raised when the provided tiers are invalid."""
+
+
+class MetaDataError(Exception):
+    """Error raised by the `cai_causal_graph.interfaces.HasMetadata` relating to metadata."""
+
+    pass
