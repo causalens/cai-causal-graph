@@ -463,7 +463,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         self,
         backward_steps: Optional[int] = None,
         forward_steps: Optional[int] = None,
-        include_all_parents: bool = False,
+        include_all_parents: bool = True,
     ) -> TimeSeriesCausalGraph:
         """
         Return an extended graph.
@@ -475,6 +475,11 @@ class TimeSeriesCausalGraph(CausalGraph):
         include nodes at time t-2, but rather that it will include nodes at time t-2 and all the nodes that are
         connected to them as specified by the minimal graph.
 
+        By default, this will also add all parents of newly added nodes. This is done to ensure that all nodes
+        corresponding to the same variable name have consistent parents, which is particularly useful for
+        causal modelling tasks. This can be controlled by the `include_all_parents` parameter. If set to `False`, then
+        only nodes up-to `backward_steps` back in time are added.
+
         If both `backward_steps` and `forward_steps` are None, the original graph is returned.
 
         :param backward_steps: Number of steps to extend the graph backwards in time. If None, do not extend backwards.
@@ -482,9 +487,11 @@ class TimeSeriesCausalGraph(CausalGraph):
         :param include_all_parents: If `True`, any nodes and edges required to predict nodes up to `backward_steps` ago
             will also be added, in addition to the nodes/edges normally added by this method. This may mean that nodes
             further back in time than `backward_steps` will be added, if they are parents of any nodes up to
-            `backward_steps` ago. Default is `False`, meaning this extra nodes/edges are not added.
+            `backward_steps` ago. Default is `True`, meaning this extra nodes/edges are added.
+
             `include_all_parents` is only valid when specifying a `backward_steps`, and will have no effect on the
-            logic of `forward_steps`.
+            logic of `forward_steps` since by definition all the parents of the added nodes in the future will either
+            already exist in the minimal graph or be added.
         :return: Extended graph with nodes for each variable at each time step from `backward_steps` to `forward_steps`.
         """
         # check steps are valid (positive integers) if not None
