@@ -147,10 +147,6 @@ class TimeSeriesCausalGraph(CausalGraph):
         self._stationary_graph: Optional[TimeSeriesCausalGraph] = None
         self._minimal_graph: Optional[TimeSeriesCausalGraph] = None
 
-    def __ne__(self, other: object) -> bool:
-        """Check if the graph is not equal to another graph."""
-        return not (self == other)
-
     def is_stationary_graph(self) -> bool:
         """
         Check if the graph is stationary. That is, if the graph is time invariant.

@@ -48,7 +48,7 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         self._identifier = identifier
 
         self.variable_type: NodeVariableType = variable_type
-        super().__init__(meta=meta)
+        super(HasIdentifier, self).__init__(meta=meta)
 
         self._inbound_edges: List[Edge] = []
         self._outbound_edges: List[Edge] = []
@@ -385,7 +385,7 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         self._destination = destination
         self._edge_type = edge_type
 
-        super().__init__(meta=meta)
+        super(HasIdentifier, self).__init__(meta=meta)
 
         # Switches to False if the edge is deleted
         self._valid: bool = True
