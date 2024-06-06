@@ -21,7 +21,7 @@ jobs:
         os: [ ubuntu-20.04 ]
         # Add other python distributions as required (should match the package python requirements).
         # This is to highlight any issues that would occur during `release`/`post-release` workflows.
-        python-version: [ '3.8', '3.9', '3.10', '3.11', '3.12' ]  # Order here does not matter if we do not fail-fast above.
+        python-version: [ '3.9', '3.10', '3.11', '3.12' ]  # Order here does not matter if we do not fail-fast above.
     steps:
       - name: Checkout current branch
         uses: actions/checkout@v4
