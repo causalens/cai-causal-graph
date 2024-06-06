@@ -20,7 +20,8 @@ import logging
 from copy import copy
 from typing import List, Optional
 
-from cai_causal_graph.metadata_handler import MetaDataError, MetaField
+from cai_causal_graph.exceptions import MetaDataError
+from cai_causal_graph.metadata_handler import MetaField
 
 logger = logging.getLogger(__name__)
 

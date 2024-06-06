@@ -4,8 +4,9 @@ Copyright (c) 2024 by Impulse Innovations Ltd. Private and confidential. Part of
 from typing import List, Optional
 from unittest import TestCase
 
+from cai_causal_graph.exceptions import MetaDataError
 from cai_causal_graph.interfaces import HasMetadata
-from cai_causal_graph.metadata_handler import MetaDataError, MetaField
+from cai_causal_graph.metadata_handler import MetaField
 
 
 class ManualHasMeta(HasMetadata):

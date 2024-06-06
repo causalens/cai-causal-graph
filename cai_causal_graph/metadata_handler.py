@@ -5,12 +5,6 @@ from dataclasses import dataclass
 from typing import Any, Optional
 
 
-class MetaDataError(Exception):
-    """Error raised by the `cai_causal_graph.interfaces.HasMetadata` relating to metadata."""
-
-    pass
-
-
 @dataclass
 class MetaField:
     """
