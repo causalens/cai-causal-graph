@@ -76,9 +76,10 @@ class TestGraphComponents(unittest.TestCase):
         node.meta['variable_name'] = 'b'
         node.meta['time_lag'] = 3
 
-        # check it raises if meta is not consistent
-        with self.assertRaises(AssertionError):
-            node1 = TimeSeriesNode.from_dict(node.to_dict())
+        # check identifier overwrites inconsitent meta
+        node1 = TimeSeriesNode.from_dict(node.to_dict())
+        self.assertEqual(node1.variable_name, 'a')
+        self.assertEqual(node1.time_lag, -2)
 
         # test N -> TSN
         node = Node(identifier='a', meta={'color': 'blue'}, variable_type=NodeVariableType.BINARY)

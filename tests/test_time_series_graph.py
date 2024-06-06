@@ -15,6 +15,7 @@ limitations under the License.
 """
 import json
 import unittest
+from copy import copy, deepcopy
 
 import networkx
 import numpy
@@ -344,15 +345,18 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
         # test with a custom metadata
         newg = self.tsdag.copy()
+        newg.meta['foo'] = (o := object())
         newg.add_node('xm future(n=2)', variable_type=NodeVariableType.CONTINUOUS, meta={'test': 'test'})
         graph_as_dict_withmeta = newg.to_dict(include_meta=True)
         # test that the metadata is in the dict
         self.assertIn('test', graph_as_dict_withmeta['nodes']['xm future(n=2)']['meta'].keys())
+        self.assertEqual(graph_as_dict_withmeta['meta']['foo'], o)
         # confirm node info is still correct on reconstruction
         self.assertEqual(TimeSeriesCausalGraph.from_dict(graph_as_dict_withmeta).get_node('xm future(n=2)').time_lag, 2)
         self.assertEqual(
             TimeSeriesCausalGraph.from_dict(graph_as_dict_withmeta).get_node('xm future(n=2)').variable_name, 'xm'
         )
+        self.assertNotEqual(TimeSeriesCausalGraph.from_dict(graph_as_dict_withmeta).meta['foo'], o)
 
         graph_as_dict_nometa = newg.to_dict(include_meta=False)
         # test that the metadata is not in the dict
@@ -1665,14 +1669,14 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
         self.assertIsInstance(e.__repr__(), str)
         self.assertIsInstance(cg.__repr__(), str)
         self.assertTrue(n.__repr__().startswith('TimeSeriesNode'))
-        self.assertTrue(e.__repr__().startswith('Edge'))
+        self.assertTrue(e.__repr__().startswith('TimeSeriesEdge'))
         self.assertTrue(cg.__repr__().startswith('TimeSeriesCausalGraph'))
 
         self.assertIsInstance(n.details(), str)
         self.assertIsInstance(e.details(), str)
         self.assertIsInstance(cg.details(), str)
         self.assertTrue(n.details().startswith('TimeSeriesNode'))
-        self.assertTrue(e.details().startswith('Edge'))
+        self.assertTrue(e.details().startswith('TimeSeriesEdge'))
         self.assertTrue(cg.details().startswith('TimeSeriesCausalGraph'))
 
     def test_complex_nodes_and_edges(self):
@@ -1689,14 +1693,14 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
         self.assertIsInstance(e.__repr__(), str)
         self.assertIsInstance(cg.__repr__(), str)
         self.assertTrue(n.__repr__().startswith('TimeSeriesNode'))
-        self.assertTrue(e.__repr__().startswith('Edge'))
+        self.assertTrue(e.__repr__().startswith('TimeSeriesEdge'))
         self.assertTrue(cg.__repr__().startswith('TimeSeriesCausalGraph'))
 
         self.assertIsInstance(n.details(), str)
         self.assertIsInstance(e.details(), str)
         self.assertIsInstance(cg.details(), str)
         self.assertTrue(n.details().startswith('TimeSeriesNode'))
-        self.assertTrue(e.details().startswith('Edge'))
+        self.assertTrue(e.details().startswith('TimeSeriesEdge'))
         self.assertTrue(cg.details().startswith('TimeSeriesCausalGraph'))
 
     def test_add_node_from_node(self):
@@ -1757,16 +1761,16 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
         cg = TimeSeriesCausalGraph()
         node = cg.add_node(identifier=identifier)
 
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             cg.add_node()
 
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             cg.add_node(None, None, None)
 
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             cg.add_node(None, 'apple', None)
 
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             cg.add_node(None, None, -2)
 
         with self.assertRaises(AssertionError):
@@ -2001,3 +2005,90 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
         self.assertEqual(floating_cont_node.meta['some cont'], 'metadata')
         self.assertEqual(floating_cont_node.variable_type, NodeVariableType.CONTINUOUS)
         self.assertEqual(floating_cont_node.time_lag, 0)
+
+    def test_deepcopy_with_metadata(self):
+        o = object()
+
+        cg = TimeSeriesCausalGraph()
+        cg.meta['foo'] = o
+
+        cg_copy = deepcopy(cg)
+
+        self.assertIn('foo', cg_copy.meta)
+        self.assertNotEqual(cg_copy.meta['foo'], cg.meta['foo'])
+
+    def test_metadata_in_constructor(self):
+        o = object()
+        meta = {'foo': 'bar', 'o': o}
+
+        cg = TimeSeriesCausalGraph(meta=meta)
+
+        self.assertEqual(len(cg.meta), 2)
+        self.assertEqual(cg.meta['o'], o)
+        self.assertEqual(cg.meta['foo'], 'bar')
+
+    def test_set_metadata(self):
+        o = object()
+        meta = {'foo': 'bar', 'o': o}
+
+        cg = TimeSeriesCausalGraph()
+        cg.meta = meta
+
+        # no shallow copy
+        meta['bar'] = 'foo'
+
+        self.assertEqual(len(cg.meta), 3)
+        self.assertEqual(cg.meta['o'], o)
+        self.assertEqual(cg.meta['foo'], 'bar')
+        self.assertEqual(cg.meta['bar'], 'foo')
+
+    def test_copy_with_metadata(self):
+        o = object()
+
+        cg = TimeSeriesCausalGraph()
+        cg.meta['foo'] = o
+
+        cg_copy = copy(cg)
+
+        self.assertIn('foo', cg_copy.meta)
+        self.assertNotEqual(cg_copy.meta['foo'], cg.meta['foo'])
+
+    def test_get_minimal_deepcopies_meta(self):
+        o = object()
+
+        cg = TimeSeriesCausalGraph()
+        cg.meta['foo'] = o
+
+        cg.add_edges_from_paths(['a lag(n=1)', 'a', 'b'])
+
+        cg = cg.extend_graph(backward_steps=2)
+
+        # deepcopied here
+        self.assertNotEqual(cg.meta['foo'], o)
+
+        o = cg.meta['foo']
+
+        cg = cg.get_minimal_graph()
+
+        # deepcopied here
+        self.assertNotEqual(cg.meta['foo'], o)
+
+    def test_get_stationary_deepcopies_meta(self):
+        o = object()
+
+        cg = TimeSeriesCausalGraph()
+        cg.meta['foo'] = o
+
+        cg.add_edges_from_paths(['a lag(n=1)', 'a', 'b'])
+
+        cg = cg.get_stationary_graph()
+
+        # deepcopied here
+        self.assertNotEqual(cg.meta['foo'], o)
+
+        o = cg.meta['foo']
+
+        cg = cg.get_minimal_graph()
+
+        # deepcopied here
+        self.assertNotEqual(cg.meta['foo'], o)

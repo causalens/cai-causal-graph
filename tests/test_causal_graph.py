@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import copy
 import json
 import unittest
 from copy import deepcopy
@@ -182,12 +183,18 @@ class TestCausalGraph(unittest.TestCase):
         self.assertTrue(CausalGraph.from_dict(graph_as_dict_withmeta).__eq__(self.fully_connected_graph, deep=True))
 
         # test with a custom metadata
+        o = object()
         newg = self.fully_connected_graph.copy()
+        newg.meta['foo'] = o
         newg.add_node('xm', variable_type=NodeVariableType.CONTINUOUS, meta={'test': 'test'})
         graph_as_dict_withmeta = newg.to_dict(include_meta=True)
         # test that the metadata is in the dict
+        self.assertEqual(graph_as_dict_withmeta['meta']['foo'], o)
         self.assertIn('test', graph_as_dict_withmeta['nodes']['xm']['meta'].keys())
         self.assertEqual(CausalGraph.from_dict(graph_as_dict_withmeta), newg)
+        self.assertNotEqual(
+            CausalGraph.from_dict(graph_as_dict_withmeta).meta['foo'], o
+        )   # should not be equal because deepcopied
         self.assertTrue(CausalGraph.from_dict(graph_as_dict_withmeta).__eq__(newg, deep=True))
 
         graph_as_dict_nometa = newg.to_dict(include_meta=False)
@@ -883,6 +890,53 @@ class TestCausalGraph(unittest.TestCase):
             causal_graph_deepcopy.get_node('x').get_identifier(),
             self.fully_connected_graph.get_node('x').get_identifier(),
         )
+
+    def test_deepcopy_with_metadata(self):
+        o = object()
+
+        cg = CausalGraph()
+        cg.meta['foo'] = o
+
+        cg_copy = deepcopy(cg)
+
+        self.assertIn('foo', cg_copy.meta)
+        self.assertNotEqual(cg_copy.meta['foo'], cg.meta['foo'])
+
+    def test_metadata_in_constructor(self):
+        o = object()
+        meta = {'foo': 'bar', 'o': o}
+
+        cg = CausalGraph(meta=meta)
+
+        self.assertEqual(len(cg.meta), 2)
+        self.assertEqual(cg.meta['o'], o)
+        self.assertEqual(cg.meta['foo'], 'bar')
+
+    def test_set_metadata(self):
+        o = object()
+        meta = {'foo': 'bar', 'o': o}
+
+        cg = CausalGraph()
+        cg.meta = meta
+
+        # no shallow copy
+        meta['bar'] = 'foo'
+
+        self.assertEqual(len(cg.meta), 3)
+        self.assertEqual(cg.meta['o'], o)
+        self.assertEqual(cg.meta['foo'], 'bar')
+        self.assertEqual(cg.meta['bar'], 'foo')
+
+    def test_copy_with_metadata(self):
+        o = object()
+
+        cg = CausalGraph()
+        cg.meta['foo'] = o
+
+        cg_copy = copy.copy(cg)
+
+        self.assertIn('foo', cg_copy.meta)
+        self.assertNotEqual(cg_copy.meta['foo'], cg.meta['foo'])
 
     def test_neighbors(self):
         neighbors = self.fully_connected_graph.get_neighbors('x')
