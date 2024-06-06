@@ -1,5 +1,9 @@
 # Changelog
 
+## NEXT
+
+- Dropped support for `python` `3.8` as it is approaching end of life.
+
 ## 0.4.10
 
 - Improved documentation by cleaning up a few syntax issues to support the new docs building process.

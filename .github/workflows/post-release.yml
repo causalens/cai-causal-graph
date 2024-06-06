@@ -19,7 +19,7 @@ jobs:
         # It is again enough to only test on linux, as mac osx is only used by developers.
         os: [ ubuntu-20.04 ]
         # All the python versions the package should be tested for clean pip installation from bdist or sdist (based on availability)
-        python-version: [ '3.8', '3.9', '3.10', '3.11', '3.12' ]   # Order here does not matter if we do not fail-fast above.
+        python-version: [ '3.9', '3.10', '3.11', '3.12' ]   # Order here does not matter if we do not fail-fast above.
     steps:
       - name: Get package version
         # This is the version that has just got release, as this workflow is triggered by the release workflow
