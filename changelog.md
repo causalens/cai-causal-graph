@@ -4,9 +4,9 @@
 
 > **_NOTE:_**  **Backwards compatibility warning!** Global metadata to `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`
 > and `cai_causal_graph.causal_graph.CausalGraph`, which means their serialized state has changed.
->
-> > **_NOTE:_**  **Backwards compatibility warning!** The default value of the `include_all_parents` argument to `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_graph`
-> > has been changed to `True` (from `False`).
+
+> **_NOTE:_**  **Backwards compatibility warning!** The default value of the `include_all_parents` argument to `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_graph`
+> has been changed to `True` (from `False`).
 
 - Added metadata handling system to the `cai_causal_graph.interfaces.HasMetadata` class. All extending classes should use
   this system to parse and set their metadata.
