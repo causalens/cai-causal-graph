@@ -469,7 +469,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         self._skeleton = Skeleton(graph=self)
         self._sepsets: dict = dict()
 
-        super().__init__(meta=meta)
+        super(HasIdentifier, self).__init__(meta=meta)
 
     def __copy__(self) -> CausalGraph:
         """Copy a `cai_causal_graph.causal_graph.CausalGraph` instance."""

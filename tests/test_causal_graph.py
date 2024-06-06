@@ -183,12 +183,18 @@ class TestCausalGraph(unittest.TestCase):
         self.assertTrue(CausalGraph.from_dict(graph_as_dict_withmeta).__eq__(self.fully_connected_graph, deep=True))
 
         # test with a custom metadata
+        o = object()
         newg = self.fully_connected_graph.copy()
+        newg.meta['foo'] = o
         newg.add_node('xm', variable_type=NodeVariableType.CONTINUOUS, meta={'test': 'test'})
         graph_as_dict_withmeta = newg.to_dict(include_meta=True)
         # test that the metadata is in the dict
+        self.assertEqual(graph_as_dict_withmeta['meta']['foo'], o)
         self.assertIn('test', graph_as_dict_withmeta['nodes']['xm']['meta'].keys())
         self.assertEqual(CausalGraph.from_dict(graph_as_dict_withmeta), newg)
+        self.assertNotEqual(
+            CausalGraph.from_dict(graph_as_dict_withmeta).meta['foo'], o
+        )   # should not be equal because deepcopied
         self.assertTrue(CausalGraph.from_dict(graph_as_dict_withmeta).__eq__(newg, deep=True))
 
         graph_as_dict_nometa = newg.to_dict(include_meta=False)

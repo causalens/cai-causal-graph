@@ -345,15 +345,18 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
         # test with a custom metadata
         newg = self.tsdag.copy()
+        newg.meta['foo'] = (o := object())
         newg.add_node('xm future(n=2)', variable_type=NodeVariableType.CONTINUOUS, meta={'test': 'test'})
         graph_as_dict_withmeta = newg.to_dict(include_meta=True)
         # test that the metadata is in the dict
         self.assertIn('test', graph_as_dict_withmeta['nodes']['xm future(n=2)']['meta'].keys())
+        self.assertEqual(graph_as_dict_withmeta['meta']['foo'], o)
         # confirm node info is still correct on reconstruction
         self.assertEqual(TimeSeriesCausalGraph.from_dict(graph_as_dict_withmeta).get_node('xm future(n=2)').time_lag, 2)
         self.assertEqual(
             TimeSeriesCausalGraph.from_dict(graph_as_dict_withmeta).get_node('xm future(n=2)').variable_name, 'xm'
         )
+        self.assertNotEqual(TimeSeriesCausalGraph.from_dict(graph_as_dict_withmeta).meta['foo'], o)
 
         graph_as_dict_nometa = newg.to_dict(include_meta=False)
         # test that the metadata is not in the dict
@@ -2051,7 +2054,41 @@ class TestTimeSeriesCausalGraphPrinting(unittest.TestCase):
         self.assertNotEqual(cg_copy.meta['foo'], cg.meta['foo'])
 
     def test_get_minimal_deepcopies_meta(self):
-        ...
+        o = object()
+
+        cg = TimeSeriesCausalGraph()
+        cg.meta['foo'] = o
+
+        cg.add_edges_from_paths(['a lag(n=1)', 'a', 'b'])
+
+        cg = cg.extend_graph(backward_steps=2)
+
+        # deepcopied here
+        self.assertNotEqual(cg.meta['foo'], o)
+
+        o = cg.meta['foo']
+
+        cg = cg.get_minimal_graph()
+
+        # deepcopied here
+        self.assertNotEqual(cg.meta['foo'], o)
 
     def test_get_stationary_deepcopies_meta(self):
-        ...
+        o = object()
+
+        cg = TimeSeriesCausalGraph()
+        cg.meta['foo'] = o
+
+        cg.add_edges_from_paths(['a lag(n=1)', 'a', 'b'])
+
+        cg = cg.get_stationary_graph()
+
+        # deepcopied here
+        self.assertNotEqual(cg.meta['foo'], o)
+
+        o = cg.meta['foo']
+
+        cg = cg.get_minimal_graph()
+
+        # deepcopied here
+        self.assertNotEqual(cg.meta['foo'], o)
