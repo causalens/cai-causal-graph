@@ -593,7 +593,7 @@ class TimeSeriesEdge(Edge):
     """
     Class defining a time-series edge.
 
-    Time series edge is equivalent to a `cai_causal_graph.graph_components.Edge` class, except that it only
+    Time-series edge is equivalent to a `cai_causal_graph.graph_components.Edge` class, except that it only
     ensures that the destination of an edge is at the same or later time than its source.
 
     This means that it is not possible to construct a directed time-series edge which does not respect time. Moreover,
@@ -636,9 +636,7 @@ class TimeSeriesEdge(Edge):
 
         # If edge type is not directed, swap source and destination to respect time
         if edge_type != EdgeType.DIRECTED_EDGE and source.time_lag > destination.time_lag:
-            _destination = source
-            source = destination
-            destination = _destination
+            source, destination = destination, source
         elif source.time_lag > destination.time_lag:
             raise ValueError(
                 f'Cannot add a directed edge between {source} and {destination} because this does not respect time.'
