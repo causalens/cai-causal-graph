@@ -4,6 +4,8 @@
 
 > **_NOTE:_**  **Backwards compatibility warning!** Global metadata to `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`
 > and `cai_causal_graph.causal_graph.CausalGraph`, which means their serialized state has changed.
+> > **_NOTE:_**  **Backwards compatibility warning!** The default value of the `include_all_parents` argument to `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_graph`
+> has been changed to `True` (from `False`).
 
 - Added metadata handling system to the `cai_causal_graph.interfaces.HasMetadata` class. All extending classes should use
   this system to parse and set their metadata.
@@ -20,6 +22,8 @@
 - Generalized `cai_causal_graph.causal_graph.CausalGraph.__eq__` to check for the class of the instance itself, enabling
   to reuse this method by extending classes.
 - Dropped support for `python` `3.8` as it is approaching end of life.
+- The default value of the `include_all_parents` argument to `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_graph` 
+  has been changed to `True` (from `False`).
 
 ## 0.4.10
 
