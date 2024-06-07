@@ -22,10 +22,10 @@ import networkx
 import numpy
 import pandas
 
-from cai_causal_graph import CausalGraph, EdgeType, NodeVariableType
+from cai_causal_graph import CausalGraph, EdgeType, NodeVariableType, TimeSeriesCausalGraph
 from cai_causal_graph import __version__ as VERSION
 from cai_causal_graph.exceptions import CausalGraphErrors
-from cai_causal_graph.graph_components import Edge, Node
+from cai_causal_graph.graph_components import Edge, Node, TimeSeriesEdge, TimeSeriesNode
 
 
 class TestCausalGraph(unittest.TestCase):
@@ -1158,6 +1158,7 @@ class TestCausalGraphPrinting(unittest.TestCase):
         self.assertTrue(n.__repr__().startswith('Node'))
         self.assertTrue(e.__repr__().startswith('Edge'))
         self.assertTrue(cg.__repr__().startswith('CausalGraph'))
+        self.assertIn('is_dag=True', cg.__repr__())
 
         self.assertIsInstance(n.details(), str)
         self.assertIsInstance(e.details(), str)
@@ -1165,6 +1166,31 @@ class TestCausalGraphPrinting(unittest.TestCase):
         self.assertTrue(n.details().startswith('Node'))
         self.assertTrue(e.details().startswith('Edge'))
         self.assertTrue(cg.details().startswith('CausalGraph'))
+        self.assertIn('is_dag=True', cg.details())
+
+        tscg = TimeSeriesCausalGraph.from_causal_graph(cg)
+        n = tscg.get_node('a')
+        e = tscg.get_edge('a', 'b')
+
+        self.assertIsInstance(n.__hash__(), int)
+        self.assertIsInstance(e.__hash__(), int)
+        self.assertIsInstance(tscg.__hash__(), int)
+
+        self.assertIsInstance(n.__repr__(), str)
+        self.assertIsInstance(e.__repr__(), str)
+        self.assertIsInstance(tscg.__repr__(), str)
+        self.assertTrue(n.__repr__().startswith('TimeSeriesNode'))
+        self.assertTrue(e.__repr__().startswith('TimeSeriesEdge'))
+        self.assertTrue(tscg.__repr__().startswith('TimeSeriesCausalGraph'))
+        self.assertIn('is_dag=True', tscg.__repr__())
+
+        self.assertIsInstance(n.details(), str)
+        self.assertIsInstance(e.details(), str)
+        self.assertIsInstance(cg.details(), str)
+        self.assertTrue(n.details().startswith('TimeSeriesNode'))
+        self.assertTrue(e.details().startswith('TimeSeriesEdge'))
+        self.assertTrue(tscg.details().startswith('TimeSeriesCausalGraph'))
+        self.assertIn('is_dag=True', tscg.details())
 
     def test_complex_nodes_and_edges(self):
         cg = CausalGraph()
@@ -1182,6 +1208,7 @@ class TestCausalGraphPrinting(unittest.TestCase):
         self.assertTrue(n.__repr__().startswith('Node'))
         self.assertTrue(e.__repr__().startswith('Edge'))
         self.assertTrue(cg.__repr__().startswith('CausalGraph'))
+        self.assertIn('is_dag=False', cg.__repr__())
 
         self.assertIsInstance(n.details(), str)
         self.assertIsInstance(e.details(), str)
@@ -1189,6 +1216,31 @@ class TestCausalGraphPrinting(unittest.TestCase):
         self.assertTrue(n.details().startswith('Node'))
         self.assertTrue(e.details().startswith('Edge'))
         self.assertTrue(cg.details().startswith('CausalGraph'))
+        self.assertIn('is_dag=False', cg.details())
+
+        tscg = TimeSeriesCausalGraph.from_causal_graph(cg)
+        n = tscg.get_node('a')
+        e = tscg.get_edge('a', 'b')
+
+        self.assertIsInstance(n.__hash__(), int)
+        self.assertIsInstance(e.__hash__(), int)
+        self.assertIsInstance(tscg.__hash__(), int)
+
+        self.assertIsInstance(n.__repr__(), str)
+        self.assertIsInstance(e.__repr__(), str)
+        self.assertIsInstance(tscg.__repr__(), str)
+        self.assertTrue(n.__repr__().startswith('TimeSeriesNode'))
+        self.assertTrue(e.__repr__().startswith('TimeSeriesEdge'))
+        self.assertTrue(tscg.__repr__().startswith('TimeSeriesCausalGraph'))
+        self.assertIn('is_dag=False', tscg.__repr__())
+
+        self.assertIsInstance(n.details(), str)
+        self.assertIsInstance(e.details(), str)
+        self.assertIsInstance(cg.details(), str)
+        self.assertTrue(n.details().startswith('TimeSeriesNode'))
+        self.assertTrue(e.details().startswith('TimeSeriesEdge'))
+        self.assertTrue(tscg.details().startswith('TimeSeriesCausalGraph'))
+        self.assertIn('is_dag=False', tscg.details())
 
     def test_add_node_from_node(self):
         causal_graph = CausalGraph()
@@ -1271,3 +1323,9 @@ class TestCausalGraphPrinting(unittest.TestCase):
         self.assertEqual(cg['b'], cg.get_node('b'))
         self.assertEqual(repr(cg['a']), 'Node("a")')
         self.assertEqual(repr(cg['b']), 'Node("b", type="continuous")')
+
+        tscg = TimeSeriesCausalGraph.from_causal_graph(cg)
+        self.assertEqual(tscg['a'], tscg.get_node('a'))
+        self.assertEqual(tscg['b'], tscg.get_node('b'))
+        self.assertEqual(repr(tscg['a']), 'TimeSeriesNode("a")')
+        self.assertEqual(repr(tscg['b']), 'TimeSeriesNode("b", type="continuous")')
