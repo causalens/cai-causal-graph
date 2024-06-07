@@ -16,11 +16,11 @@ limitations under the License.
 from __future__ import annotations
 
 import logging
-from copy import deepcopy
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from cai_causal_graph.exceptions import CausalGraphErrors
 from cai_causal_graph.interfaces import CanDictSerialize, HasIdentifier, HasMetadata
+from cai_causal_graph.metadata_handler import MetaField
 from cai_causal_graph.type_definitions import TIME_LAG, VARIABLE_NAME, EdgeType, NodeLike, NodeVariableType
 from cai_causal_graph.utils import get_name_with_lag, get_variable_name_and_lag
 
@@ -38,7 +38,7 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
     ):
         """
         :param identifier: String that uniquely identifies the node within the causal graph.
-        :param meta: The metadata of the node. Default is None.
+        :param meta: The metadata of the node. Default is None. If passed, meta is shallow-copied.
         :param variable_type: The variable type that the node represents. The choices are available through the
             `cai_causal_graph.type_definitions.NodeVariableType` enum. Default is `NodeVariableType.UNSPECIFIED`.
         """
@@ -48,10 +48,7 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         self._identifier = identifier
 
         self.variable_type: NodeVariableType = variable_type
-        self.meta = dict() if meta is None else meta
-        assert isinstance(self.meta, dict) and all(
-            isinstance(k, str) for k in self.meta
-        ), 'Metadata must be provided as a dictionary with strings as keys.'
+        super(HasIdentifier, self).__init__(meta=meta)
 
         self._inbound_edges: List[Edge] = []
         self._outbound_edges: List[Edge] = []
@@ -211,6 +208,8 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         """
         Serialize a `cai_causal_graph.graph_components.Node` instance to a dictionary.
 
+        Returned dictionary contains a shallow-copy of the metadata of this node (if `include_meta` is `True`).
+
         :param include_meta: Whether to include meta information about the node in the dictionary. Default is `True`.
         :return: The dictionary representation of the `cai_causal_graph.graph_components.Node` instance.
         """
@@ -220,7 +219,7 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
             'node_class': self.__class__.__name__,
         }
         if include_meta:
-            node_dict['meta'] = self.meta  # type: ignore
+            node_dict['meta'] = self.meta.copy()  # type: ignore
 
         return node_dict
 
@@ -266,7 +265,7 @@ class TimeSeriesNode(Node):
         :param variable_name: The variable name of the node. If `variable_name` is provided, then `time_lag` must be
             provided to set the identifier. If both `time_lag` and `variable_name` are provided, the `identifier` must
             be `None`. Default is `None`.
-        :param meta: The metadata of the node. Default is `None`.
+        :param meta: The metadata of the node. Default is `None`. If passed, meta is shallow-copied.
         :param variable_type: The variable type that the node represents. The choices are available through the
             `cai_causal_graph.type_definitions.NodeVariableType` enum. Default is `NodeVariableType.UNSPECIFIED`.
         """
@@ -292,32 +291,23 @@ class TimeSeriesNode(Node):
                 'series node.'
             )
 
-        # populate the metadata for each node
-        if meta is not None:
-            # need to copy it as we update it below; don't want to change dict outside scope of this constructor
-            meta = deepcopy(meta)
-            meta_time_lag = meta.get(TIME_LAG)
-            meta_variable_name = meta.get(VARIABLE_NAME)
-            if meta_time_lag is not None and meta_time_lag != time_lag:
-                logger.info(
-                    'The current time lag in the meta (%d) for node %s will be overwritten to the newly provided value (%d).',
-                    meta_time_lag,
-                    identifier,
-                    time_lag,
-                )
-            if meta_variable_name is not None and meta_variable_name != variable_name:
-                logger.info(
-                    'The current variable name in the meta (%s) for node %s will be overwritten to the newly provided value (%s).',
-                    meta_variable_name,
-                    identifier,
-                    variable_name,
-                )
-            meta.update({TIME_LAG: time_lag, VARIABLE_NAME: variable_name})
-        else:
-            meta = {TIME_LAG: time_lag, VARIABLE_NAME: variable_name}
+        meta = self._process_meta(meta=meta, kwargs_dict=dict(variable_name=variable_name, time_lag=time_lag))
 
         # populate the metadata for the node
-        super().__init__(identifier, meta, variable_type)
+        super().__init__(identifier=identifier, meta=meta, variable_type=variable_type)
+
+    @classmethod
+    def get_metadata_schema(cls) -> List[MetaField]:
+        """
+        Return the metadata schema of `TimeSeriesNode`.
+
+        See `cai_causal_graph.interfaces.HasMetadata.get_metadata_schema` for more information on the how the
+        metadata schema is used.
+        """
+        return super().get_metadata_schema() + [
+            MetaField(metatag=TIME_LAG, property_name='time_lag'),
+            MetaField(metatag=VARIABLE_NAME, property_name='variable_name'),
+        ]
 
     @property
     def time_lag(self) -> int:
@@ -370,80 +360,6 @@ class TimeSeriesNode(Node):
         dictionary.update({TIME_LAG: self.time_lag, VARIABLE_NAME: self.variable_name})
         return dictionary
 
-    @classmethod
-    def from_dict(cls, dictionary: dict) -> TimeSeriesNode:
-        """
-        Return a `cai_causal_graph.graph_components.TimeSeriesNode` instance from a dictionary.
-
-        :param dictionary: The dictionary from which to create the time series node.
-        :return: The time series node created from the dictionary.
-        """
-        assert 'identifier' in dictionary, 'The dictionary must contain the `identifier` key.'
-        if dictionary.get('node_class', 'TimeSeriesNode') != 'TimeSeriesNode':
-            logger.debug(
-                f'The node class in the dictionary is {dictionary.get("node_class")}, but the class is '
-                f'`cai_causal_graph.graph_components.TimeSeriesNode`. The node class will be overwritten to '
-                '`TimeSeriesNode`.'
-            )
-
-        # check the meta for the time lag and variable name match the ones in the dictionary
-        time_lag = dictionary.get(TIME_LAG, None)
-        variable_name = dictionary.get(VARIABLE_NAME, None)
-
-        meta = dictionary.get('meta', {})
-
-        if time_lag is None:
-            time_lag = meta.get(TIME_LAG, None)
-        else:
-            # check that the time lag in the meta matches the time lag in the dictionary
-            time_lag_meta = meta.get(TIME_LAG, None)
-
-            if time_lag != time_lag_meta:
-                meta[TIME_LAG] = time_lag
-                logger.warning(
-                    f'The time lag in the meta ({time_lag_meta}) does not match the time lag in the dictionary ({time_lag}).'
-                )
-
-        if variable_name is None:
-            variable_name = meta.get(VARIABLE_NAME, None)
-        else:
-            # check that the variable name in the meta matches the variable name in the dictionary
-            variable_name_meta = meta.get(VARIABLE_NAME, None)
-
-            if variable_name != variable_name_meta:
-                meta[VARIABLE_NAME] = variable_name
-                logger.warning(
-                    f'The variable name in the meta ({variable_name_meta}) does not match the variable name in the '
-                    f'dictionary ({variable_name}).'
-                )
-
-        variable_name_identifier, time_lag_identifier = get_variable_name_and_lag(dictionary['identifier'])
-
-        if time_lag is not None:
-            # now if time lag and variable name are not None, check they match the identifier
-            assert (
-                time_lag == time_lag_identifier
-            ), f'The time lag in the identifier ({time_lag_identifier}) does not match the time lag in the dictionary '
-            f'({time_lag}).'
-        else:
-            time_lag = time_lag_identifier
-
-        if variable_name is not None:
-            assert variable_name == variable_name_identifier, (
-                f'The variable name in the identifier ({variable_name_identifier}) does not match the variable name in '
-                f'the dictionary ({variable_name}).'
-            )
-        else:
-            variable_name = variable_name_identifier
-
-        return cls(
-            identifier=dictionary['identifier'],
-            time_lag=time_lag,
-            variable_name=variable_name,
-            meta=meta,
-            variable_type=dictionary.get('variable_type', NodeVariableType.UNSPECIFIED),
-        )
-
 
 class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
     """A utility class that manages the state of an edge."""
@@ -463,13 +379,13 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         :param edge_type: The type of the edge to be added. Default is
             `cai_causal_graph.type_definitions.EdgeType.DIRECTED_EDGE`. See `cai_causal_graph.type_definitions.EdgeType`
             for the list of possible edge types.
-        :param meta: The meta values for the node.
+        :param meta: The meta values for the edge. Default is `None`. If passed, meta is shallow-copied.
         """
         self._source = source
         self._destination = destination
         self._edge_type = edge_type
 
-        self.meta = dict() if meta is None else meta
+        super(HasIdentifier, self).__init__(meta=meta)
 
         # Switches to False if the edge is deleted
         self._valid: bool = True
@@ -656,6 +572,8 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         """
         Serialize a `cai_causal_graph.graph_components.Edge` instance to a dictionary.
 
+        Returned dictionary contains a shallow-copy of the metadata of this edge (if `include_meta` is `True`).
+
         :param include_meta: Whether to include meta information about the edge in the dictionary. Default is `True`.
         :return: The dictionary representation of the `cai_causal_graph.graph_components.Edge` instance.
         """
@@ -666,6 +584,62 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
         }
 
         if include_meta:
-            edge_dict['meta'] = self.meta
+            edge_dict['meta'] = self.meta.copy()
 
         return edge_dict
+
+
+class TimeSeriesEdge(Edge):
+    """
+    Class defining a time-series edge.
+
+    Time-series edge is equivalent to a `cai_causal_graph.graph_components.Edge` class, except that it only
+    ensures that the destination of an edge is at the same or later time than its source.
+
+    This means that it is not possible to construct a directed time-series edge which does not respect time. Moreover,
+    if an undirected edge is constructed by passing a source which is at a later time than the destination, the source
+    and destination are swapped.
+    """
+
+    _NodeClassDict = Edge._NodeClassDict.copy()
+    _NodeClassDict.update({TimeSeriesNode.__name__: TimeSeriesNode})
+
+    source: TimeSeriesNode
+    destination: TimeSeriesNode
+
+    def __init__(
+        self,
+        source: Node,
+        destination: Node,
+        edge_type: EdgeType = EdgeType.DIRECTED_EDGE,
+        meta: Optional[Dict[str, Any]] = None,
+    ):
+        """
+        Construct a `TimeSeriesEdge`.
+
+        :param source: The `cai_causal_graph.graph_components.Node` from which the edge will originate.
+        :param destination: The `cai_causal_graph.graph_components.Node` at which the edge will terminate.
+        :param edge_type: The type of the edge to be added. Default is
+            `cai_causal_graph.type_definitions.EdgeType.DIRECTED_EDGE`. See `cai_causal_graph.type_definitions.EdgeType`
+            for the list of possible edge types.
+        :param meta: The meta values for the edge. Default is `None`. If passed, meta is shallow-copied.
+        """
+        if not isinstance(source, TimeSeriesNode):
+            source = TimeSeriesNode.from_dict(source.to_dict(include_meta=True))
+
+        assert isinstance(source, TimeSeriesNode)   # for lint
+
+        if not isinstance(destination, TimeSeriesNode):
+            destination = TimeSeriesNode.from_dict(destination.to_dict(include_meta=True))
+
+        assert isinstance(destination, TimeSeriesNode)   # for lint
+
+        # If edge type is not directed, swap source and destination to respect time
+        if edge_type != EdgeType.DIRECTED_EDGE and source.time_lag > destination.time_lag:
+            source, destination = destination, source
+        elif source.time_lag > destination.time_lag:
+            raise ValueError(
+                f'Cannot add a directed edge between {source} and {destination} because this does not respect time.'
+            )
+
+        super().__init__(source=source, destination=destination, edge_type=edge_type, meta=meta)

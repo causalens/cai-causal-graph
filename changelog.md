@@ -2,6 +2,28 @@
 
 ## NEXT
 
+> **_NOTE:_**  **Backwards compatibility warning!** Global metadata to `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`
+> and `cai_causal_graph.causal_graph.CausalGraph`, which means their serialized state has changed.
+
+> **_NOTE:_**  **Backwards compatibility warning!** The default value of the `include_all_parents` argument to `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_graph`
+> has been changed to `True` (from `False`).
+
+- The default value of the `include_all_parents` argument to `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_graph`
+  has been changed to `True` (from `False`).
+- Added metadata handling system to the `cai_causal_graph.interfaces.HasMetadata` class. All extending classes should use
+  this system to parse and set their metadata.
+- Added `cai_causal_graph.graph_components.TimeSeriesEdge` class, which is used as an edge class by `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`.
+- Added metadata to `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` and `cai_causal_graph.causal_graph.CausalGraph`.
+- Ensured consistent metadata handling. Metadata passed at construction to `cai_causal_graph.graph_components.TimeSeriesNode`,
+  `cai_causal_graph.graph_components.Node`, `cai_causal_graph.graph_components.TimeSeriesEdge`, `cai_causal_graph.graph_components.Edge`,
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` and `cai_causal_graph.causal_graph.CausalGraph` is shallow-copied. Any
+  metadata is deepcopied when constructing `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` and `cai_causal_graph.causal_graph.CausalGraph`
+  from dictionary.
+- Ensured that `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.replace_node` performs similarly to
+  `cai_causal_graph.causal_graph.CausalGraph.replace_node`, meaning that if any additional information (such as metadata)
+  is specified, it is used to overwrite corresponding information in the constructed node.
+- Generalized `cai_causal_graph.causal_graph.CausalGraph.__eq__` to check for the class of the instance itself, enabling
+  to reuse this method by extending classes.
 - Dropped support for `python` `3.8` as it is approaching end of life.
 
 ## 0.4.10
