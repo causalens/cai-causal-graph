@@ -305,10 +305,16 @@ is obtained by extending (in time) the minimal graph with all the edges to the c
 
 You can extend the graph in time by adding nodes for each variable at each time step from `backward_steps` to
 `forward_steps`. If a backward step of `n` is specified, it means that the graph will be extended in order to
-include nodes back to time `-n` and all the nodes connected to them as specified by the minimal graph. An extra 
-`include_all_parents` flag can be set so that, in addition to all nodes as far back as `backward_steps`, extra nodes 
-and edges will be added as far back that all nodes up to `backward_steps` in the past have all their parents and 
-inbound edges. This means that the extended graph may now have nodes at lags further back than `backward_steps`.
+include nodes back to time `-n` and all the nodes connected to them as specified by the minimal graph. 
+
+By default, in addition to all nodes as far back as `backward_steps`, extra nodes and edges will be added as far back that all nodes 
+up to `backward_steps` in the past have all their parents and inbound edges. This means that the extended graph may now 
+have nodes at lags further back than `backward_steps`. This behavior ensures that by default, all nodes for the same
+variable will have consistent parents, i.e. if a node for variable `'X'` at time `n` has a parent `'Y'` at time `k`, then
+a newly added node `'X'` at time `n - j` will have a parent `'Y'` at time `k - j`. This is especially important for
+causal modeling tasks, such as Structural Causal Models. This behavior can, however, be disabled by passing
+`include_all_parents=False`.
+
 If a forward step of `n` is specified, it means the graph will be extended in order to include nodes forward to time 
 `n` and all the nodes connected to them as specified by the minimal graph. `include_all_parents` is only valid when 
 specifying a `backward_steps`, and will have no effect on the logic of `forward_steps`. If both `backward_steps` and 
@@ -321,10 +327,11 @@ ts_cg: TimeSeriesCausalGraph
 backward_steps = 2
 forward_steps = 3
 
+# With all parents
 extended_graph = ts_cg.extend_graph(backward_steps=backward_steps, forward_steps=forward_steps)
 
-# With all parents
-extended_graph = ts_cg.extend_graph(backward_steps=backward_steps, forward_steps=forward_steps, include_all_parents=True)
+# Without all parents
+extended_graph = ts_cg.extend_graph(backward_steps=backward_steps, forward_steps=forward_steps, include_all_parents=False)
 ```
 
 ## Other methods
@@ -347,12 +354,12 @@ If you query for the summary graph, you will get the following:
 
 If you extend the minimal graph `backward_steps=2` and `forward_steps=0` with default arguments:
 
-![ts_cg](images/ts_extended_graph.png)
+![ts_cg](images/ts_extended_graph_all_parents.png)
 
 Finally, if you extend the minimal graph with `backward_steps=2` and `forward_steps=0` but setting 
-`include_all_parents=True`:
+`include_all_parents=False`:
 
-![ts_cg](images/ts_extended_graph_all_parents.png)
+![ts_cg](images/ts_extended_graph.png)
 
 ## Markov Equivalence Classes
 Certain causal relationships yield the same conditional independencies and are therefore indistinguishable from each 
