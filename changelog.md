@@ -25,6 +25,7 @@
 - Generalized `cai_causal_graph.causal_graph.CausalGraph.__eq__` to check for the class of the instance itself, enabling
   to reuse this method by extending classes.
 - Dropped support for `python` `3.8` as it is approaching end of life.
+- Added `cai_causal_graph.causal_graph.CausalGraph.has_non_serializable_metadata` method, which returns `False` by default.
 
 ## 0.4.10
 
