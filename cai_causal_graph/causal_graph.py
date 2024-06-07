@@ -620,6 +620,15 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """Return True if there are no nodes and edges. False otherwise."""
         return len(self.nodes) == 0 and len(self.edges) == 0
 
+    @property
+    def has_non_serializable_metadata(self) -> bool:
+        """
+        Return `True` whether the graph or any node or edge contains non-JSON serializable metadata.
+
+        By default, this returns `False`.
+        """
+        return False
+
     def _check_node_exists(self, identifier: NodeLike) -> str:
         """Validate and return the node identifier."""
         identifier = self._NodeCls.identifier_from(identifier)
