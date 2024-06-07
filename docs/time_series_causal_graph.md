@@ -309,10 +309,10 @@ include nodes back to time `-n` and all the nodes connected to them as specified
 
 By default, in addition to all nodes as far back as `backward_steps`, extra nodes and edges will be added as far back that all nodes 
 up to `backward_steps` in the past have all their parents and inbound edges. This means that the extended graph may now 
-have nodes at lags further back than `backward_steps`. This behaviour ensures that by default, all nodes for the same
+have nodes at lags further back than `backward_steps`. This behavior ensures that by default, all nodes for the same
 variable will have consistent parents, i.e. if a node for variable `'X'` at time `n` has a parent `'Y'` at time `k`, then
 a newly added node `'X'` at time `n - j` will have a parent `'Y'` at time `k - j`. This is especially important for
-causal modeling tasks, such as Structural Causal Models. This behaviour can, however, be disabled by passing
+causal modeling tasks, such as Structural Causal Models. This behavior can, however, be disabled by passing
 `include_all_parents=False`.
 
 If a forward step of `n` is specified, it means the graph will be extended in order to include nodes forward to time 
@@ -354,12 +354,12 @@ If you query for the summary graph, you will get the following:
 
 If you extend the minimal graph `backward_steps=2` and `forward_steps=0` with default arguments:
 
-![ts_cg](images/ts_extended_graph.png)
+![ts_cg](images/ts_extended_graph_all_parents.png)
 
 Finally, if you extend the minimal graph with `backward_steps=2` and `forward_steps=0` but setting 
-`include_all_parents=True`:
+`include_all_parents=False`:
 
-![ts_cg](images/ts_extended_graph_all_parents.png)
+![ts_cg](images/ts_extended_graph.png)
 
 ## Markov Equivalence Classes
 Certain causal relationships yield the same conditional independencies and are therefore indistinguishable from each 

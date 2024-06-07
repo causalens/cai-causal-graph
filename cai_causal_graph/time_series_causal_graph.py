@@ -437,7 +437,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         By default, this will also add all parents of newly added nodes. This is done to ensure that all nodes
         corresponding to the same variable name have consistent parents, which is particularly useful for
-        causal modelling tasks. This can be controlled by the `include_all_parents` parameter. If set to `False`, then
+        causal modeling tasks. This can be controlled by the `include_all_parents` parameter. If set to `False`, then
         only nodes up-to `backward_steps` back in time are added.
 
         If both `backward_steps` and `forward_steps` are None, the original graph is returned.
