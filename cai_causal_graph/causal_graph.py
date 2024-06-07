@@ -625,7 +625,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """
         Return `True` whether the graph or any node or edge contains non-JSON serializable metadata.
 
-        By default, this returns `False`.
+        By default, this returns `False`. Please note that by default `CausalGraph` does not perform any checks
+        on the metadata. Instead, this method enables any derived classes to implement custom checks.
         """
         return False
 
