@@ -927,6 +927,11 @@ class TestCausalGraph(unittest.TestCase):
         self.assertEqual(cg.meta['foo'], 'bar')
         self.assertEqual(cg.meta['bar'], 'foo')
 
+    def test_has_non_serial_metadata(self):
+        cg = CausalGraph()
+
+        self.assertFalse(cg.has_non_serializable_metadata)
+
     def test_copy_with_metadata(self):
         o = object()
 
