@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.5.0
 
 > **_NOTE:_**  **Backwards compatibility warning!** Global metadata to `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`
 > and `cai_causal_graph.causal_graph.CausalGraph`, which means their serialized state has changed.
