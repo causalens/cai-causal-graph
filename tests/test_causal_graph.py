@@ -1145,6 +1145,19 @@ class TestCausalGraph(unittest.TestCase):
         with self.assertRaises(AssertionError):
             _ = causal_graph.get_descendant_graph('f')
 
+    def test_is_dag_caching_add_edge(self):
+        cg = CausalGraph()
+        cg.add_edges_from_paths(['x', 'y'])
+
+        self.assertTrue(cg.is_dag())
+
+        cg.add_edge('x', 'z', edge_type=EdgeType.UNDIRECTED_EDGE)
+
+        self.assertFalse(cg.is_dag())
+
+        cg.delete_edge('x', 'z')
+        self.assertTrue(cg.is_dag())
+
 
 class TestCausalGraphPrinting(unittest.TestCase):
     def test_default_nodes_and_edges(self):
