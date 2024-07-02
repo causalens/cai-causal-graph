@@ -871,7 +871,15 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         # test it does not fail with a very big graph due to recursion
         self.tsdag_1.extend_graph(forward_steps=200, backward_steps=200).get_minimal_graph()
 
-        # test add non-directed e
+        # test adding an edge after calling `get_minimal_graph` once
+        tsdag = TimeSeriesCausalGraph()
+        tsdag.add_edge('b lag(n=1)', 'c')
+        tsdag.get_minimal_graph()
+
+        tsdag.add_edge('b lag(n=1)', 'b')
+        min_tsgraph = tsdag.get_minimal_graph()
+
+        self.assertSetEqual(set(min_tsgraph.get_edge_pairs()), {('b lag(n=1)', 'b'), ('b lag(n=1)', 'c')})
 
     def test_extend_backward(self):
         # with 1 steps
