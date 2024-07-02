@@ -1296,12 +1296,12 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
         tscg.get_stationary_graph()
 
-        tscg.add_edge('b lag(n=1)', 'b')
+        tscg.add_edge('a lag(n=1)', 'b')
 
         stat_tscg = tscg.get_stationary_graph()
         self.assertSetEqual(
             set(stat_tscg.get_edge_pairs()),
-            {('a', 'b'), ('a lag(n=1)', 'a'), ('a lag(n=1)', 'b lag(n=1)'), ('b lag(n=1)', 'b')},
+            {('a', 'b'), ('a lag(n=1)', 'a'), ('a lag(n=1)', 'b lag(n=1)'), ('a lag(n=1)', 'b')},
         )
 
     def test_cached_stationary_graph_copies(self):
