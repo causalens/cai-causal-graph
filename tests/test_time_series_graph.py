@@ -881,6 +881,16 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
         self.assertSetEqual(set(min_tsgraph.get_edge_pairs()), {('b lag(n=1)', 'b'), ('b lag(n=1)', 'c')})
 
+        # test cached minimal graph is deepcopied before being returned
+        tsdag = TimeSeriesCausalGraph()
+        tsdag.add_edge('b lag(n=1)', 'c')
+        min_tsgraph_1 = tsdag.get_minimal_graph()
+        min_tsgraph_2 = tsdag.get_minimal_graph()
+
+        min_tsgraph_2.add_edge('a', 'c')
+
+        self.assertSetEqual(set(min_tsgraph_1.get_edge_pairs()), {('b lag(n=1)', 'c')})
+
     def test_extend_backward(self):
         # with 1 steps
         # dag
