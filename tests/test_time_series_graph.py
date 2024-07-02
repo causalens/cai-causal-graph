@@ -1290,6 +1290,35 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
         self.assertTrue(stat_tscg.is_stationary_graph())
 
+        # test after adding edge and calling once
+        tscg = TimeSeriesCausalGraph()
+        tscg.add_edges_from_paths(['a lag(n=1)', 'a', 'b'])
+
+        tscg.get_stationary_graph()
+
+        tscg.add_edge('b lag(n=1)', 'b')
+
+        stat_tscg = tscg.get_stationary_graph()
+        self.assertSetEqual(
+            set(stat_tscg.get_edge_pairs()),
+            {('a', 'b'), ('a lag(n=1)', 'a'), ('a lag(n=1)', 'b lag(n=1)'), ('b lag(n=1)', 'b')},
+        )
+
+    def test_cached_stationary_graph_copies(self):
+        tscg = TimeSeriesCausalGraph()
+        tscg.add_edges_from_paths(['a lag(n=1)', 'a', 'b'])
+
+        stat_tscg_1 = tscg.get_stationary_graph()
+        stat_tscg_2 = tscg.get_stationary_graph()
+
+        stat_tscg_2.remove_edge('a lag(n=1)', 'a')
+
+        # test the edge has not been removed from the other stationary graph
+        self.assertSetEqual(
+            set(stat_tscg_1.get_edge_pairs()),
+            {('a', 'b'), ('a lag(n=1)', 'a'), ('a lag(n=1)', 'b lag(n=1)')},
+        )
+
     def test_to_numpy_by_lag(self):
         # test with empty graph
         tsdag = TimeSeriesCausalGraph()
