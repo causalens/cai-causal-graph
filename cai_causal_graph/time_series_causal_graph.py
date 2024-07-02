@@ -155,7 +155,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         If there exists the edge `X(t-1) -> X(t)`, then there must be the edge `X(t-2) -> X(t-1)`, etc.
         """
         if self._stationary_graph is not None:
-            return self._stationary_graph
+            return self._stationary_graph.copy()
 
         # extract the minimal graph
         minimal_graph = self.get_minimal_graph()
@@ -184,97 +184,103 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         :return: The minimal graph as a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` object.
         """
-        minimal_cg = self.__class__(meta=deepcopy(self.meta))
+        if self._minimal_graph is None:
+            minimal_cg = self.__class__(meta=deepcopy(self.meta))
 
-        for edge in self.get_edges():
-            # copy edge
-            edge = self._EdgeCls.from_dict(edge.to_dict(include_meta=True))
+            for edge in self.get_edges():
+                # copy edge
+                edge = self._EdgeCls.from_dict(edge.to_dict(include_meta=True))
 
-            # get the relative time delta; asserts are needed for linting
-            source = edge.source
-            destination = edge.destination
-            assert isinstance(source, TimeSeriesNode)
-            assert isinstance(destination, TimeSeriesNode)
-            assert isinstance(source.time_lag, int)
-            assert isinstance(destination.time_lag, int)
-            assert source.variable_name is not None
-            assert destination.variable_name is not None
+                # get the relative time delta; asserts are needed for linting
+                source = edge.source
+                destination = edge.destination
+                assert isinstance(source, TimeSeriesNode)
+                assert isinstance(destination, TimeSeriesNode)
+                assert isinstance(source.time_lag, int)
+                assert isinstance(destination.time_lag, int)
+                assert source.variable_name is not None
+                assert destination.variable_name is not None
 
-            time_delta = destination.time_lag - source.time_lag
+                time_delta = destination.time_lag - source.time_lag
 
-            # add the edge if the time delta is 0 (no need to extract the new names)
-            # copy the edge type to the minimal graph
-            if time_delta == 0 and not minimal_cg.edge_exists(source.variable_name, destination.variable_name):
-                # create the time series nodes
-                # update the node metadata to make sure the time lag is correct
-                source.meta[TIME_LAG] = 0
-                destination.meta[TIME_LAG] = 0
-
-                source = self._NodeCls(
-                    identifier=source.variable_name, meta=source.meta, variable_type=source.variable_type
-                )
-
-                destination = self._NodeCls(
-                    identifier=destination.variable_name,
-                    meta=destination.meta,
-                    variable_type=destination.variable_type,
-                )
-
-                edge = self._EdgeCls(source=source, destination=destination, edge_type=edge.edge_type, meta=edge.meta)
-
-                # Do not check for acyclicity as an acyclic minimal graph will always produce an acyclic extended graph
-                minimal_cg.add_edge(edge=edge, validate=False)
-
-            # otherwise if the time delta is not 0, we may have X[t-2]->X[t-1] and
-            # we must add X[t-1]->X[t]
-            else:
-                # get the new names according to the time delta
-                destination_name = get_name_with_lag(destination.identifier, 0)
-                source_name = get_name_with_lag(source.identifier, -time_delta)
-                if not minimal_cg.edge_exists(source_name, destination_name):
+                # add the edge if the time delta is 0 (no need to extract the new names)
+                # copy the edge type to the minimal graph
+                if time_delta == 0 and not minimal_cg.edge_exists(source.variable_name, destination.variable_name):
+                    # create the time series nodes
                     # update the node metadata to make sure the time lag is correct
-                    source.meta[TIME_LAG] = -time_delta
+                    source.meta[TIME_LAG] = 0
                     destination.meta[TIME_LAG] = 0
 
-                    # create the nodes
                     source = self._NodeCls(
-                        identifier=source_name,
-                        meta=source.meta,
-                        variable_type=source.variable_type,
+                        identifier=source.variable_name, meta=source.meta, variable_type=source.variable_type
                     )
 
                     destination = self._NodeCls(
-                        identifier=destination_name,
+                        identifier=destination.variable_name,
                         meta=destination.meta,
                         variable_type=destination.variable_type,
                     )
 
-                    # create the edge
                     edge = self._EdgeCls(
                         source=source, destination=destination, edge_type=edge.edge_type, meta=edge.meta
                     )
-                    # Do not check for acyclicity as an acyclic minimal graph will always produce an acyclic extended
-                    # graph
+
+                    # Do not check for acyclicity as an acyclic minimal graph will always produce an acyclic extended graph
                     minimal_cg.add_edge(edge=edge, validate=False)
 
-        # check for floating nodes
-        if self.variables is not None and len(self.variables) > 0:
-            for variable in self.variables:
-                if (
-                    minimal_cg.variables is None or variable not in minimal_cg.variables
-                ) and not minimal_cg.node_exists(variable):
-                    # Guaranteed there is at least one node, take the first for simplicity.
-                    # This aligns with how edges are chosen for minimal graph.
-                    # Only issue is if they have different meta. TODO: CAUSALAI-4784
-                    original_floating_node = self.get_nodes_for_variable_name(variable)[0]
-                    new_floating_node = self._NodeCls(
-                        identifier=variable,
-                        meta=original_floating_node.meta,
-                        variable_type=original_floating_node.variable_type,
-                    )
-                    minimal_cg.add_node(node=new_floating_node)
+                # otherwise if the time delta is not 0, we may have X[t-2]->X[t-1] and
+                # we must add X[t-1]->X[t]
+                else:
+                    # get the new names according to the time delta
+                    destination_name = get_name_with_lag(destination.identifier, 0)
+                    source_name = get_name_with_lag(source.identifier, -time_delta)
+                    if not minimal_cg.edge_exists(source_name, destination_name):
+                        # update the node metadata to make sure the time lag is correct
+                        source.meta[TIME_LAG] = -time_delta
+                        destination.meta[TIME_LAG] = 0
 
-        return minimal_cg
+                        # create the nodes
+                        source = self._NodeCls(
+                            identifier=source_name,
+                            meta=source.meta,
+                            variable_type=source.variable_type,
+                        )
+
+                        destination = self._NodeCls(
+                            identifier=destination_name,
+                            meta=destination.meta,
+                            variable_type=destination.variable_type,
+                        )
+
+                        # create the edge
+                        edge = self._EdgeCls(
+                            source=source, destination=destination, edge_type=edge.edge_type, meta=edge.meta
+                        )
+                        # Do not check for acyclicity as an acyclic minimal graph will always produce an acyclic extended
+                        # graph
+                        minimal_cg.add_edge(edge=edge, validate=False)
+
+            # check for floating nodes
+            if self.variables is not None and len(self.variables) > 0:
+                for variable in self.variables:
+                    if (
+                        minimal_cg.variables is None or variable not in minimal_cg.variables
+                    ) and not minimal_cg.node_exists(variable):
+                        # Guaranteed there is at least one node, take the first for simplicity.
+                        # This aligns with how edges are chosen for minimal graph.
+                        # Only issue is if they have different meta. TODO: CAUSALAI-4784
+                        original_floating_node = self.get_nodes_for_variable_name(variable)[0]
+                        new_floating_node = self._NodeCls(
+                            identifier=variable,
+                            meta=original_floating_node.meta,
+                            variable_type=original_floating_node.variable_type,
+                        )
+                        minimal_cg.add_node(node=new_floating_node)
+
+            self._minimal_graph = minimal_cg
+            return minimal_cg
+
+        return self._minimal_graph.copy()
 
     def get_topological_order(
         self, return_all: bool = False, respect_time_ordering: bool = True
@@ -404,7 +410,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
             self._summary_graph = summary_graph
 
-        return self._summary_graph
+        return self._summary_graph.copy()
 
     def extend_graph(
         self,
@@ -1065,7 +1071,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                 assert node.variable_name is not None
                 variables.append(node.variable_name)
             self._variables = sorted(list(set(variables)))
-        return self._variables
+        return self._variables.copy()
 
     def to_numpy_by_lag(self) -> Tuple[Dict[int, numpy.ndarray], List[str]]:
         """

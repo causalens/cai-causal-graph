@@ -871,6 +871,8 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         # test it does not fail with a very big graph due to recursion
         self.tsdag_1.extend_graph(forward_steps=200, backward_steps=200).get_minimal_graph()
 
+        # test add non-directed e
+
     def test_extend_backward(self):
         # with 1 steps
         # dag
