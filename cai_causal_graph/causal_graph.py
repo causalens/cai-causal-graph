@@ -490,9 +490,6 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
         self._is_dag: Optional[bool] = None
 
-    def _reset_cached_attributes(self):
-        self._is_dag = None
-
     def __copy__(self) -> CausalGraph:
         """Copy a `cai_causal_graph.causal_graph.CausalGraph` instance."""
         return self.copy()
@@ -2149,6 +2146,10 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         new_graph = self.__class__.from_dict(graph_dict, validate=False)
         assert isinstance(new_graph, self.__class__)  # for linting and sanity check
         return new_graph
+
+    def _reset_cached_attributes(self):
+        """Reset cached internal attributes."""
+        self._is_dag = None
 
     def __repr__(self) -> str:
         """Return a string description of the `cai_causal_graph.causal_graph.CausalGraph` instance."""

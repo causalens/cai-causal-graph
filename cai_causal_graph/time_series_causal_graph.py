@@ -128,15 +128,6 @@ class TimeSeriesCausalGraph(CausalGraph):
         self._is_minimal_graph: Optional[bool] = None
         self._is_stationary_graph: Optional[bool] = None
 
-    def _reset_cached_attributes(self):
-        self._minimal_graph = None
-        self._summary_graph = None
-        self._stationary_graph = None
-        self._variables = None
-        self._is_minimal_graph = None
-        self._is_stationary_graph = None
-        super()._reset_cached_attributes()
-
     def is_stationary_graph(self) -> bool:
         """
         Check if the graph is stationary. That is, if the graph is time invariant.
@@ -1182,3 +1173,13 @@ class TimeSeriesCausalGraph(CausalGraph):
             meta=node.meta,  # meta is shallow copied by the node constructor
             variable_type=node.variable_type,
         )
+
+    def _reset_cached_attributes(self):
+        """Reset cached internal attributes."""
+        self._minimal_graph = None
+        self._summary_graph = None
+        self._stationary_graph = None
+        self._variables = None
+        self._is_minimal_graph = None
+        self._is_stationary_graph = None
+        super()._reset_cached_attributes()
