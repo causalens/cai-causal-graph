@@ -50,6 +50,8 @@ def _reset_ts_graph_attributes(func: Callable) -> Callable:
         self._summary_graph = None
         self._stationary_graph = None
         self._variables = None
+        self._is_minimal_graph = None
+        self._is_stationary_graph = None
         return function
 
     return wrapper
@@ -146,6 +148,8 @@ class TimeSeriesCausalGraph(CausalGraph):
         self._summary_graph: Optional[CausalGraph] = None
         self._stationary_graph: Optional[TimeSeriesCausalGraph] = None
         self._minimal_graph: Optional[TimeSeriesCausalGraph] = None
+        self._is_minimal_graph: Optional[bool] = None
+        self._is_stationary_graph: Optional[bool] = None
 
     def is_stationary_graph(self) -> bool:
         """
@@ -158,6 +162,9 @@ class TimeSeriesCausalGraph(CausalGraph):
         if not self.is_dag():
             logger.warning('The graph is not a DAG. The stationarity check is not valid.')
             return False
+
+        if self._is_stationary_graph is not None:
+            return self._is_stationary_graph
 
         stationary_graph = self.get_stationary_graph()
 
@@ -349,6 +356,8 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         See `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph` for more details.
         """
+        if self._is_minimal_graph is not None:
+            return self._is_minimal_graph
         return self == self.get_minimal_graph()
 
     def get_summary_graph(self) -> CausalGraph:
