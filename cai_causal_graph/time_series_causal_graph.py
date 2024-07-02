@@ -19,42 +19,19 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from copy import deepcopy
-from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union, cast
+from typing import Callable, Dict, List, Optional, Tuple, Type, Union, cast
 
 import networkx
 import numpy
 from mypy_extensions import Arg, DefaultArg
 
-from cai_causal_graph import CausalGraph, Skeleton
+from cai_causal_graph.causal_graph import CausalGraph, Skeleton, reset_cached_attributes_decorator
 from cai_causal_graph.graph_components import Edge, TimeSeriesEdge, TimeSeriesNode
 from cai_causal_graph.interfaces import HasIdentifier, HasMetadata
 from cai_causal_graph.type_definitions import TIME_LAG, EdgeType, NodeLike, NodeVariableType
 from cai_causal_graph.utils import get_name_with_lag, get_variable_name_and_lag
 
 logger = logging.getLogger(__name__)
-
-
-def _reset_ts_graph_attributes(func: Callable) -> Callable:
-    """
-    Decorator to reset attributes of TimeSeriesCausalGraph such as summary graph, minimal graph, etc.
-
-    Whenever a function is called that changes the graph, we need to reset these attributes.
-    """
-
-    # TODO - CAUSALAI-3369: Improve this decorator to remove need to reset the summary graph and other attributes
-    @wraps(func)
-    def wrapper(self: TimeSeriesCausalGraph, *args, **kwargs) -> Any:
-        function = func(self, *args, **kwargs)
-        self._minimal_graph = None
-        self._summary_graph = None
-        self._stationary_graph = None
-        self._variables = None
-        self._is_minimal_graph = None
-        self._is_stationary_graph = None
-        return function
-
-    return wrapper
 
 
 class TimeSeriesCausalGraph(CausalGraph):
@@ -150,6 +127,15 @@ class TimeSeriesCausalGraph(CausalGraph):
         self._minimal_graph: Optional[TimeSeriesCausalGraph] = None
         self._is_minimal_graph: Optional[bool] = None
         self._is_stationary_graph: Optional[bool] = None
+
+    def _reset_cached_attributes(self):
+        self._minimal_graph = None
+        self._summary_graph = None
+        self._stationary_graph = None
+        self._variables = None
+        self._is_minimal_graph = None
+        self._is_stationary_graph = None
+        super()._reset_cached_attributes()
 
     def is_stationary_graph(self) -> bool:
         """
@@ -613,7 +599,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         """
         return self.get_variable_names_from_node_names(node_names=self.get_node_names())
 
-    @_reset_ts_graph_attributes
+    @reset_cached_attributes_decorator
     def add_node(
         self,
         /,
@@ -679,7 +665,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         return node
 
-    @_reset_ts_graph_attributes
+    @reset_cached_attributes_decorator
     def replace_node(
         self,
         /,
@@ -717,7 +703,7 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         super().replace_node(node_id=node_id, new_node_id=new_node_id, variable_type=variable_type, meta=meta)
 
-    @_reset_ts_graph_attributes
+    @reset_cached_attributes_decorator
     def delete_node(self, identifier: NodeLike):
         """
         Delete a node from the graph.
@@ -729,7 +715,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         self._remove_node_from_cache(node)
         super().delete_node(identifier)
 
-    @_reset_ts_graph_attributes
+    @reset_cached_attributes_decorator
     def delete_edge(self, /, source: NodeLike, destination: NodeLike, *, edge_type: Optional[EdgeType] = None):
         """
         Delete an edge from the graph.
@@ -795,7 +781,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                 )
         # No else needed as we don't need to check time direction for other edge types.
 
-    @_reset_ts_graph_attributes
+    @reset_cached_attributes_decorator
     def add_time_edge(
         self,
         /,

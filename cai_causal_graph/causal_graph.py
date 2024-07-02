@@ -37,7 +37,7 @@ def to_list(var: Any) -> List[Any]:
     return var if isinstance(var, list) else [var]
 
 
-def _reset_graph_attributes(func: Callable) -> Callable:
+def reset_cached_attributes_decorator(func: Callable) -> Callable:
     """
     Decorator to reset cached attributes of `cai_causal_graph.causal_graph.CausalGraph`.
 
@@ -47,6 +47,7 @@ def _reset_graph_attributes(func: Callable) -> Callable:
     @wraps(func)
     def wrapper(self: CausalGraph, *args, **kwargs) -> Any:
         function = func(self, *args, **kwargs)
+        self._reset_cached_attributes()
         return function
 
     return wrapper
@@ -488,6 +489,9 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         super(HasIdentifier, self).__init__(meta=meta)
 
         self._is_dag: Optional[bool] = None
+
+    def _reset_cached_attributes(self):
+        self._is_dag = None
 
     def __copy__(self) -> CausalGraph:
         """Copy a `cai_causal_graph.causal_graph.CausalGraph` instance."""
