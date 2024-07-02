@@ -857,6 +857,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         except KeyError:
             return False
 
+    @reset_cached_attributes_decorator
     def add_node(
         self,
         /,
@@ -902,6 +903,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
         return node
 
+    @reset_cached_attributes_decorator
     def add_nodes_from(self, identifiers: List[NodeLike]):
         """
         A convenience method to add multiple nodes. Only allows to set up nodes with default setup.
@@ -912,12 +914,14 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         for identifier in identifiers:
             self.add_node(identifier)
 
+    @reset_cached_attributes_decorator
     def add_fully_connected_nodes(self, inputs: List[NodeLike], outputs: List[NodeLike]):
         """Create directed edges between all inputs and all outputs."""
         for input_node in inputs:
             for output_node in outputs:
                 self.add_edge(input_node, output_node, edge_type=EdgeType.DIRECTED_EDGE)
 
+    @reset_cached_attributes_decorator
     def delete_node(self, identifier: NodeLike):
         """
         Delete a node from the causal graph. This also deletes all edges connecting to this node.
@@ -939,6 +943,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         self._nodes_by_identifier.pop(identifier)
         node.invalidate()
 
+    @reset_cached_attributes_decorator
     def remove_node(self, identifier: NodeLike):
         """
         Remove a node from the causal graph. This also deletes all edges connecting to this node.
@@ -947,6 +952,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """
         self.delete_node(identifier=identifier)
 
+    @reset_cached_attributes_decorator
     def replace_node(
         self,
         /,
@@ -1145,6 +1151,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """Return all edge pairs in the current graph."""
         return [edge.get_edge_pair() for edge in self.edges]
 
+    @reset_cached_attributes_decorator
     def change_edge_type(self, source: NodeLike, destination: NodeLike, new_edge_type: EdgeType):
         """
         Change an edge type for a specific edge.
@@ -1167,6 +1174,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             self.remove_edge(source=source, destination=destination, edge_type=edge.get_edge_type())
             self.add_edge(source=source, destination=destination, edge_type=new_edge_type, meta=meta)
 
+    @reset_cached_attributes_decorator
     def add_edge(
         self,
         /,
@@ -1230,6 +1238,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         self._set_edge(edge=edge, validate=validate)
         return edge
 
+    @reset_cached_attributes_decorator
     def add_edges_from(self, pairs: List[Tuple[NodeLike, NodeLike]], validate: bool = True):
         """
         A convenience method to add multiple edges by specifying tuples of source and destination node identifiers.
@@ -1248,6 +1257,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             validate_pair_type(pair)
             self.add_edge(source=pair[0], destination=pair[1], validate=validate)
 
+    @reset_cached_attributes_decorator
     def add_edges_from_paths(self, paths: Union[List[NodeLike], List[List[NodeLike]]], validate: bool = True):
         """
         A convenience method to add multiple edges by specifying a single or a list of paths.
@@ -1286,6 +1296,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
                     validate_pair_type((source, destination))
                     self.add_edge(source=source, destination=destination, validate=validate)
 
+    @reset_cached_attributes_decorator
     def add_edge_by_pair(
         self,
         pair: Tuple[NodeLike, NodeLike],
@@ -1308,11 +1319,13 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         validate_pair_type(pair)
         self.add_edge(pair[0], pair[1], edge_type=edge_type, meta=meta, validate=validate)
 
+    @reset_cached_attributes_decorator
     def remove_edge_by_pair(self, pair: Tuple[NodeLike, NodeLike], edge_type: Optional[EdgeType] = None):
         """Remove edge by pair identifier (source, destination)."""
         validate_pair_type(pair)
         self.delete_edge(pair[0], pair[1], edge_type=edge_type)
 
+    @reset_cached_attributes_decorator
     def delete_edge(self, /, source: NodeLike, destination: NodeLike, *, edge_type: Optional[EdgeType] = None):
         """
         Delete an edge from the causal graph.
@@ -1355,10 +1368,12 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         self._clean_empty_edge_dictionaries()
         edge.invalidate()
 
+    @reset_cached_attributes_decorator
     def remove_edge(self, /, source: NodeLike, destination: NodeLike, *, edge_type: Optional[EdgeType] = None):
         """Remove a specific edge by source and destination node identifiers, as well as edge type."""
         self.delete_edge(source=source, destination=destination, edge_type=edge_type)
 
+    @reset_cached_attributes_decorator
     def replace_edge(
         self,
         /,
