@@ -155,7 +155,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         If there exists the edge `X(t-1) -> X(t)`, then there must be the edge `X(t-2) -> X(t-1)`, etc.
         """
         if self._stationary_graph is not None:
-            return self._stationary_graph.copy()
+            return cast(TimeSeriesCausalGraph, self._stationary_graph.copy())
 
         # extract the minimal graph
         minimal_graph = self.get_minimal_graph()
@@ -280,7 +280,7 @@ class TimeSeriesCausalGraph(CausalGraph):
             self._minimal_graph = minimal_cg
             return minimal_cg
 
-        return self._minimal_graph.copy()
+        return cast(TimeSeriesCausalGraph, self._minimal_graph.copy())
 
     def get_topological_order(
         self, return_all: bool = False, respect_time_ordering: bool = True
