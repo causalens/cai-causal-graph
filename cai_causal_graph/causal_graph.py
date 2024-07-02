@@ -18,7 +18,8 @@ from __future__ import annotations
 import itertools
 from collections import defaultdict
 from copy import deepcopy
-from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Type, Union, cast
+from functools import wraps
+from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Tuple, Type, Union, cast
 
 import networkx
 import numpy
@@ -34,6 +35,21 @@ from cai_causal_graph.utils import pairwise
 def to_list(var: Any) -> List[Any]:
     """Helper to make sure a var is always a list."""
     return var if isinstance(var, list) else [var]
+
+
+def _reset_graph_attributes(func: Callable) -> Callable:
+    """
+    Decorator to reset cached attributes of `cai_causal_graph.causal_graph.CausalGraph`.
+
+    Whenever a function is called that changes the graph, we need to reset these attributes.
+    """
+
+    @wraps(func)
+    def wrapper(self: CausalGraph, *args, **kwargs) -> Any:
+        function = func(self, *args, **kwargs)
+        return function
+
+    return wrapper
 
 
 class Skeleton(CanDictSerialize, CanDictDeserialize):
@@ -471,6 +487,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
         super(HasIdentifier, self).__init__(meta=meta)
 
+        self._is_dag: Optional[bool] = None
+
     def __copy__(self) -> CausalGraph:
         """Copy a `cai_causal_graph.causal_graph.CausalGraph` instance."""
         return self.copy()
@@ -614,6 +632,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
     def is_dag(self) -> bool:
         """Check whether the `cai_causal_graph.causal_graph.CausalGraph` instance is a Directed Acyclic Graph (DAG)."""
+        if self._is_dag is not None:
+            return self._is_dag
         return networkx.is_directed_acyclic_graph(self.to_networkx()) if self._is_fully_directed() else False
 
     def is_empty(self) -> bool:

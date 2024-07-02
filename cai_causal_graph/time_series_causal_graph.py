@@ -163,13 +163,13 @@ class TimeSeriesCausalGraph(CausalGraph):
             logger.warning('The graph is not a DAG. The stationarity check is not valid.')
             return False
 
-        if self._is_stationary_graph is not None:
-            return self._is_stationary_graph
+        if self._is_stationary_graph is None:
+            stationary_graph = self.get_stationary_graph()
 
-        stationary_graph = self.get_stationary_graph()
+            # now check if the stationary graph is equal to the current graph
+            self._is_stationary_graph = stationary_graph == self
 
-        # now check if the stationary graph is equal to the current graph
-        return stationary_graph == self
+        return self._is_stationary_graph
 
     def get_stationary_graph(self) -> TimeSeriesCausalGraph:
         """
@@ -356,9 +356,10 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         See `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph` for more details.
         """
-        if self._is_minimal_graph is not None:
-            return self._is_minimal_graph
-        return self == self.get_minimal_graph()
+        if self._is_minimal_graph is None:
+            self._is_minimal_graph = self == self.get_minimal_graph()
+
+        return self._is_minimal_graph
 
     def get_summary_graph(self) -> CausalGraph:
         """
