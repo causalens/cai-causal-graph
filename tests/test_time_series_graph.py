@@ -729,6 +729,14 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         self.assertTrue(self.tsdag.is_minimal_graph())
         # dag_1
         self.assertFalse(self.tsdag_1.is_minimal_graph())
+        # test after adding edge
+        cg = TimeSeriesCausalGraph()
+        cg.add_edges_from_paths(['x lag(n=1)', 'x'])
+
+        self.assertTrue(cg.is_minimal_graph())
+
+        cg.add_edges_from_paths(['x lag(n=2)', 'x lag(n=1)'])
+        self.assertFalse(cg.is_minimal_graph())
 
     def test_max_backwards_lag(self):
         # dag
@@ -1284,6 +1292,15 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         tscg.add_edge('X1 lag(n=1)', 'X1')
 
         self.assertTrue(tscg.is_stationary_graph())
+
+        # test after adding edge with caching
+        cg = TimeSeriesCausalGraph()
+        cg.add_edges_from_paths(['x lag(n=1)', 'x', 'y'])
+
+        self.assertFalse(cg.is_stationary_graph())
+
+        cg.add_edge('x lag(n=1)', 'y lag(n=1)')
+        self.assertTrue(cg.is_stationary_graph())
 
     def test_make_stationary(self):
 
