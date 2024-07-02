@@ -13,6 +13,8 @@
 - Unified cached attribute resetting between `cai_causal_graph.causal_graph.CausalGraph` and `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`
   by introducing a `cai_causal_graph.causal_graph.CausalGraph._reset_cached_attributes` method and `cai_causal_graph.causal_graph.reset_cached_attributes_decorator`
   decorator.
+- Fixed a bug where calling `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.variables` method would return the variable list by reference, rather than returning
+  a copy.
 
 ## 0.5.0
 
