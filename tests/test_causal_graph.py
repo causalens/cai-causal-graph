@@ -21,6 +21,7 @@ from copy import deepcopy
 import networkx
 import numpy
 import pandas
+from networkx.utils import graphs_equal
 
 from cai_causal_graph import CausalGraph, EdgeType, NodeVariableType, TimeSeriesCausalGraph
 from cai_causal_graph import __version__ as VERSION
@@ -734,6 +735,19 @@ class TestCausalGraph(unittest.TestCase):
 
         self.assertEqual(CausalGraph.from_adjacency_matrix(*cg.to_numpy()), cg)
 
+        # test caching
+        cg = CausalGraph()
+        cg.add_edges_from_paths(['a', 'b'])
+
+        adj = cg.adjacency_matrix
+
+        cg.add_edge('b', 'c')
+
+        adj2 = cg.adjacency_matrix
+
+        self.assertTupleEqual(adj.shape, (2, 2))
+        self.assertTupleEqual(adj2.shape, (3, 3))
+
     def test_copy(self):
         cg = CausalGraph()
         cg.add_node('a', meta={'some': 'thing'})
@@ -863,6 +877,18 @@ class TestCausalGraph(unittest.TestCase):
         self.assertTrue(networkx.utils.graphs_equal(u, ug.to_networkx()))
         self.assertTrue(networkx.utils.graphs_equal(d, dg.to_networkx()))
         self.assertTrue(networkx.utils.graphs_equal(u, dg.skeleton.to_networkx()))
+
+        # Test to_networkx cache
+        cg = CausalGraph()
+        cg.add_edges_from_paths(['a', 'b'])
+
+        nx = cg.to_networkx()
+
+        cg.add_edge('b', 'c')
+
+        nx2 = cg.to_networkx()
+
+        self.assertFalse(graphs_equal(nx2, nx))
 
     def test_networkx_raises(self):
         adj_1 = numpy.array([[0, 1, 0], [0, 0, 1], [0, 0, 0]])
