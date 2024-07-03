@@ -493,6 +493,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         self._networkx: Optional[networkx.Graph] = None
         self._is_fully_directed_cached: Optional[bool] = None
         self._is_fully_undirected_cached: Optional[bool] = None
+        self._adjacency: Optional[numpy.ndarray] = None
 
     def __copy__(self) -> CausalGraph:
         """Copy a `cai_causal_graph.causal_graph.CausalGraph` instance."""
@@ -593,6 +594,9 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         The column order is dependent upon the ordering of node names. To obtain both, adjacency matrix and node names
         in corresponding order use the to_numpy method instead.
         """
+        if self._adjacency is not None:
+            return deepcopy(self._adjacency)
+
         # check that the graph only has directed and undirected edges
         nodes_indices_map = {node: i for i, node in enumerate(self.get_node_names())}
         adj = numpy.zeros((len(self.nodes), len(self.nodes)), dtype=int)
@@ -608,7 +612,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
                     f'Adjacency matrices can only be computed if the CausalGraph instance solely contains directed and '
                     f'undirected edges. Got {edge.get_edge_type()} for the edge {edge.descriptor}.'
                 )
-        return adj
+        self._adjacency = adj
+        return self._adjacency
 
     @property
     def sepsets(self) -> dict:
@@ -2168,6 +2173,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         self._networkx = None
         self._is_fully_directed_cached = None
         self._is_fully_undirected_cached = None
+        self._adjacency = None
 
     def __repr__(self) -> str:
         """Return a string description of the `cai_causal_graph.causal_graph.CausalGraph` instance."""
