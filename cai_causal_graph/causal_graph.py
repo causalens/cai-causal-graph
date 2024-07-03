@@ -489,6 +489,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         super(HasIdentifier, self).__init__(meta=meta)
 
         self._is_dag: Optional[bool] = None
+        self._networkx: Optional[networkx.Graph] = None
 
     def __copy__(self) -> CausalGraph:
         """Copy a `cai_causal_graph.causal_graph.CausalGraph` instance."""
@@ -1958,7 +1959,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             of directed and undirected edges or there are more elaborate edge types, a
             `cai_causal_graph.exceptions.CausalGraphErrors.GraphConversionError` will be raised.
         """
-
+        if self._networkx is not None:
+            return deepcopy(self._networkx)
         # Save these off as they need to be called more than once.
         is_fully_directed = self._is_fully_directed()
         is_fully_undirected = self._is_fully_undirected()
@@ -1989,6 +1991,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         for source, destinations in self._edges_by_source.items():
             for target in destinations.keys():
                 networkx_graph.add_edge(source, target)
+
+        self._networkx = networkx_graph
 
         return networkx_graph
 
@@ -2152,6 +2156,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
     def _reset_cached_attributes(self):
         """Reset cached internal attributes."""
         self._is_dag = None
+        self._networkx = None
 
     def __repr__(self) -> str:
         """Return a string description of the `cai_causal_graph.causal_graph.CausalGraph` instance."""
