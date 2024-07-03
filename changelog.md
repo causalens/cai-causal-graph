@@ -9,7 +9,8 @@
     a deepcopied version of this graph is returned.
   - Fixed a bug where cached attributes would not be reset when adding edges to `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`, which can lead to erroneous
     stationary graphs being returned.
-- Added caching of `cai_causal_graph.causal_graph.CausalGraph.is_dag` method.
+- Added caching of `cai_causal_graph.causal_graph.CausalGraph.is_dag`, `cai_causal_graph.causal_graph.CausalGraph.adjacency_matrix` and `cai_causal_graph.causal_graph.CausalGraph.to_networkx`
+  methods.
 - Unified cached attribute resetting between `cai_causal_graph.causal_graph.CausalGraph` and `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`
   by introducing a `cai_causal_graph.causal_graph.CausalGraph._reset_cached_attributes` method and `cai_causal_graph.causal_graph.reset_cached_attributes_decorator`
   decorator.
