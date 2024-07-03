@@ -488,8 +488,11 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
         super(HasIdentifier, self).__init__(meta=meta)
 
+        # cached attributes
         self._is_dag: Optional[bool] = None
         self._networkx: Optional[networkx.Graph] = None
+        self._is_fully_directed_cached: Optional[bool] = None
+        self._is_fully_undirected_cached: Optional[bool] = None
 
     def __copy__(self) -> CausalGraph:
         """Copy a `cai_causal_graph.causal_graph.CausalGraph` instance."""
@@ -743,14 +746,20 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         Check whether the `cai_causal_graph.causal_graph.CausalGraph` instance only contains directed edges, i.e.,
         all edges are directed.
         """
-        return all(edge.get_edge_type() == EdgeType.DIRECTED_EDGE for edge in self.edges)
+        if self._is_fully_directed_cached is None:
+            self._is_fully_directed_cached = all(edge.get_edge_type() == EdgeType.DIRECTED_EDGE for edge in self.edges)
+        return self._is_fully_directed_cached
 
     def _is_fully_undirected(self) -> bool:
         """
         Check whether the `cai_causal_graph.causal_graph.CausalGraph` instance only contains undirected edges, i.e.,
         all edges are undirected.
         """
-        return all(edge.get_edge_type() == EdgeType.UNDIRECTED_EDGE for edge in self.edges)
+        if self._is_fully_undirected_cached is None:
+            self._is_fully_undirected_cached = all(
+                edge.get_edge_type() == EdgeType.UNDIRECTED_EDGE for edge in self.edges
+            )
+        return self._is_fully_undirected_cached
 
     def _is_directed_and_or_undirected_error_message(self, is_one_kind_only: bool = True) -> str:
         """
@@ -2157,6 +2166,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """Reset cached internal attributes."""
         self._is_dag = None
         self._networkx = None
+        self._is_fully_directed_cached = None
+        self._is_fully_undirected_cached = None
 
     def __repr__(self) -> str:
         """Return a string description of the `cai_causal_graph.causal_graph.CausalGraph` instance."""
