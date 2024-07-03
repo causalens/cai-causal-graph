@@ -633,9 +633,11 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
     def is_dag(self) -> bool:
         """Check whether the `cai_causal_graph.causal_graph.CausalGraph` instance is a Directed Acyclic Graph (DAG)."""
-        if self._is_dag is not None:
-            return self._is_dag
-        return networkx.is_directed_acyclic_graph(self.to_networkx()) if self._is_fully_directed() else False
+        if self._is_dag is None:
+            self._is_dag = (
+                networkx.is_directed_acyclic_graph(self.to_networkx()) if self._is_fully_directed() else False
+            )
+        return self._is_dag
 
     def is_empty(self) -> bool:
         """Return True if there are no nodes and edges. False otherwise."""
