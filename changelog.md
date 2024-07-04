@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.5.1
 
 - Improved caching of results for `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class, including:
   - Adding caching to the following methods: `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph`, `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.is_minimal_graph`,
