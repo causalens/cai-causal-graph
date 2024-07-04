@@ -729,6 +729,14 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         self.assertTrue(self.tsdag.is_minimal_graph())
         # dag_1
         self.assertFalse(self.tsdag_1.is_minimal_graph())
+        # test after adding edge
+        cg = TimeSeriesCausalGraph()
+        cg.add_edges_from_paths(['x lag(n=1)', 'x'])
+
+        self.assertTrue(cg.is_minimal_graph())
+
+        cg.add_edges_from_paths(['x lag(n=2)', 'x lag(n=1)'])
+        self.assertFalse(cg.is_minimal_graph())
 
     def test_max_backwards_lag(self):
         # dag
@@ -870,6 +878,26 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
         # test it does not fail with a very big graph due to recursion
         self.tsdag_1.extend_graph(forward_steps=200, backward_steps=200).get_minimal_graph()
+
+        # test adding an edge after calling `get_minimal_graph` once
+        tsdag = TimeSeriesCausalGraph()
+        tsdag.add_edge('b lag(n=1)', 'c')
+        tsdag.get_minimal_graph()
+
+        tsdag.add_edge('b lag(n=1)', 'b')
+        min_tsgraph = tsdag.get_minimal_graph()
+
+        self.assertSetEqual(set(min_tsgraph.get_edge_pairs()), {('b lag(n=1)', 'b'), ('b lag(n=1)', 'c')})
+
+        # test cached minimal graph is deepcopied before being returned
+        tsdag = TimeSeriesCausalGraph()
+        tsdag.add_edge('b lag(n=1)', 'c')
+        min_tsgraph_1 = tsdag.get_minimal_graph()
+        min_tsgraph_2 = tsdag.get_minimal_graph()
+
+        min_tsgraph_2.add_edge('a', 'c')
+
+        self.assertSetEqual(set(min_tsgraph_1.get_edge_pairs()), {('b lag(n=1)', 'c')})
 
     def test_extend_backward(self):
         # with 1 steps
@@ -1265,6 +1293,15 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
 
         self.assertTrue(tscg.is_stationary_graph())
 
+        # test after adding edge with caching
+        cg = TimeSeriesCausalGraph()
+        cg.add_edges_from_paths(['x lag(n=1)', 'x', 'y'])
+
+        self.assertFalse(cg.is_stationary_graph())
+
+        cg.add_edge('x lag(n=1)', 'y lag(n=1)')
+        self.assertTrue(cg.is_stationary_graph())
+
     def test_make_stationary(self):
 
         tscg = TimeSeriesCausalGraph()
@@ -1279,6 +1316,35 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         stat_tscg = tscg.get_stationary_graph()
 
         self.assertTrue(stat_tscg.is_stationary_graph())
+
+        # test after adding edge and calling once
+        tscg = TimeSeriesCausalGraph()
+        tscg.add_edges_from_paths(['a lag(n=1)', 'a', 'b'])
+
+        tscg.get_stationary_graph()
+
+        tscg.add_edge('a lag(n=1)', 'b')
+
+        stat_tscg = tscg.get_stationary_graph()
+        self.assertSetEqual(
+            set(stat_tscg.get_edge_pairs()),
+            {('a', 'b'), ('a lag(n=1)', 'a'), ('a lag(n=1)', 'b lag(n=1)'), ('a lag(n=1)', 'b')},
+        )
+
+    def test_cached_stationary_graph_copies(self):
+        tscg = TimeSeriesCausalGraph()
+        tscg.add_edges_from_paths(['a lag(n=1)', 'a', 'b'])
+
+        stat_tscg_1 = tscg.get_stationary_graph()
+        stat_tscg_2 = tscg.get_stationary_graph()
+
+        stat_tscg_2.remove_edge('a lag(n=1)', 'a')
+
+        # test the edge has not been removed from the other stationary graph
+        self.assertSetEqual(
+            set(stat_tscg_1.get_edge_pairs()),
+            {('a', 'b'), ('a lag(n=1)', 'a'), ('a lag(n=1)', 'b lag(n=1)')},
+        )
 
     def test_to_numpy_by_lag(self):
         # test with empty graph

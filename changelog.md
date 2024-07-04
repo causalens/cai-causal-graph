@@ -1,5 +1,22 @@
 # Changelog
 
+## NEXT
+
+- Improved caching of results for `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class, including:
+  - Adding caching to the following methods: `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph`, `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.is_minimal_graph`,
+    `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.is_stationary_graph`.
+  - Fixed a bug in `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_stationary_graph` where the same cached graph would be returned multiple times. Instead now,
+    a deepcopied version of this graph is returned.
+  - Fixed a bug where cached attributes would not be reset when adding edges to `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`, which can lead to erroneous
+    stationary graphs being returned.
+- Added caching of `cai_causal_graph.causal_graph.CausalGraph.is_dag`, `cai_causal_graph.causal_graph.CausalGraph.adjacency_matrix` and `cai_causal_graph.causal_graph.CausalGraph.to_networkx`
+  methods.
+- Unified cached attribute resetting between `cai_causal_graph.causal_graph.CausalGraph` and `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`
+  by introducing a `cai_causal_graph.causal_graph.CausalGraph._reset_cached_attributes` method and `cai_causal_graph.causal_graph.reset_cached_attributes_decorator`
+  decorator.
+- Fixed a bug where calling `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.variables` method would return the variable list by reference, rather than returning
+  a copy.
+
 ## 0.5.0
 
 > **_NOTE:_**  **Backwards compatibility warning!** Global metadata to `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`
