@@ -122,9 +122,6 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         # list of variables in the graph, i.e. discarding the lags (X1(t-1) and X1 are the same variable)
         self._variables: Optional[List[str]] = None
-        self._summary_graph: Optional[CausalGraph] = None
-        self._stationary_graph: Optional[TimeSeriesCausalGraph] = None
-        self._minimal_graph: Optional[TimeSeriesCausalGraph] = None
         self._is_minimal_graph: Optional[bool] = None
         self._is_stationary_graph: Optional[bool] = None
 
@@ -154,9 +151,6 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         If there exists the edge `X(t-1) -> X(t)`, then there must be the edge `X(t-2) -> X(t-1)`, etc.
         """
-        if self._stationary_graph is not None:
-            return cast(TimeSeriesCausalGraph, self._stationary_graph.copy())
-
         # extract the minimal graph
         minimal_graph = self.get_minimal_graph()
 
@@ -165,9 +159,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         neg_lag, pos_lag = lags[0], lags[-1]
 
         # now extend the minimal graph to the current max and min lag to match the current graph
-        self._stationary_graph = minimal_graph.extend_graph(-neg_lag, pos_lag, include_all_parents=False)
-
-        return self._stationary_graph
+        return minimal_graph.extend_graph(-neg_lag, pos_lag, include_all_parents=False)
 
     def get_minimal_graph(self) -> TimeSeriesCausalGraph:
         """
@@ -184,103 +176,97 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         :return: The minimal graph as a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` object.
         """
-        if self._minimal_graph is None:
-            minimal_cg = self.__class__(meta=deepcopy(self.meta))
+        minimal_cg = self.__class__(meta=deepcopy(self.meta))
 
-            for edge in self.get_edges():
-                # copy edge
-                edge = self._EdgeCls.from_dict(edge.to_dict(include_meta=True))
+        for edge in self.get_edges():
+            # copy edge
+            edge = self._EdgeCls.from_dict(edge.to_dict(include_meta=True))
 
-                # get the relative time delta; asserts are needed for linting
-                source = edge.source
-                destination = edge.destination
-                assert isinstance(source, TimeSeriesNode)
-                assert isinstance(destination, TimeSeriesNode)
-                assert isinstance(source.time_lag, int)
-                assert isinstance(destination.time_lag, int)
-                assert source.variable_name is not None
-                assert destination.variable_name is not None
+            # get the relative time delta; asserts are needed for linting
+            source = edge.source
+            destination = edge.destination
+            assert isinstance(source, TimeSeriesNode)
+            assert isinstance(destination, TimeSeriesNode)
+            assert isinstance(source.time_lag, int)
+            assert isinstance(destination.time_lag, int)
+            assert source.variable_name is not None
+            assert destination.variable_name is not None
 
-                time_delta = destination.time_lag - source.time_lag
+            time_delta = destination.time_lag - source.time_lag
 
-                # add the edge if the time delta is 0 (no need to extract the new names)
-                # copy the edge type to the minimal graph
-                if time_delta == 0 and not minimal_cg.edge_exists(source.variable_name, destination.variable_name):
-                    # create the time series nodes
+            # add the edge if the time delta is 0 (no need to extract the new names)
+            # copy the edge type to the minimal graph
+            if time_delta == 0 and not minimal_cg.edge_exists(source.variable_name, destination.variable_name):
+                # create the time series nodes
+                # update the node metadata to make sure the time lag is correct
+                source.meta[TIME_LAG] = 0
+                destination.meta[TIME_LAG] = 0
+
+                source = self._NodeCls(
+                    identifier=source.variable_name, meta=source.meta, variable_type=source.variable_type
+                )
+
+                destination = self._NodeCls(
+                    identifier=destination.variable_name,
+                    meta=destination.meta,
+                    variable_type=destination.variable_type,
+                )
+
+                edge = self._EdgeCls(source=source, destination=destination, edge_type=edge.edge_type, meta=edge.meta)
+
+                # Do not check for acyclicity as an acyclic minimal graph will always produce an acyclic extended graph
+                minimal_cg.add_edge(edge=edge, validate=False)
+
+            # otherwise if the time delta is not 0, we may have X[t-2]->X[t-1] and
+            # we must add X[t-1]->X[t]
+            else:
+                # get the new names according to the time delta
+                destination_name = get_name_with_lag(destination.identifier, 0)
+                source_name = get_name_with_lag(source.identifier, -time_delta)
+                if not minimal_cg.edge_exists(source_name, destination_name):
                     # update the node metadata to make sure the time lag is correct
-                    source.meta[TIME_LAG] = 0
+                    source.meta[TIME_LAG] = -time_delta
                     destination.meta[TIME_LAG] = 0
 
+                    # create the nodes
                     source = self._NodeCls(
-                        identifier=source.variable_name, meta=source.meta, variable_type=source.variable_type
+                        identifier=source_name,
+                        meta=source.meta,
+                        variable_type=source.variable_type,
                     )
 
                     destination = self._NodeCls(
-                        identifier=destination.variable_name,
+                        identifier=destination_name,
                         meta=destination.meta,
                         variable_type=destination.variable_type,
                     )
 
+                    # create the edge
                     edge = self._EdgeCls(
                         source=source, destination=destination, edge_type=edge.edge_type, meta=edge.meta
                     )
-
-                    # Do not check for acyclicity as an acyclic minimal graph will always produce an acyclic extended graph
+                    # Do not check for acyclicity as an acyclic minimal graph will always produce an acyclic extended
+                    # graph
                     minimal_cg.add_edge(edge=edge, validate=False)
 
-                # otherwise if the time delta is not 0, we may have X[t-2]->X[t-1] and
-                # we must add X[t-1]->X[t]
-                else:
-                    # get the new names according to the time delta
-                    destination_name = get_name_with_lag(destination.identifier, 0)
-                    source_name = get_name_with_lag(source.identifier, -time_delta)
-                    if not minimal_cg.edge_exists(source_name, destination_name):
-                        # update the node metadata to make sure the time lag is correct
-                        source.meta[TIME_LAG] = -time_delta
-                        destination.meta[TIME_LAG] = 0
+        # check for floating nodes
+        if self.variables is not None and len(self.variables) > 0:
+            for variable in self.variables:
+                if (
+                    minimal_cg.variables is None or variable not in minimal_cg.variables
+                ) and not minimal_cg.node_exists(variable):
+                    # Guaranteed there is at least one node, take the first for simplicity.
+                    # This aligns with how edges are chosen for minimal graph.
+                    # Only issue is if they have different meta. TODO: CAUSALAI-4784
+                    original_floating_node = self.get_nodes_for_variable_name(variable)[0]
+                    new_floating_node = self._NodeCls(
+                        identifier=variable,
+                        meta=original_floating_node.meta,
+                        variable_type=original_floating_node.variable_type,
+                    )
+                    minimal_cg.add_node(node=new_floating_node)
 
-                        # create the nodes
-                        source = self._NodeCls(
-                            identifier=source_name,
-                            meta=source.meta,
-                            variable_type=source.variable_type,
-                        )
-
-                        destination = self._NodeCls(
-                            identifier=destination_name,
-                            meta=destination.meta,
-                            variable_type=destination.variable_type,
-                        )
-
-                        # create the edge
-                        edge = self._EdgeCls(
-                            source=source, destination=destination, edge_type=edge.edge_type, meta=edge.meta
-                        )
-                        # Do not check for acyclicity as an acyclic minimal graph will always produce an acyclic extended
-                        # graph
-                        minimal_cg.add_edge(edge=edge, validate=False)
-
-            # check for floating nodes
-            if self.variables is not None and len(self.variables) > 0:
-                for variable in self.variables:
-                    if (
-                        minimal_cg.variables is None or variable not in minimal_cg.variables
-                    ) and not minimal_cg.node_exists(variable):
-                        # Guaranteed there is at least one node, take the first for simplicity.
-                        # This aligns with how edges are chosen for minimal graph.
-                        # Only issue is if they have different meta. TODO: CAUSALAI-4784
-                        original_floating_node = self.get_nodes_for_variable_name(variable)[0]
-                        new_floating_node = self._NodeCls(
-                            identifier=variable,
-                            meta=original_floating_node.meta,
-                            variable_type=original_floating_node.variable_type,
-                        )
-                        minimal_cg.add_node(node=new_floating_node)
-
-            self._minimal_graph = minimal_cg
-            return minimal_cg
-
-        return cast(TimeSeriesCausalGraph, self._minimal_graph.copy())
+        return minimal_cg
 
     def get_topological_order(
         self, return_all: bool = False, respect_time_ordering: bool = True
@@ -360,57 +346,52 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         :return: The summary graph as a `cai_causal_graph.causal_graph.CausalGraph` object.
         """
-        if self._summary_graph is None:
-            summary_graph = self._SummaryGraphCls(meta=deepcopy(self.meta))
-            # now check as described above (assume edges are already directed)
-            edges = self.get_edges()
+        # check if the graph is a DAG
+        assert self.is_dag(), 'This method only works for DAGs but the current graph is not a DAG.'
 
-            # check if the graph is a DAG
-            assert self.is_dag(), 'This method only works for DAGs but the current graph is not a DAG.'
+        summary_graph = self._SummaryGraphCls(meta=deepcopy(self.meta))
+        # now check as described above (assume edges are already directed)
+        edges = self.get_edges()
 
-            for edge in edges:
-                # first we need to extract the variable names from the nodes as the summary graph
-                # will have the variable names as nodes
-                source_node = edge.source
-                destination_node = edge.destination
-                assert isinstance(source_node, TimeSeriesNode)
-                assert isinstance(destination_node, TimeSeriesNode)
+        for edge in edges:
+            # first we need to extract the variable names from the nodes as the summary graph
+            # will have the variable names as nodes
+            source_node = edge.source
+            destination_node = edge.destination
+            assert isinstance(source_node, TimeSeriesNode)
+            assert isinstance(destination_node, TimeSeriesNode)
 
-                source_variable_name = source_node.variable_name
-                destination_variable_name = destination_node.variable_name
+            source_variable_name = source_node.variable_name
+            destination_variable_name = destination_node.variable_name
 
-                assert (
-                    source_variable_name is not None
-                ), 'Source variable name is None, cannot create summary graph. The edge is: {}'.format(edge)
+            assert (
+                source_variable_name is not None
+            ), 'Source variable name is None, cannot create summary graph. The edge is: {}'.format(edge)
 
-                assert (
-                    destination_variable_name is not None
-                ), 'Destination variable name is None, cannot create summary graph. The edge is: {}'.format(edge)
+            assert (
+                destination_variable_name is not None
+            ), 'Destination variable name is None, cannot create summary graph. The edge is: {}'.format(edge)
 
-                if source_variable_name != destination_variable_name and not summary_graph.is_edge_by_pair(
-                    (source_variable_name, destination_variable_name)
-                ):
-                    # create the nodes
-                    source = self._NodeCls(
-                        identifier=source_variable_name,
-                        meta=source_node.meta,
-                        variable_type=source_node.variable_type,
-                    )
-                    destination = self._NodeCls(
-                        identifier=destination_variable_name,
-                        meta=destination_node.meta,
-                        variable_type=destination_node.variable_type,
-                    )
+            if source_variable_name != destination_variable_name and not summary_graph.is_edge_by_pair(
+                (source_variable_name, destination_variable_name)
+            ):
+                # create the nodes
+                source = self._NodeCls(
+                    identifier=source_variable_name,
+                    meta=source_node.meta,
+                    variable_type=source_node.variable_type,
+                )
+                destination = self._NodeCls(
+                    identifier=destination_variable_name,
+                    meta=destination_node.meta,
+                    variable_type=destination_node.variable_type,
+                )
 
-                    # create the edge
-                    edge = self._EdgeCls(
-                        source=source, destination=destination, edge_type=edge.edge_type, meta=edge.meta
-                    )
-                    summary_graph.add_edge(edge=edge)
+                # create the edge
+                edge = self._EdgeCls(source=source, destination=destination, edge_type=edge.edge_type, meta=edge.meta)
+                summary_graph.add_edge(edge=edge)
 
-            self._summary_graph = summary_graph
-
-        return self._summary_graph.copy()
+        return summary_graph
 
     def extend_graph(
         self,
@@ -1182,9 +1163,6 @@ class TimeSeriesCausalGraph(CausalGraph):
 
     def _reset_cached_attributes(self):
         """Reset cached internal attributes."""
-        self._minimal_graph = None
-        self._summary_graph = None
-        self._stationary_graph = None
         self._variables = None
         self._is_minimal_graph = None
         self._is_stationary_graph = None
