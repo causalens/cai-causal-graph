@@ -346,12 +346,12 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         :return: The summary graph as a `cai_causal_graph.causal_graph.CausalGraph` object.
         """
+        # check if the graph is a DAG
+        assert self.is_dag(), 'This method only works for DAGs but the current graph is not a DAG.'
+
         summary_graph = self._SummaryGraphCls(meta=deepcopy(self.meta))
         # now check as described above (assume edges are already directed)
         edges = self.get_edges()
-
-        # check if the graph is a DAG
-        assert self.is_dag(), 'This method only works for DAGs but the current graph is not a DAG.'
 
         for edge in edges:
             # first we need to extract the variable names from the nodes as the summary graph
