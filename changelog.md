@@ -1,5 +1,11 @@
 # Changelog
 
+## NEXT
+
+- Removed caching from `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph`, `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_stationary_graph` and
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_summary_graph` because the caching would not account for changes
+  in node/edge metadata.
+
 ## 0.5.1
 
 - Improved caching of results for `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class, including:
