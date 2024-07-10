@@ -40,7 +40,7 @@ jobs:
         uses: snok/install-poetry@v1
         with:
           installer-parallel: true
-          version: 1.8.2  # This should be a specific micro version for reproducibility
+          version: 1.8.3  # This should be a specific micro version for reproducibility
       - name: Set poetry cache
         # To have a consistent cache directory between different os (linux/macosx)
         run: poetry config cache-dir .pypoetry
