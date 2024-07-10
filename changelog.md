@@ -79,7 +79,7 @@
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_nodes_for_variable_name` by adding caching.
 - Updated `networkx` dependency from `">=3.0.0, <4.0.0"` to `">=3.0.0, <3.3.0"` and `networkx` have claimed to fix a bug
   with simple paths and other related functions, but this now introduces paths of length 1 which we do not want. Also
-  updated `pyproject.toml` to allow different `networkx` versions for `python` `3.8` and `3.9` - `3.12` as `networkx` 
+  updated `pyproject.toml` to allow different `networkx` versions for `python` `3.8` and `3.9` - `3.12` as `networkx`
   `3.1` is the last one that supports `3.8`.
 - Upgraded `poetry` version from `1.7.1` to `1.8.2` in the GitHub workflows.
 
