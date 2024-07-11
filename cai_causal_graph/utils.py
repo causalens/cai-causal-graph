@@ -44,7 +44,17 @@ def get_variable_name_and_lag(node_name: NodeLike) -> Tuple[str, int]:
     if not isinstance(node_name, str):
         raise TypeError(f'Expected node name to be a string, got type {type(node_name)}.')
 
-    is_match = re.match(r'^(.+?)(?: lag\(n=(\d+)\))?(?: future\(n=(\d+)\))?$', node_name)
+    # This matches three groups:
+    # (?s:(.+?\n?)) - The variable name. The main bulk of it - (?s:(.+?)) - matches any characters (including new lines)
+    #       in a non-greedy fashion, meaning it won't capture ' lag(n=X)' or ' future(n=X)' at the end as part of the
+    #       variable, as they will be captured by the other matching groups. The extra \n* in the group is there because
+    #       for some reason the main bulk fails to match trailing new lines if there is no lag or future afterward. Not
+    #       sure why, but this fixes it.
+    # (?: lag\(n=(\d+)\))? - Optionally the lag in the past. This matches the whole 'lag(n=X)' section, but the captured
+    #       group is only the lag value.
+    # (?: future\(n=(\d+)\))? - Optionally the lag in the future. This matches the whole 'future(n=X)' section, but the
+    #       captured group is only the future lag value.
+    is_match = re.match(r'^(?s:(.+?\n*))(?: lag\(n=(\d+)\))?(?: future\(n=(\d+)\))?$', node_name)
 
     lag_matches = re.findall(r'lag\(n=(\d+)\)', node_name)
     future_matches = re.findall(r'future\(n=(\d+)\)', node_name)

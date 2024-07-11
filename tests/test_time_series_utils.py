@@ -32,13 +32,13 @@ class TestTimeSeriesGraphUtils(TestCase):
 
         # With special characters
         self.assertTupleEqual(
-            get_variable_name_and_lag('1@£$%^&*()-+=*/_\\"\'<>?*~.'), ('1@£$%^&*()-+=*/_\\"\'<>?*~.', 0)
+            get_variable_name_and_lag('1@£$%^&*()-+=*/\n_\\"\'<>?*~.'), ('1@£$%^&*()-+=*/\n_\\"\'<>?*~.', 0)
         )
         self.assertTupleEqual(
-            get_variable_name_and_lag('1@£$%^&*()-+=*/_\\"\'<>?*~. lag(n=2)'), ('1@£$%^&*()-+=*/_\\"\'<>?*~.', -2)
+            get_variable_name_and_lag('1@£$%^&*()-+=*/\n_\\"\'<>?*~. lag(n=2)'), ('1@£$%^&*()-+=*/\n_\\"\'<>?*~.', -2)
         )
         self.assertTupleEqual(
-            get_variable_name_and_lag('1@£$%^&*()-+=*/_\\"\'<>?*~. future(n=2)'), ('1@£$%^&*()-+=*/_\\"\'<>?*~.', 2)
+            get_variable_name_and_lag('1@£$%^&*()-+=*/\n_\\"\'<>?*~. future(n=2)'), ('1@£$%^&*()-+=*/\n_\\"\'<>?*~.', 2)
         )
 
         # Has something that looks like lag in the name
@@ -60,6 +60,16 @@ class TestTimeSeriesGraphUtils(TestCase):
         self.assertTupleEqual(get_variable_name_and_lag('x1 lag(n=1'), ('x1 lag(n=1', 0))
         self.assertTupleEqual(get_variable_name_and_lag('x1 lag(n=1 lag(n=1)'), ('x1 lag(n=1', -1))
         self.assertTupleEqual(get_variable_name_and_lag('x1 lag(n=1 future(n=1)'), ('x1 lag(n=1', 1))
+
+        # New line at the end of a variable name matches (edge case regression test)
+        self.assertTupleEqual(get_variable_name_and_lag('x1\n'), ('x1\n', 0))
+        self.assertTupleEqual(get_variable_name_and_lag('x1\n lag(n=1)'), ('x1\n', -1))
+        self.assertTupleEqual(get_variable_name_and_lag('x1\n future(n=1)'), ('x1\n', 1))
+
+        # Multiple new line at the end of a variable name matches (edge case regression test)
+        self.assertTupleEqual(get_variable_name_and_lag('x1\n\n\n'), ('x1\n\n\n', 0))
+        self.assertTupleEqual(get_variable_name_and_lag('x1\n\n\n lag(n=1)'), ('x1\n\n\n', -1))
+        self.assertTupleEqual(get_variable_name_and_lag('x1\n\n\n future(n=1)'), ('x1\n\n\n', 1))
 
     def test_get_variable_name_and_lag_raises(self):
         self.assertRaises(ValueError, get_variable_name_and_lag, 'x1 lag(n=1) lag(n=2)')
