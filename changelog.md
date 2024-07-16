@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.5.3
 
 - `cai_causal_graph.utils.get_variable_name_and_lag` now allows new lines in the names of variables.
 - Passing `input_list`, `output_list`, and `fully_connected` as arguments to the constructor of a
