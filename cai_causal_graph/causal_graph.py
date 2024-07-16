@@ -434,23 +434,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             >>> # add an undirected edge between 'input1' and 'input2'
             >>> causal_graph.add_edge('input1', 'input2', edge_type=EdgeType.UNDIRECTED_EDGE)
 
-            Setting `fully_connected=True` (default) and providing an `input_list` and `n `output_list` during
-            construction, automatically creates a fully-connected bipartite directed causal graph. This means that all
-            inputs are automatically connected to all outputs by means of directed edges. But there will be no edges
-            between inputs and no edges between outputs; this will be a simple two layer graph. For example,
-
-            >>> from cai_causal_graph import CausalGraph
-            >>>
-            >>> input_list = ['input1', 'input2']
-            >>> output_list = ['output1', 'output2']
-            >>>
-            >>> # Create a fully connected graph from inputs to outputs
-            >>> causal_graph = CausalGraph(
-            >>>     input_list=input_list,
-            >>>     output_list=output_list,
-            >>> )
-
-            Finally, it is straightforward to export an instantiated `cai_causal_graph.causal_graph.CausalGraph` to a
+            It is straightforward to export an instantiated `cai_causal_graph.causal_graph.CausalGraph` to a
             serializable dictionary,
 
             >>> causal_graph_dict = causal_graph.to_dict()
@@ -476,14 +460,16 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         if input_list is not None:
             warnings.warn(
                 'Passing input_list during construction of a CausalGraph is now deprecated, and will be '
-                'removed in future versions. Please add nodes and edges after construction instead.',
+                'removed in future versions. To maintain this behavior, call add_fully_connected_nodes after '
+                'construction.',
                 category=DeprecationWarning,
             )
             self.add_nodes_from(input_list)
         if output_list is not None:
             warnings.warn(
                 'Passing output_list during construction of a CausalGraph is now deprecated, and will be '
-                'removed in future versions. Please add nodes and edges after construction instead.',
+                'removed in future versions. To maintain this behavior, call add_fully_connected_nodes after '
+                'construction.',
                 category=DeprecationWarning,
             )
             self.add_nodes_from(output_list)
@@ -492,7 +478,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         if fully_connected and input_list is not None and output_list is not None:
             warnings.warn(
                 'Passing fully_connected during construction of a CausalGraph is now deprecated, and will be '
-                'removed in future versions. Please add nodes and edges after construction instead.',
+                'removed in future versions. To maintain this behavior, call add_fully_connected_nodes after '
+                'construction.',
                 category=DeprecationWarning,
             )
             self.add_fully_connected_nodes(input_list, output_list)
