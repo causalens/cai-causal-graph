@@ -61,6 +61,21 @@ class TestTimeSeriesGraphUtils(TestCase):
         self.assertTupleEqual(get_variable_name_and_lag('x1 lag(n=1 lag(n=1)'), ('x1 lag(n=1', -1))
         self.assertTupleEqual(get_variable_name_and_lag('x1 lag(n=1 future(n=1)'), ('x1 lag(n=1', 1))
 
+        # New lines match
+        self.assertTupleEqual(get_variable_name_and_lag('x\n1'), ('x\n1', 0))
+        self.assertTupleEqual(get_variable_name_and_lag('x\n1 lag(n=1)'), ('x\n1', -1))
+        self.assertTupleEqual(get_variable_name_and_lag('x\n1 future(n=1)'), ('x\n1', 1))
+
+        # New line at the end of a variable name matches (edge case regression test)
+        self.assertTupleEqual(get_variable_name_and_lag('x1\n'), ('x1\n', 0))
+        self.assertTupleEqual(get_variable_name_and_lag('x1\n lag(n=1)'), ('x1\n', -1))
+        self.assertTupleEqual(get_variable_name_and_lag('x1\n future(n=1)'), ('x1\n', 1))
+
+        # Multiple new line at the end of a variable name matches (edge case regression test)
+        self.assertTupleEqual(get_variable_name_and_lag('x1\n\n\n'), ('x1\n\n\n', 0))
+        self.assertTupleEqual(get_variable_name_and_lag('x1\n\n\n lag(n=1)'), ('x1\n\n\n', -1))
+        self.assertTupleEqual(get_variable_name_and_lag('x1\n\n\n future(n=1)'), ('x1\n\n\n', 1))
+
     def test_get_variable_name_and_lag_raises(self):
         self.assertRaises(ValueError, get_variable_name_and_lag, 'x1 lag(n=1) lag(n=2)')
         self.assertRaises(ValueError, get_variable_name_and_lag, 'x1 future(n=1) future(n=2)')

@@ -2,6 +2,7 @@
 
 ## NEXT
 
+- `cai_causal_graph.utils.get_variable_name_and_lag` now allows new lines in the names of variables.
 - Upgraded `poetry` version from `1.8.2` to `1.8.3` in the GitHub workflows.
 
 ## 0.5.2
