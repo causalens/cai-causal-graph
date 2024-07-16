@@ -3,6 +3,9 @@
 ## NEXT
 
 - `cai_causal_graph.utils.get_variable_name_and_lag` now allows new lines in the names of variables.
+- Passing `input_list`, `output_list`, and `fully_connected` as arguments to the constructor of a
+  `cai_causal_graph.causal_graph.CausalGraph` is now deprecated, and will be removed in future versions. Please add
+  nodes and edges after construction instead.
 - Upgraded `poetry` version from `1.8.2` to `1.8.3` in the GitHub workflows.
 
 ## 0.5.2

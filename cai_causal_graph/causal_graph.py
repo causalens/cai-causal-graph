@@ -16,6 +16,7 @@ limitations under the License.
 from __future__ import annotations
 
 import itertools
+import warnings
 from collections import defaultdict
 from copy import deepcopy
 from functools import wraps
@@ -473,12 +474,27 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
         # Add nodes.
         if input_list is not None:
+            warnings.warn(
+                'Passing input_list during construction of a CausalGraph is now deprecated, and will be '
+                'removed in future versions. Please add nodes and edges after construction instead.',
+                category=DeprecationWarning,
+            )
             self.add_nodes_from(input_list)
         if output_list is not None:
+            warnings.warn(
+                'Passing output_list during construction of a CausalGraph is now deprecated, and will be '
+                'removed in future versions. Please add nodes and edges after construction instead.',
+                category=DeprecationWarning,
+            )
             self.add_nodes_from(output_list)
 
         # create a fully-connected causal graph if specified, using only directed edges
         if fully_connected and input_list is not None and output_list is not None:
+            warnings.warn(
+                'Passing fully_connected during construction of a CausalGraph is now deprecated, and will be '
+                'removed in future versions. Please add nodes and edges after construction instead.',
+                category=DeprecationWarning,
+            )
             self.add_fully_connected_nodes(input_list, output_list)
         # No else needed as no edges need to be added.
 
