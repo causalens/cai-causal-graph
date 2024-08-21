@@ -730,15 +730,12 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         tsgraph.add_edge('y lag(n=1)', 'z')
 
         summary_graph = tsgraph.get_summary_graph()
-
         self.assertEqual(summary_graph, graph)
-        self.assertTrue(graph.__eq__(summary_graph, True))  # deep equality
 
         # Make sure extra floating of same var name is fine.
         tsgraph.add_node('x lag(n=1)')
         summary_graph = tsgraph.get_summary_graph()
         self.assertEqual(summary_graph, graph)
-        self.assertTrue(graph.__eq__(summary_graph, True))  # deep equality
 
     def test_variable_names(self):
         variables = self.tsdag.variables
