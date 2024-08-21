@@ -391,6 +391,13 @@ class TimeSeriesCausalGraph(CausalGraph):
                 edge = self._EdgeCls(source=source, destination=destination, edge_type=edge.edge_type, meta=edge.meta)
                 summary_graph.add_edge(edge=edge)
 
+        # There could be floating nodes in the original graph that should be maintained in the summary graph.
+        # For example, X[t], Y[t-1]->Z[t], the summary graph should be X, Y->Z.
+        summary_var_names = summary_graph.get_node_names()
+        for var_name in self.get_all_variable_names():
+            if var_name not in summary_var_names:
+                summary_graph.add_node(var_name)
+
         return summary_graph
 
     def extend_graph(
