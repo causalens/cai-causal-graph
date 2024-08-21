@@ -1,5 +1,11 @@
 # Changelog
 
+## NEXT
+
+- Fixed a bug in the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_summary_graph` method for the
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class where it would not correctly maintain
+  floating nodes.
+
 ## 0.5.3
 
 - `cai_causal_graph.utils.get_variable_name_and_lag` now allows new lines in the names of variables.
@@ -10,9 +16,10 @@
 
 ## 0.5.2
 
-- Removed caching from `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph`, `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_stationary_graph` and
-  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_summary_graph` because the caching would not account for changes
-  in node/edge metadata.
+- Removed caching from `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph`,
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_stationary_graph` and
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_summary_graph` because the caching would not
+  account for changes in node/edge metadata.
 
 ## 0.5.1
 
