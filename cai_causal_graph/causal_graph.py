@@ -2104,7 +2104,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
     @classmethod
     def from_adjacency_matrix(
-        cls, adjacency: numpy.ndarray, node_names: Optional[List[Union[NodeLike, int]]] = None
+        cls, adjacency: numpy.ndarray, node_names: Optional[List[Union[NodeLike, int]]] = None, validate: bool = False
     ) -> CausalGraph:
         """
         Construct a `cai_causal_graph.causal_graph.CausalGraph` instance from an adjacency matrix and optionally a list
@@ -2116,6 +2116,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         :param adjacency: A square binary numpy adjacency array.
         :param node_names: A list of strings, `cai_causal_graph.interfaces.HasIdentifier`, and/or integers which can be
             coerced to `cai_causal_graph.graph_components.Node`.
+        :param validate: Whether to perform validation against cycles. Default is `False`.
         :return: A `cai_causal_graph.causal_graph.CausalGraph` object.
         """
         # check that adjacency matrix is a square matrix
@@ -2148,12 +2149,21 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         graph = cls()
         graph.add_nodes_from(nodes)
         for i, j in itertools.combinations(range(len(nodes)), 2):
+            # Keep validate as False to not slow construction. We will look at validate param after graph is constructed.
             if adjacency[i, j] != 0 and adjacency[j, i] == 0:
-                graph.add_edge(nodes[i], nodes[j], edge_type=EdgeType.DIRECTED_EDGE)
+                graph.add_edge(nodes[i], nodes[j], edge_type=EdgeType.DIRECTED_EDGE, validate=False)
             elif adjacency[i, j] == 0 and adjacency[j, i] != 0:
-                graph.add_edge(nodes[j], nodes[i], edge_type=EdgeType.DIRECTED_EDGE)
+                graph.add_edge(nodes[j], nodes[i], edge_type=EdgeType.DIRECTED_EDGE, validate=False)
             elif adjacency[i, j] != 0 and adjacency[j, i] != 0:
-                graph.add_edge(nodes[i], nodes[j], edge_type=EdgeType.UNDIRECTED_EDGE)
+                graph.add_edge(nodes[i], nodes[j], edge_type=EdgeType.UNDIRECTED_EDGE, validate=False)
+
+        # check that there are no cycles of directed edges
+        if validate:
+            try:
+                for node in nodes:
+                    graph._assert_node_does_not_depend_on_itself(node)
+            except AssertionError:
+                raise CausalGraphErrors.CyclicConnectionError(f'Nodes {node} is on a cyclic path.')
 
         return graph
 

@@ -840,6 +840,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         adjacency_matrices: Dict[int, numpy.ndarray],
         variable_names: Optional[List[Union[NodeLike, int]]] = None,
         construct_minimal: bool = True,
+        validate: bool = False,
     ) -> TimeSeriesCausalGraph:
         """
         Instantiate a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` from a dictionary of
@@ -882,6 +883,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         :param variable_names: A list of variable names. If not provided, the variable names are integers starting
             from 0. Node names must correspond to the variable names and must not contain the lag.
         :param construct_minimal: Whether to return a minimal time series graph. Default is `True`.
+        :param validate: Whether to perform validation against cycles. Default is `False`.
         :return: A time series causal graph.
         """
         assert isinstance(adjacency_matrices, dict)
