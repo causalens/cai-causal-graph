@@ -946,7 +946,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                     time_delta_to_index[0] + (n_time_delta * column),
                 ] = 1
 
-        graph = cls.from_adjacency_matrix(adjacency_matrix_full, node_names)  # type: ignore
+        graph = cls.from_adjacency_matrix(adjacency_matrix_full, node_names, validate=validate)  # type: ignore
 
         if construct_minimal:
             graph = graph.get_minimal_graph()
