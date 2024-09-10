@@ -1579,6 +1579,24 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
         return parents_graph
 
+    def _get_subgraph(self, nodes: List[NodeLike]) -> CausalGraph:
+        """
+        Get a sub-graph that only contains variables in `nodes` and edges between them.
+        """
+        node_list: List[str] = [self._NodeCls.identifier_from(node) for node in nodes]
+        filtered_edges = [
+            edge
+            for edge in self.edges
+            if edge.source.identifier in node_list and edge.destination.identifier in node_list
+        ]
+        filtered_graph = self.__class__(meta=deepcopy(self.meta))
+        if len(filtered_edges) == 0:
+            for node in nodes:
+                filtered_graph.add_node(node=self.get_node(node))
+        for edge in filtered_edges:
+            filtered_graph.add_edge(edge=edge, validate=False)
+        return filtered_graph
+
     def get_ancestors(self, node: NodeLike) -> Set[str]:
         """
         Get all ancestors of a node.
@@ -1598,15 +1616,9 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         Get a sub causal graph that only includes the ancestors of a specific node and the node itself.
         """
         identifier = self._NodeCls.identifier_from(node)
-        ancestors: List[str] = [*self.get_ancestors(node), identifier]
+        ancestors: List[NodeLike] = [*self.get_ancestors(identifier), identifier]
 
-        ancestral_graph = self.copy()
-
-        for i in ancestral_graph.nodes:
-            if i.identifier not in ancestors:
-                ancestral_graph.delete_node(i.identifier)
-
-        return ancestral_graph
+        return self._get_subgraph(ancestors)
 
     def get_descendants(self, node: NodeLike) -> Set[str]:
         """
@@ -1627,15 +1639,9 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         Get a sub causal graph that only includes the descendants of a specific node and the node itself.
         """
         identifier = self._NodeCls.identifier_from(node)
-        descendants: List[str] = [*self.get_descendants(node), identifier]
+        descendants: List[NodeLike] = [*self.get_descendants(node), identifier]
 
-        descendant_graph = self.copy()
-
-        for i in descendant_graph.nodes:
-            if i.identifier not in descendants:
-                descendant_graph.delete_node(i.identifier)
-
-        return descendant_graph
+        return self._get_subgraph(nodes=descendants)
 
     def is_ancestor(
         self, ancestor_node: NodeLike, descendant_node: Union[NodeLike, Set[NodeLike], List[NodeLike]]
