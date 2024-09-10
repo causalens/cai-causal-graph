@@ -1606,9 +1606,9 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         Get a sub causal graph that only includes the ancestors of a specific node and the node itself.
         """
         identifier = self._NodeCls.identifier_from(node)
-        ancestors: List[str] = [*self.get_ancestors(identifier), identifier]
+        ancestors = [*self.get_ancestors(identifier), identifier]
 
-        return self._filter_graph_by_nodes(ancestors)
+        return self._filter_graph_by_nodes(ancestors)   # type: ignore
 
     def get_descendants(self, node: NodeLike) -> Set[str]:
         """
@@ -1629,9 +1629,9 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         Get a sub causal graph that only includes the descendants of a specific node and the node itself.
         """
         identifier = self._NodeCls.identifier_from(node)
-        descendants: List[str] = [*self.get_descendants(node), identifier]
+        descendants = [*self.get_descendants(node), identifier]
 
-        return self._filter_graph_by_nodes(nodes=descendants)
+        return self._filter_graph_by_nodes(nodes=descendants)   # type: ignore
 
     def is_ancestor(
         self, ancestor_node: NodeLike, descendant_node: Union[NodeLike, Set[NodeLike], List[NodeLike]]
