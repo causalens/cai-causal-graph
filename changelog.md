@@ -4,7 +4,7 @@
 
 - Improved the speed of the `cai_causal_graph.causal_graph.CausalGraph.from_adjacency_matrix` and
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_adjacency_matrices` methods by introducing a
-  `validate` flag. When `False` (default), there are no checks for cycles.
+  `validate` flag. When `False`, there are no checks for cycles (default is `True`).
 - Fixed a bug in the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_summary_graph` method for the
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class where it would not correctly maintain
   floating nodes.
