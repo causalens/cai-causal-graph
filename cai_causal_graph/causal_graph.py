@@ -1579,9 +1579,9 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
         return parents_graph
 
-    def _filter_graph_by_nodes(self, nodes: List[NodeLike]) -> CausalGraph:
+    def _get_subgraph(self, nodes: List[NodeLike]) -> CausalGraph:
         """
-        Get a subgraph consisting only of nodes in list and edges between those nodes.
+        Get a sub-graph that only contains variables in `nodes` and edges between them.
         """
         node_list: List[str] = [self._NodeCls.identifier_from(node) for node in nodes]
         filtered_edges = [
@@ -1616,9 +1616,9 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         Get a sub causal graph that only includes the ancestors of a specific node and the node itself.
         """
         identifier = self._NodeCls.identifier_from(node)
-        ancestors = [*self.get_ancestors(identifier), identifier]
+        ancestors: List[NodeLike] = [*self.get_ancestors(identifier), identifier]
 
-        return self._filter_graph_by_nodes(ancestors)   # type: ignore
+        return self._get_subgraph(ancestors)
 
     def get_descendants(self, node: NodeLike) -> Set[str]:
         """
@@ -1639,9 +1639,9 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         Get a sub causal graph that only includes the descendants of a specific node and the node itself.
         """
         identifier = self._NodeCls.identifier_from(node)
-        descendants = [*self.get_descendants(node), identifier]
+        descendants: List[NodeLike] = [*self.get_descendants(node), identifier]
 
-        return self._filter_graph_by_nodes(nodes=descendants)   # type: ignore
+        return self._get_subgraph(nodes=descendants)
 
     def is_ancestor(
         self, ancestor_node: NodeLike, descendant_node: Union[NodeLike, Set[NodeLike], List[NodeLike]]
