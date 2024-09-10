@@ -1580,6 +1580,9 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             if edge.source.identifier in node_list and edge.destination.identifier in node_list
         ]
         filtered_graph = CausalGraph()
+        if len(filtered_edges) == 0:
+            for node in nodes:
+                filtered_graph.add_node(self.get_node(node))
         for edge in filtered_edges:
             filtered_graph.add_edge(edge=edge, validate=False)
         return filtered_graph
