@@ -1441,6 +1441,18 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
         # add a new edge
         self.add_edge(source=new_source, destination=new_destination, edge_type=edge_type, meta=meta)
+    
+    def filter_graph_by_nodes(self, nodes: List[NodeLike]) -> CausalGraph:
+        node_list = [self.get_node(node) for node in nodes]
+        filtered_edges = [
+            edge
+            for edge in self.edges
+            if edge.source in node_list and edge.destination in node_list
+        ]
+        filtered_graph = CausalGraph()
+        for edge in filtered_edges:
+            filtered_graph.add_edge(edge=edge)
+        return filtered_graph
 
     def get_neighbors(self, node: NodeLike) -> List[str]:
         """
@@ -1590,13 +1602,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         identifier = self._NodeCls.identifier_from(node)
         ancestors: List[str] = [*self.get_ancestors(node), identifier]
 
-        ancestral_graph = self.copy()
-
-        for i in ancestral_graph.nodes:
-            if i.identifier not in ancestors:
-                ancestral_graph.delete_node(i.identifier)
-
-        return ancestral_graph
+        return self.filter_graph_by_nodes(nodes=ancestors)
 
     def get_descendants(self, node: NodeLike) -> Set[str]:
         """
@@ -1619,13 +1625,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         identifier = self._NodeCls.identifier_from(node)
         descendants: List[str] = [*self.get_descendants(node), identifier]
 
-        descendant_graph = self.copy()
-
-        for i in descendant_graph.nodes:
-            if i.identifier not in descendants:
-                descendant_graph.delete_node(i.identifier)
-
-        return descendant_graph
+        return self.filter_graph_by_nodes(nodes=descendants)
 
     def is_ancestor(
         self, ancestor_node: NodeLike, descendant_node: Union[NodeLike, Set[NodeLike], List[NodeLike]]
