@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.5.4
 
 - Improved the speed of the `cai_causal_graph.causal_graph.CausalGraph.get_descendant_graph` and
   `cai_causal_graph.causal_graph.CausalGraph.get_ancestral_graph` methods for large graphs.
