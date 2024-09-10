@@ -233,7 +233,7 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
         adjacency: numpy.ndarray,
         node_names: Optional[List[Union[NodeLike, int]]] = None,
         graph_class: Union[Type[CausalGraph], None] = None,
-        validate: bool = False
+        validate: bool = False,
     ) -> Skeleton:
         """
         Instantiate a `cai_causal_graph.causal_graph.Skeleton` object from an adjacency matrix.
@@ -253,7 +253,9 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
             ), f'The provided graph_class is not a subclass of CausalGraph. Got type {type(graph_class)}.'
         else:
             graph_class = CausalGraph
-        graph: CausalGraph = graph_class.from_adjacency_matrix(adjacency=adjacency, node_names=node_names, validate=validate)
+        graph: CausalGraph = graph_class.from_adjacency_matrix(
+            adjacency=adjacency, node_names=node_names, validate=validate
+        )
         return cls(graph=graph)
 
     def to_dict(self, include_meta: bool = True) -> dict:
@@ -327,7 +329,9 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
         return cls(graph=graph_class.from_dict(d))
 
     @classmethod
-    def from_networkx(cls, g: networkx.Graph, graph_class: Union[Type[CausalGraph], None] = None, validate: bool = False) -> Skeleton:
+    def from_networkx(
+        cls, g: networkx.Graph, graph_class: Union[Type[CausalGraph], None] = None, validate: bool = False
+    ) -> Skeleton:
         """
         Instantiate a `cai_causal_graph.causal_graph.Skeleton` object from a `networkx.Graph`.
 
