@@ -244,6 +244,7 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
         :param graph_class: The appropriate subclass of `cai_causal_graph.causal_graph.CausalGraph` to use. If `None`,
             which is the default, `cai_causal_graph.causal_graph.CausalGraph` will be used. This is to ensure the new
             `cai_causal_graph.causal_graph.Skeleton` object has the correct node class type.
+        :param validate: Whether to perform validation against cycles. Default is `False`.
         :return: A new `cai_causal_graph.causal_graph.Skeleton` based on the provided adjacency matrix.
         """
         if graph_class is not None:
@@ -334,6 +335,7 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
         :param graph_class: The appropriate subclass of `cai_causal_graph.causal_graph.CausalGraph` to use. If `None`,
             which is the default, `cai_causal_graph.causal_graph.CausalGraph` will be used. This is to ensure the new
             `cai_causal_graph.causal_graph.Skeleton` object has the correct node class type.
+        :param validate: Whether to perform validation against cycles. Default is `False`.
         :return: A new `cai_causal_graph.causal_graph.Skeleton` based on the `networkx.Graph`.
         """
         if graph_class is not None:
@@ -2074,7 +2076,13 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
     @classmethod
     def from_networkx(cls, g: networkx.Graph, validate: bool = False) -> CausalGraph:
-        """Construct a `cai_causal_graph.causal_graph.CausalGraph` instance from a `networkx.Graph` instance."""
+        """
+        Construct a `cai_causal_graph.causal_graph.CausalGraph` instance from a `networkx.Graph` instance.
+
+        :param g: A `networkx.Graph` object to build a graph from.
+        :param validate: Whether to perform validation against cycles. Default is `False`.
+        :return: A `cai_causal_graph.causal_graph.CausalGraph` object.
+        """
         # Check graph type.
         if isinstance(g, networkx.MultiGraph) or isinstance(g, networkx.MultiDiGraph):
             raise CausalGraphErrors.InvalidNetworkXError(
@@ -2086,22 +2094,30 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         return cls.from_adjacency_matrix(networkx.to_numpy_array(g), node_names, validate=validate)  # type: ignore
 
     @classmethod
-    def from_skeleton(cls, skeleton: Skeleton) -> CausalGraph:
+    def from_skeleton(cls, skeleton: Skeleton, validate: bool = False) -> CausalGraph:
         """
         Construct a `cai_causal_graph.causal_graph.CausalGraph` instance from a
         `cai_causal_graph.causal_graph.Skeleton` instance.
+
+        :param skeleton: A `cai_causal_graph.causal_graph.Skeleton` object to build a graph from.
+        :param validate: Whether to perform validation against cycles. Default is `False`.
+        :return: A `cai_causal_graph.causal_graph.CausalGraph` object.
         """
         assert isinstance(skeleton, Skeleton), f'Expected skeleton to be of type Skeleton, but got {type(skeleton)}.'
-        return cls.from_networkx(skeleton.to_networkx())
+        return cls.from_networkx(skeleton.to_networkx(), validate=validate)
 
     @classmethod
-    def from_gml_string(cls, gml: str) -> CausalGraph:
+    def from_gml_string(cls, gml: str, validate: bool = False) -> CausalGraph:
         """
         Return an instance of `cai_causal_graph.causal_graph.CausalGraph` constructed from the provided Graph Modelling
         Language (GML) string.
+
+        :param gml: A GML string to build a graph from.
+        :param validate: Whether to perform validation against cycles. Default is `False`.
+        :return: A `cai_causal_graph.causal_graph.CausalGraph` object.
         """
         g = networkx.parse_gml(gml)
-        return cls.from_networkx(g)
+        return cls.from_networkx(g, validate=validate)
 
     @classmethod
     def from_adjacency_matrix(
