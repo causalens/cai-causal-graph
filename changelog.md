@@ -2,6 +2,8 @@
 
 ## NEXT
 
+- Improved the speed of the `cai_causal_graph.causal_graph.CausalGraph.get_descendant_graph` and
+  `cai_causal_graph.causal_graph.CausalGraph.get_ancestral_graph` methods for large graphs.
 - Improved the speed of the `cai_causal_graph.causal_graph.CausalGraph.from_adjacency_matrix` and
   `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_adjacency_matrices` methods by introducing a
   `validate` flag. When `False`, there are no checks for cycles (default is `True`).
