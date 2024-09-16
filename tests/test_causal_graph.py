@@ -1422,4 +1422,3 @@ class TestCausalGraphPrinting(unittest.TestCase):
             cg.add_edge('b', 'a')
         with self.assertRaises(CausalGraphErrors.ReverseEdgeExistsError):
             cg.add_edge('b', 'a', edge_type=EdgeType.UNDIRECTED_EDGE)
-
