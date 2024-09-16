@@ -17,6 +17,7 @@ import copy
 import json
 import unittest
 from copy import deepcopy
+from multiprocessing.managers import Value
 
 import networkx
 import numpy
@@ -1412,3 +1413,23 @@ class TestCausalGraphPrinting(unittest.TestCase):
         self.assertEqual(tscg['b'], tscg.get_node('b'))
         self.assertEqual(repr(tscg['a']), 'TimeSeriesNode("a")')
         self.assertEqual(repr(tscg['b']), 'TimeSeriesNode("b", type="continuous")')
+
+    def test_add_to_undirected_edges(self):
+
+        cg = CausalGraph()
+        cg.add_edge('a', 'b', edge_type=EdgeType.UNDIRECTED_EDGE)
+
+        # ExistsError, or Duplicate Error, or other Error?
+        with self.assertRaises(CausalGraphErrors.EdgeExistsError):
+            cg.add_edge('b', 'a')
+        with self.assertRaises(CausalGraphErrors.EdgeExistsError):
+            cg.add_edge('b', 'a', edge_type=EdgeType.UNDIRECTED_EDGE)
+
+        # with self.assertRaises(CausalGraphErrors.EdgeDuplicatedError):
+        #     cg.add_edge('a', 'b')
+        # with self.assertRaises(CausalGraphErrors.EdgeDuplicatedError):
+        #     cg.add_edge('a', 'b', edge_type=EdgeType.UNDIRECTED_EDGE)
+
+
+        # self.assertEqual(0, 1)
+
