@@ -17,7 +17,6 @@ import copy
 import json
 import unittest
 from copy import deepcopy
-from multiprocessing.managers import Value
 
 import networkx
 import numpy
