@@ -742,7 +742,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         )
 
         if source in self._edges_by_source[destination].keys():
-            raise CausalGraphErrors.EdgeExistsError()
+            raise CausalGraphErrors.ReverseEdgeExistsError()
 
         self._edges_by_source[source][destination] = edge
         self._edges_by_destination[destination][source] = edge

@@ -632,7 +632,7 @@ class TestCausalGraph(unittest.TestCase):
 
         # check conflicting paths raises
         causal_graph.add_edges_from_paths(['a3', 'b', 'c'])
-        with self.assertRaises(CausalGraphErrors.CyclicConnectionError):
+        with self.assertRaises(CausalGraphErrors.ReverseEdgeExistsError):
             causal_graph.add_edges_from_paths(['c', 'b', 'z'])
 
     def test_add_edges_from_multiple_paths(self):
@@ -646,7 +646,7 @@ class TestCausalGraph(unittest.TestCase):
         )
 
         # check conflicting paths raises
-        with self.assertRaises(CausalGraphErrors.CyclicConnectionError):
+        with self.assertRaises(CausalGraphErrors.ReverseEdgeExistsError):
             causal_graph.add_edges_from_paths([['a3', 'b', 'c'], ['c', 'b', 'z']])
 
         # check that invalid paths raises (mix of paths and strings)
@@ -1419,17 +1419,8 @@ class TestCausalGraphPrinting(unittest.TestCase):
         cg = CausalGraph()
         cg.add_edge('a', 'b', edge_type=EdgeType.UNDIRECTED_EDGE)
 
-        # ExistsError, or Duplicate Error, or other Error?
-        with self.assertRaises(CausalGraphErrors.EdgeExistsError):
+        with self.assertRaises(CausalGraphErrors.ReverseEdgeExistsError):
             cg.add_edge('b', 'a')
-        with self.assertRaises(CausalGraphErrors.EdgeExistsError):
+        with self.assertRaises(CausalGraphErrors.ReverseEdgeExistsError):
             cg.add_edge('b', 'a', edge_type=EdgeType.UNDIRECTED_EDGE)
-
-        # with self.assertRaises(CausalGraphErrors.EdgeDuplicatedError):
-        #     cg.add_edge('a', 'b')
-        # with self.assertRaises(CausalGraphErrors.EdgeDuplicatedError):
-        #     cg.add_edge('a', 'b', edge_type=EdgeType.UNDIRECTED_EDGE)
-
-
-        # self.assertEqual(0, 1)
 

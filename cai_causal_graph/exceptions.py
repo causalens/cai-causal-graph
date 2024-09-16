@@ -45,6 +45,9 @@ class CausalGraphErrors:
     class EdgeExistsError(Exception):
         """Error raised when edge already exists in the graph."""
 
+    class ReverseEdgeExistsError(Exception):
+        """Error raised when adding any edge from src to dest where dest to src already exists in the graph."""
+
     class EdgeDoesNotExistError(Exception):
         """Error raised when edge does not exist in the graph."""
 
