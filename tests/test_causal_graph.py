@@ -631,7 +631,7 @@ class TestCausalGraph(unittest.TestCase):
 
         # check conflicting paths raises
         causal_graph.add_edges_from_paths(['a3', 'b', 'c'])
-        with self.assertRaises(CausalGraphErrors.CyclicConnectionError):
+        with self.assertRaises(CausalGraphErrors.ReverseEdgeExistsError):
             causal_graph.add_edges_from_paths(['c', 'b', 'z'])
 
     def test_add_edges_from_multiple_paths(self):
@@ -645,7 +645,7 @@ class TestCausalGraph(unittest.TestCase):
         )
 
         # check conflicting paths raises
-        with self.assertRaises(CausalGraphErrors.CyclicConnectionError):
+        with self.assertRaises(CausalGraphErrors.ReverseEdgeExistsError):
             causal_graph.add_edges_from_paths([['a3', 'b', 'c'], ['c', 'b', 'z']])
 
         # check that invalid paths raises (mix of paths and strings)
@@ -1412,3 +1412,22 @@ class TestCausalGraphPrinting(unittest.TestCase):
         self.assertEqual(tscg['b'], tscg.get_node('b'))
         self.assertEqual(repr(tscg['a']), 'TimeSeriesNode("a")')
         self.assertEqual(repr(tscg['b']), 'TimeSeriesNode("b", type="continuous")')
+
+    def test_add_to_undirected_edges(self):
+        # adding an edge dest-src to an existing edge src-dest should raise an error
+
+        cg = CausalGraph()
+        cg.add_edge('a', 'b', edge_type=EdgeType.UNDIRECTED_EDGE)
+
+        with self.assertRaises(CausalGraphErrors.ReverseEdgeExistsError):
+            cg.add_edge('b', 'a')
+        with self.assertRaises(CausalGraphErrors.ReverseEdgeExistsError):
+            cg.add_edge('b', 'a', edge_type=EdgeType.UNDIRECTED_EDGE)
+        with self.assertRaises(CausalGraphErrors.ReverseEdgeExistsError):
+            cg.add_edge('b', 'a', edge_type=EdgeType.BIDIRECTED_EDGE)
+        with self.assertRaises(CausalGraphErrors.ReverseEdgeExistsError):
+            cg.add_edge('b', 'a', edge_type=EdgeType.UNKNOWN_EDGE)
+        with self.assertRaises(CausalGraphErrors.ReverseEdgeExistsError):
+            cg.add_edge('b', 'a', edge_type=EdgeType.UNKNOWN_DIRECTED_EDGE)
+        with self.assertRaises(CausalGraphErrors.ReverseEdgeExistsError):
+            cg.add_edge('b', 'a', edge_type=EdgeType.UNKNOWN_UNDIRECTED_EDGE)

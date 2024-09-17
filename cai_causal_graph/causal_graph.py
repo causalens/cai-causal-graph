@@ -741,6 +741,10 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
             edge.destination
         )
 
+        # raise an error if reverse edge from destination to source has already been defined
+        if self._edges_by_source[destination].get(source) is not None:
+            raise CausalGraphErrors.ReverseEdgeExistsError()
+
         self._edges_by_source[source][destination] = edge
         self._edges_by_destination[destination][source] = edge
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## NEXT
+
+- Fixed a bug in the `cai_causal_graph.causal_graph.CausalGraph.add_edge` method that would allow the addition of an
+  edge between `b` and `a` when the reversed edge, i.e. between `a` and `b` was already specified.
+  - Added the `CausalGraphError.ReverseEdgeExistsError` exception, which distinguishes errors arising from the
+    introduction of cycles or reverse edges.
+
 ## 0.5.4
 
 - Improved the speed of the `cai_causal_graph.causal_graph.CausalGraph.get_descendant_graph` and
