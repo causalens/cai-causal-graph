@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.5.5
 
 - Fixed a bug in the `cai_causal_graph.causal_graph.CausalGraph.add_edge` method that would allow the addition of an
   edge between `b` and `a` when the reversed edge, i.e. between `a` and `b` was already specified.
