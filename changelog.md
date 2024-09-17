@@ -4,11 +4,8 @@
 
 - Fixed a bug that would allow the addition of b--a and b->a edges to a graph with an existing undirected a--b edge in
   the `cai_causal_graph.causal_graph.CausalGraph._set_edge` method.
-  - Added the `CausalGraphsError.ReverseEdgeExistsError` exception, which distinguishes errors arising from the
+  - Added the `CausalGraphError.ReverseEdgeExistsError` exception, which distinguishes errors arising from the
     introduction of cycles or reverse edges.
-  - `TestCausalGraphPrinting.test_add_edges_from_single_path` and
-    `TestCausalGraphPrinting.test_add_edges_from_single_path` now assert that a
-    `CausalGraphsError.ReverseEdgeExistsError` instead of a `CausalGraphsError.ReverseEdgeExistsError` is raised.
 
 ## 0.5.4
 

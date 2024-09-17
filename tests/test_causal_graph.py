@@ -1414,6 +1414,7 @@ class TestCausalGraphPrinting(unittest.TestCase):
         self.assertEqual(repr(tscg['b']), 'TimeSeriesNode("b", type="continuous")')
 
     def test_add_to_undirected_edges(self):
+        # adding an edge dest-src to an existing edge src-dest should raise an error
 
         cg = CausalGraph()
         cg.add_edge('a', 'b', edge_type=EdgeType.UNDIRECTED_EDGE)
@@ -1422,3 +1423,11 @@ class TestCausalGraphPrinting(unittest.TestCase):
             cg.add_edge('b', 'a')
         with self.assertRaises(CausalGraphErrors.ReverseEdgeExistsError):
             cg.add_edge('b', 'a', edge_type=EdgeType.UNDIRECTED_EDGE)
+        with self.assertRaises(CausalGraphErrors.ReverseEdgeExistsError):
+            cg.add_edge('b', 'a', edge_type=EdgeType.BIDIRECTED_EDGE)
+        with self.assertRaises(CausalGraphErrors.ReverseEdgeExistsError):
+            cg.add_edge('b', 'a', edge_type=EdgeType.UNKNOWN_EDGE)
+        with self.assertRaises(CausalGraphErrors.ReverseEdgeExistsError):
+            cg.add_edge('b', 'a', edge_type=EdgeType.UNKNOWN_DIRECTED_EDGE)
+        with self.assertRaises(CausalGraphErrors.ReverseEdgeExistsError):
+            cg.add_edge('b', 'a', edge_type=EdgeType.UNKNOWN_UNDIRECTED_EDGE)
