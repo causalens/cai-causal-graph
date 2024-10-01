@@ -1,8 +1,8 @@
 # Changelog
 
-## Next
+## NEXT
 
-- Added `numpy>=2.0` support.
+- Added `numpy>=2.0` support and only applies for Python versions 3.10 and upwards.
 
 ## 0.5.5
 
