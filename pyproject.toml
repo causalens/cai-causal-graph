@@ -57,7 +57,7 @@ mypy-extensions = "^1.0.0"
 # networkx 3.3 broke how get_all_simple_paths works so want to bound for now.
 networkx = ">=3.0.0, <3.3.0"
 numpy = [
-    {version = "^2.1.0", python = ">=3.10"},
+    {version = ">=1.18.0, <3.0.0", python = ">=3.10"},
     {version = ">=1.18.0, <2.0.0", python = "<3.10"}
 ]
 pandas = ">=1.0.0, <3.0.0"
