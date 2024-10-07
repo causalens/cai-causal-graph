@@ -2,7 +2,8 @@
 
 ## NEXT
 
-- Added the `cai_causal_graph.causal_graph.CausalGraph.get_nodes_between` method.
+- Added the `cai_causal_graph.causal_graph.CausalGraph.get_nodes_between` method, which returns the set of all nodes
+  that are on a directed causal path between two nodes in the graph.
 
 ## 0.5.5
 
