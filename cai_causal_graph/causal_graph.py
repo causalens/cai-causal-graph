@@ -1706,6 +1706,49 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
         return self.get_descendants(node_1).intersection(self.get_descendants(node_2))
 
+    def get_nodes_between(self, node_1: NodeLike, node_2: NodeLike) -> Set[Node]:
+        """
+        Get the set of nodes that are on causal paths between two nodes.
+
+        The nodes themselves will be included in the final set.
+
+        If there are no causal paths between the nodes then an empty set will be returned.
+
+        :param node_1: a single node-identifier coercible object, representing the source node.
+        :param node_2: a single node-identifier coercible object, representing the destination node.
+        :return: a set of nodes that are on causal paths between the two provided nodes.
+        """
+
+        # Set up cache: for each seen node, cache whether there is a causal path between it and the destination
+        seen_nodes: dict[str, bool] = {}
+
+        start = self.get_node(node_1)
+        end = self.get_node(node_2)
+
+        def _get_nodes_between_inner(start_node_: Node, end_node_: Node) -> bool:
+            if start_node_.identifier in seen_nodes:
+                return seen_nodes[start_node_.identifier]
+            if start_node_ == end_node_:
+                seen_nodes[start_node_.identifier] = True
+                return True
+            if start_node_.is_sink_node():
+                seen_nodes[start_node_.identifier] = False
+                return False
+
+            start_children = [e.destination for e in start_node_._outbound_edges]
+            has_causal_path = any([_get_nodes_between_inner(child, end_node_) for child in start_children])
+            seen_nodes[start_node_.identifier] = has_causal_path
+            return has_causal_path
+
+        causal_path = _get_nodes_between_inner(start, end)
+
+        # Can return an empty set if there is no causal path
+        if not causal_path:
+            return set()
+
+        # Otherwise return all nodes that have a causal path to the destination
+        return {self.get_node(node) for node, has_path in seen_nodes.items() if has_path}
+
     def get_d_separation_set(self, node_1: NodeLike, node_2: NodeLike) -> Set[str]:
         """
         Return a minimal d-separation set between two nodes.
@@ -1861,8 +1904,10 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         # but then it would no longer be a DAG as we confirm in the first step of this method.
         if source == destination:
             return []
-
-        return list(networkx.all_simple_paths(self.to_networkx(), source, destination))
+        print('Retrieving networkx graph...')
+        nt_cg = self.to_networkx()
+        print('Finding simple paths of networkx graph...')
+        return list(networkx.all_simple_paths(nt_cg, source, destination))
 
     def directed_path_exists(self, source: NodeLike, destination: NodeLike) -> bool:
         """

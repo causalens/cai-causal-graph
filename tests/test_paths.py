@@ -15,6 +15,8 @@ limitations under the License.
 """
 import unittest
 
+from cl_dev_tools import TestCase
+
 from cai_causal_graph import CausalGraph, EdgeType
 from cai_causal_graph.graph_components import Node
 
@@ -269,3 +271,71 @@ class TestDirectedPathExists(unittest.TestCase):
         g.add_edge('a', output_node)
 
         self.assertTrue(g.directed_path_exists(input_node, output_node))
+
+
+class TestGetNodesBetween(TestCase):
+    def test_get_nodes_between(self):
+        cg = CausalGraph()
+        cg.add_edge('a', 'b')
+        cg.add_edge('a', 'c')
+        cg.add_edge('c', 'b')
+        cg.add_edge('b', 'd')
+        cg.add_edge('c', 'd')
+        cg.add_edge('c', 'e')
+        cg.add_edge('e', 'f')
+
+        # Source to sink
+        nodes = cg.get_nodes_between('a', 'd')
+        self.assertSetEqual(nodes, set(cg.get_nodes(['a', 'b', 'c', 'd'])))
+
+        # Source to other sink
+        nodes = cg.get_nodes_between('a', 'f')
+        self.assertSetEqual(nodes, set(cg.get_nodes(['a', 'c', 'e', 'f'])))
+
+        # Non-source to sink
+        nodes = cg.get_nodes_between('c', 'd')
+        self.assertSetEqual(nodes, set(cg.get_nodes(['b', 'c', 'd'])))
+
+        # Non-source to other sink
+        nodes = cg.get_nodes_between('c', 'f')
+        self.assertSetEqual(nodes, set(cg.get_nodes(['c', 'e', 'f'])))
+
+        # source to non-sink
+        nodes = cg.get_nodes_between('a', 'b')
+        self.assertSetEqual(nodes, set(cg.get_nodes(['a', 'c', 'b'])))
+
+        nodes = cg.get_nodes_between('a', 'e')
+        self.assertSetEqual(nodes, set(cg.get_nodes(['a', 'c', 'e'])))
+
+        # non-source to non-sink
+        nodes = cg.get_nodes_between('c', 'b')
+        self.assertSetEqual(nodes, set(cg.get_nodes(['c', 'b'])))
+
+    def test_get_nodes_between_equal_source_and_destination(self):
+        """Equal source and destination returns the source/destination node."""
+
+        cg = CausalGraph()
+        cg.add_edge('a', 'b')
+        cg.add_edge('a', 'c')
+        cg.add_edge('c', 'b')
+        cg.add_edge('b', 'd')
+        cg.add_edge('c', 'd')
+        cg.add_edge('c', 'e')
+        cg.add_edge('e', 'f')
+
+        nodes = cg.get_nodes_between('a', 'a')
+        self.assertSetEqual(nodes, set(cg.get_nodes(['a'])))
+
+    def test_get_nodes_between_no_nodes(self):
+        """No nodes between the source and destination returns an empty set."""
+        cg = CausalGraph()
+        cg.add_edge('a', 'b')
+        cg.add_edge('a', 'c')
+        cg.add_edge('c', 'b')
+        cg.add_edge('b', 'd')
+        cg.add_edge('c', 'd')
+        cg.add_edge('c', 'e')
+        cg.add_edge('e', 'f')
+
+        nodes = cg.get_nodes_between('b', 'a')
+        self.assertSetEqual(nodes, set())

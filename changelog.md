@@ -7,6 +7,7 @@
   `cai_causal_graph.causal_graph.CausalGraph` is now deprecated, and will be removed in future versions. To maintain
   this behavior, call `cai_causal_graph.causal_graph.CausalGraph.add_fully_connected_nodes` after construction.
 - Upgraded `poetry` version from `1.8.2` to `1.8.3` in the GitHub workflows.
+- Added the `cai_causal_graph.causal_graph.CausalGraph.get_nodes_between` method.
 
 ## 0.5.2
 
