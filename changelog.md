@@ -1,11 +1,15 @@
 # Changelog
 
+## NEXT
+
+- Added the `cai_causal_graph.causal_graph.CausalGraph.get_nodes_between` method.
+
 ## 0.5.5
 
 - Fixed a bug in the `cai_causal_graph.causal_graph.CausalGraph.add_edge` method that would allow the addition of an
   edge between `b` and `a` when the reversed edge, i.e. between `a` and `b` was already specified.
-  - Added the `CausalGraphError.ReverseEdgeExistsError` exception, which distinguishes errors arising from the
-    introduction of cycles or reverse edges.
+- Added the `CausalGraphError.ReverseEdgeExistsError` exception, which distinguishes errors arising from the
+  introduction of cycles or reverse edges.
 
 ## 0.5.4
 
@@ -26,7 +30,6 @@
   `cai_causal_graph.causal_graph.CausalGraph` is now deprecated, and will be removed in future versions. To maintain
   this behavior, call `cai_causal_graph.causal_graph.CausalGraph.add_fully_connected_nodes` after construction.
 - Upgraded `poetry` version from `1.8.2` to `1.8.3` in the GitHub workflows.
-- Added the `cai_causal_graph.causal_graph.CausalGraph.get_nodes_between` method.
 
 ## 0.5.2
 
