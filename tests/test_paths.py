@@ -15,8 +15,6 @@ limitations under the License.
 """
 import unittest
 
-from cl_dev_tools import TestCase
-
 from cai_causal_graph import CausalGraph, EdgeType
 from cai_causal_graph.graph_components import Node
 
@@ -273,7 +271,7 @@ class TestDirectedPathExists(unittest.TestCase):
         self.assertTrue(g.directed_path_exists(input_node, output_node))
 
 
-class TestGetNodesBetween(TestCase):
+class TestGetNodesBetween(unittest.TestCase):
     def test_get_nodes_between(self):
         cg = CausalGraph()
         cg.add_edge('a', 'b')
