@@ -1,6 +1,25 @@
 # Changelog
 
-## NEXT
+## 0.5.5
+
+- Fixed a bug in the `cai_causal_graph.causal_graph.CausalGraph.add_edge` method that would allow the addition of an
+  edge between `b` and `a` when the reversed edge, i.e. between `a` and `b` was already specified.
+  - Added the `CausalGraphError.ReverseEdgeExistsError` exception, which distinguishes errors arising from the
+    introduction of cycles or reverse edges.
+
+## 0.5.4
+
+- Improved the speed of the `cai_causal_graph.causal_graph.CausalGraph.get_descendant_graph` and
+  `cai_causal_graph.causal_graph.CausalGraph.get_ancestral_graph` methods for large graphs.
+- Improved the speed of the `cai_causal_graph.causal_graph.CausalGraph.from_adjacency_matrix` and
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.from_adjacency_matrices` methods by introducing a
+  `validate` flag. When `False`, there are no checks for cycles (default is `True`).
+  - Also added this flag for all `from_skeleton`, `from_networkx` and `from_gml_string` methods.
+- Fixed a bug in the `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_summary_graph` method for the
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` class where it would not correctly maintain
+  floating nodes.
+
+## 0.5.3
 
 - `cai_causal_graph.utils.get_variable_name_and_lag` now allows new lines in the names of variables.
 - Passing `input_list`, `output_list`, and `fully_connected` as arguments to the constructor of a
@@ -11,9 +30,10 @@
 
 ## 0.5.2
 
-- Removed caching from `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph`, `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_stationary_graph` and
-  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_summary_graph` because the caching would not account for changes
-  in node/edge metadata.
+- Removed caching from `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_minimal_graph`,
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_stationary_graph` and
+  `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.get_summary_graph` because the caching would not
+  account for changes in node/edge metadata.
 
 ## 0.5.1
 

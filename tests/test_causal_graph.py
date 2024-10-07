@@ -631,7 +631,7 @@ class TestCausalGraph(unittest.TestCase):
 
         # check conflicting paths raises
         causal_graph.add_edges_from_paths(['a3', 'b', 'c'])
-        with self.assertRaises(CausalGraphErrors.CyclicConnectionError):
+        with self.assertRaises(CausalGraphErrors.ReverseEdgeExistsError):
             causal_graph.add_edges_from_paths(['c', 'b', 'z'])
 
     def test_add_edges_from_multiple_paths(self):
@@ -645,7 +645,7 @@ class TestCausalGraph(unittest.TestCase):
         )
 
         # check conflicting paths raises
-        with self.assertRaises(CausalGraphErrors.CyclicConnectionError):
+        with self.assertRaises(CausalGraphErrors.ReverseEdgeExistsError):
             causal_graph.add_edges_from_paths([['a3', 'b', 'c'], ['c', 'b', 'z']])
 
         # check that invalid paths raises (mix of paths and strings)
@@ -690,8 +690,47 @@ class TestCausalGraph(unittest.TestCase):
         # Large dense adjacency matrix
         adj_matrix = numpy.triu(rng.random(size=(400, 400)) > 0.8)
 
-        # Should take ~23s to complete
-        graph = CausalGraph.from_adjacency_matrix(adjacency=adj_matrix)
+        # Should take ~2s to complete
+        graph = CausalGraph.from_adjacency_matrix(adjacency=adj_matrix, validate=True)
+
+        # Add a cycle.
+        adj_matrix[0][1] = True
+        adj_matrix[1][0] = False  # to ensure 0 -> 1 and not 0 -- 1
+        adj_matrix[1][2] = True
+        adj_matrix[2][1] = False  # to ensure 1 -> 2 and not 1 -- 2
+        adj_matrix[2][0] = True
+        adj_matrix[0][2] = False  # to ensure 2 -> 0 and not 0 -- 2
+        with self.assertRaises(CausalGraphErrors.CyclicConnectionError):
+            graph = CausalGraph.from_adjacency_matrix(adjacency=adj_matrix, validate=True)
+        # Confirm no raise when validate=False.
+        graph = CausalGraph.from_adjacency_matrix(adjacency=adj_matrix, validate=False)
+        with self.assertRaises(AssertionError):
+            # Confirm cycle is there.
+            graph._assert_node_does_not_depend_on_itself('node_0')
+
+    def test_large_adjacency_no_validation(self):
+        # Essentially this test should run rather quickly. Less than 30 seconds.
+        n = 1_000
+        p = 2_000
+
+        rng = numpy.random.default_rng(24)
+
+        adjacency = numpy.triu(rng.random(size=(p, p)))
+        adjacency[adjacency < 0.9] = 0
+
+        noise = rng.random(size=(n, p))
+
+        cols = [f'X{i}' for i in range(p)]
+        wide_data = pandas.DataFrame(numpy.matmul(noise, adjacency) + noise, columns=cols)
+
+        adj = adjacency > 0
+        causal_graph = CausalGraph.from_adjacency_matrix(adjacency=adjacency > 0, node_names=wide_data.columns)
+
+        # networkx should be fast too.
+        g = networkx.DiGraph(adj)
+        g = networkx.relabel_nodes(g, {i: c for i, c in enumerate(wide_data.columns)})
+
+        graphs_equal(g, causal_graph.to_networkx())
 
     def test_consistency_of_node_names(self):
         cg = CausalGraph()
@@ -1373,3 +1412,22 @@ class TestCausalGraphPrinting(unittest.TestCase):
         self.assertEqual(tscg['b'], tscg.get_node('b'))
         self.assertEqual(repr(tscg['a']), 'TimeSeriesNode("a")')
         self.assertEqual(repr(tscg['b']), 'TimeSeriesNode("b", type="continuous")')
+
+    def test_add_to_undirected_edges(self):
+        # adding an edge dest-src to an existing edge src-dest should raise an error
+
+        cg = CausalGraph()
+        cg.add_edge('a', 'b', edge_type=EdgeType.UNDIRECTED_EDGE)
+
+        with self.assertRaises(CausalGraphErrors.ReverseEdgeExistsError):
+            cg.add_edge('b', 'a')
+        with self.assertRaises(CausalGraphErrors.ReverseEdgeExistsError):
+            cg.add_edge('b', 'a', edge_type=EdgeType.UNDIRECTED_EDGE)
+        with self.assertRaises(CausalGraphErrors.ReverseEdgeExistsError):
+            cg.add_edge('b', 'a', edge_type=EdgeType.BIDIRECTED_EDGE)
+        with self.assertRaises(CausalGraphErrors.ReverseEdgeExistsError):
+            cg.add_edge('b', 'a', edge_type=EdgeType.UNKNOWN_EDGE)
+        with self.assertRaises(CausalGraphErrors.ReverseEdgeExistsError):
+            cg.add_edge('b', 'a', edge_type=EdgeType.UNKNOWN_DIRECTED_EDGE)
+        with self.assertRaises(CausalGraphErrors.ReverseEdgeExistsError):
+            cg.add_edge('b', 'a', edge_type=EdgeType.UNKNOWN_UNDIRECTED_EDGE)

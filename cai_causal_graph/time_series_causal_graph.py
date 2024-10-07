@@ -391,6 +391,13 @@ class TimeSeriesCausalGraph(CausalGraph):
                 edge = self._EdgeCls(source=source, destination=destination, edge_type=edge.edge_type, meta=edge.meta)
                 summary_graph.add_edge(edge=edge)
 
+        # There could be floating nodes in the original graph that should be maintained in the summary graph.
+        # For example, X[t], Y[t-1]->Z[t], the summary graph should be X, Y->Z.
+        summary_var_names = summary_graph.get_node_names()
+        for var_name in self.get_all_variable_names():
+            if var_name not in summary_var_names:
+                summary_graph.add_node(var_name)
+
         return summary_graph
 
     def extend_graph(
@@ -833,6 +840,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         adjacency_matrices: Dict[int, numpy.ndarray],
         variable_names: Optional[List[Union[NodeLike, int]]] = None,
         construct_minimal: bool = True,
+        validate: bool = True,
     ) -> TimeSeriesCausalGraph:
         """
         Instantiate a `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph` from a dictionary of
@@ -875,6 +883,7 @@ class TimeSeriesCausalGraph(CausalGraph):
         :param variable_names: A list of variable names. If not provided, the variable names are integers starting
             from 0. Node names must correspond to the variable names and must not contain the lag.
         :param construct_minimal: Whether to return a minimal time series graph. Default is `True`.
+        :param validate: Whether to perform validation against cycles. Default is `True`.
         :return: A time series causal graph.
         """
         assert isinstance(adjacency_matrices, dict)
@@ -937,7 +946,7 @@ class TimeSeriesCausalGraph(CausalGraph):
                     time_delta_to_index[0] + (n_time_delta * column),
                 ] = 1
 
-        graph = cls.from_adjacency_matrix(adjacency_matrix_full, node_names)  # type: ignore
+        graph = cls.from_adjacency_matrix(adjacency_matrix_full, node_names, validate=validate)  # type: ignore
 
         if construct_minimal:
             graph = graph.get_minimal_graph()
