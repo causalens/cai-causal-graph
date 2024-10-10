@@ -1726,6 +1726,72 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
         return self.get_descendants(node_1).intersection(self.get_descendants(node_2))
 
+    def get_nodes_between(self, node_1: NodeLike, node_2: NodeLike) -> Set[Node]:
+        """
+        Get the set of nodes that are on directed causal paths between two nodes.
+
+        The nodes themselves will be included in the final set.
+
+        If there are no causal paths between the nodes then an empty set will be returned.
+
+        This method will be faster and significantly more memory efficient than
+        `cai_causal_graph.causal_graph.CausalGraph.get_all_causal_paths` for large graphs, but only returns the set of
+        nodes of the causal paths, rather than each individual causal path. The worst case for this method is
+        `O(n + e)` time complexity and `O(n)` memory complexity, where `n` and `e` are the number of nodes and
+        edges in the graph respectively.
+
+        :param node_1: a single node-identifier coercible object, representing the source node.
+        :param node_2: a single node-identifier coercible object, representing the destination node.
+        :return: a set of nodes that are on causal paths between the two provided nodes.
+        """
+        assert self.is_dag(), 'This method only works for DAGs but the current graph is not a DAG.'
+
+        # Set up cache: for each seen node, cache whether there is a causal path between it and the destination
+        seen_nodes: dict[str, bool] = {}
+
+        start = self.get_node(node_1)
+        end = self.get_node(node_2)
+
+        def _has_causal_path_inner(start_node_: Node, end_node_: Node) -> bool:
+            """
+            Check if there is a causal path from the start node to the end node.
+
+            This is done recursively by checking:
+            1. if the start node is the end node, return True
+            2. if the start node is a sink node, return False
+            3. else recursively check if any of the children of that start have a causal path to the end node
+
+            The return value for each node is cached in the `seen_nodes` dictionary to avoid repeat calculations. This
+            means that for a full graph this will run in `O(e)` time, where e is the number of edges in the graph.
+            """
+            if start_node_.identifier in seen_nodes:
+                return seen_nodes[start_node_.identifier]
+            if start_node_ == end_node_:
+                seen_nodes[start_node_.identifier] = True
+                return True
+            if start_node_.is_sink_node():
+                seen_nodes[start_node_.identifier] = False
+                return False
+
+            start_children = [e.destination for e in start_node_._outbound_edges]
+
+            # Run recursively for all children, which itself will cache the results of all descendant nodes.
+            children_have_causal_paths = [_has_causal_path_inner(child, end_node_) for child in start_children]
+
+            has_causal_path = any(children_have_causal_paths)
+            seen_nodes[start_node_.identifier] = has_causal_path
+            return has_causal_path
+
+        # Check recursively which of the start node of its descendants have a causal path to the end node
+        causal_path = _has_causal_path_inner(start, end)
+
+        # Can return an empty set if there is no causal path from the start node to the end node
+        if not causal_path:
+            return set()
+
+        # Otherwise return all nodes that have a causal path to the destination (including the source and destination)
+        return {self.get_node(node) for node, has_path in seen_nodes.items() if has_path}
+
     def get_d_separation_set(self, node_1: NodeLike, node_2: NodeLike) -> Set[str]:
         """
         Return a minimal d-separation set between two nodes.
