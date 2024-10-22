@@ -61,7 +61,7 @@ def simulate_er_dag(
     p = float(degree) / (d - 1)
 
     # note that we need to pass an int seed to erdos_renyi_graph(), which we extract from the current rng state
-    rng_state = rng.__getstate__()['state']['state']
+    rng_state = rng.bit_generator.state['state']['state']
 
     # generate graph, using a faster algorithm if graph is sparse, or deliberately specified
     sparsity_threshold = 0.1

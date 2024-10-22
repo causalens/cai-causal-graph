@@ -1,5 +1,9 @@
 # Changelog
 
+## NEXT
+
+- Added support for `numpy < 3.0.0` for Python versions `>= 3.10`.
+
 ## 0.5.6
 
 - Added the `cai_causal_graph.causal_graph.CausalGraph.get_nodes_between` method, which returns the set of all nodes
