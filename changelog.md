@@ -2,14 +2,19 @@
 
 ## NEXT
 
-- Added `numpy>=2.0` support and only applies for Python versions 3.10 and upwards.
+- Added support for `numpy < 3.0.0` for Python versions `>= 3.10`.
+
+## 0.5.6
+
+- Added the `cai_causal_graph.causal_graph.CausalGraph.get_nodes_between` method, which returns the set of all nodes
+  that are on a directed causal path between two nodes in the graph.
 
 ## 0.5.5
 
 - Fixed a bug in the `cai_causal_graph.causal_graph.CausalGraph.add_edge` method that would allow the addition of an
   edge between `b` and `a` when the reversed edge, i.e. between `a` and `b` was already specified.
-  - Added the `CausalGraphError.ReverseEdgeExistsError` exception, which distinguishes errors arising from the
-    introduction of cycles or reverse edges.
+- Added the `CausalGraphError.ReverseEdgeExistsError` exception, which distinguishes errors arising from the
+  introduction of cycles or reverse edges.
 
 ## 0.5.4
 
