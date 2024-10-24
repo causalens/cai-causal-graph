@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.5.7
 
 - Added support for `numpy < 3.0.0` for Python versions `>= 3.10`.
 
