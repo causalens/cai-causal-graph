@@ -1144,7 +1144,12 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         return self._get_edges_by_type(EdgeType.UNDIRECTED_EDGE)
 
     def get_nondirected_edges(self) -> List[Edge]:
-        """Returns a list of edges that are not directed, e.g. not `'X' -> 'Y'`, in the causal graph."""
+        """
+        Returns a list of edges that are not directed, e.g. not `'X' -> 'Y'`, in the causal graph.
+
+        Note that this method is different from `get_undirected_edges`, which only includes 'X' -- 'Y'`.
+        This method includes undirected edges, bidirected edges, and all kinds of unknown edges.
+        """
         return self._get_edges_excluding_type(EdgeType.DIRECTED_EDGE)
 
     def get_bidirected_edges(self) -> List[Edge]:
