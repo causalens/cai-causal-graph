@@ -2,7 +2,7 @@
 
 ## NEXT
 
-- Added the `cai_causal_graph.causal_graph.CausalGraph.get_nondirected_edges` method, which returns all edhes that are
+- Added the `cai_causal_graph.causal_graph.CausalGraph.get_nondirected_edges` method, which returns all edges that are
   not explicitly directed, i.e. not of type `EdgeType.DIRECTED_EDGE`.
 
 ## 0.5.7
