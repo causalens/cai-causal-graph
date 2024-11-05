@@ -158,6 +158,7 @@ class TestCausalGraphEdgeTypes(unittest.TestCase):
     def test_get_edges_by_type(self):
         # check that we get the correct edge numbers for the DAG
         self.assertEqual(len(self.dag.get_directed_edges()), 7)
+        self.assertEqual(len(self.dag.get_nondirected_edges()), 0)
         self.assertEqual(len(self.dag.get_undirected_edges()), 0)
         self.assertEqual(len(self.dag.get_bidirected_edges()), 0)
         self.assertEqual(len(self.dag.get_unknown_edges()), 0)
@@ -166,6 +167,7 @@ class TestCausalGraphEdgeTypes(unittest.TestCase):
 
         # check that we get the correct edge numbers for the CPDAG
         self.assertEqual(len(self.cpdag.get_directed_edges()), 4)
+        self.assertEqual(len(self.cpdag.get_nondirected_edges()), 3)
         self.assertEqual(len(self.cpdag.get_undirected_edges()), 3)
         self.assertEqual(len(self.cpdag.get_bidirected_edges()), 0)
         self.assertEqual(len(self.cpdag.get_unknown_edges()), 0)
@@ -174,6 +176,7 @@ class TestCausalGraphEdgeTypes(unittest.TestCase):
 
         # check that we get the correct edge numbers for the MAG
         self.assertEqual(len(self.mag.get_directed_edges()), 2)
+        self.assertEqual(len(self.mag.get_nondirected_edges()), 5)
         self.assertEqual(len(self.mag.get_undirected_edges()), 3)
         self.assertEqual(len(self.mag.get_bidirected_edges()), 2)
         self.assertEqual(len(self.mag.get_unknown_edges()), 0)
@@ -182,6 +185,7 @@ class TestCausalGraphEdgeTypes(unittest.TestCase):
 
         # check that we get the correct edge numbers for the PAG
         self.assertEqual(len(self.pag.get_directed_edges()), 1)
+        self.assertEqual(len(self.pag.get_nondirected_edges()), 6)
         self.assertEqual(len(self.pag.get_undirected_edges()), 2)
         self.assertEqual(len(self.pag.get_bidirected_edges()), 2)
         self.assertEqual(len(self.pag.get_unknown_edges()), 0)

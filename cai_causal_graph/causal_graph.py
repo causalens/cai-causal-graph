@@ -1143,6 +1143,15 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """Returns a list of undirected edges, e.g. `'X' -- 'Y'`, in the causal graph."""
         return self._get_edges_by_type(EdgeType.UNDIRECTED_EDGE)
 
+    def get_nondirected_edges(self) -> List[Edge]:
+        """
+        Returns a list of edges that are not directed, e.g. not `'X' -> 'Y'`, in the causal graph.
+
+        Note that this method is different from `get_undirected_edges`, which only includes 'X' -- 'Y'`.
+        This method includes undirected edges, bidirected edges, and all kinds of unknown edges.
+        """
+        return self._get_edges_excluding_type(EdgeType.DIRECTED_EDGE)
+
     def get_bidirected_edges(self) -> List[Edge]:
         """Returns a list of bidirectional edges, e.g. `'X' <-> 'Y'`,  in the causal graph."""
         return self._get_edges_by_type(EdgeType.BIDIRECTED_EDGE)
@@ -1164,8 +1173,18 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         Get a list of edges that have the provided type, e.g. `->`.
 
         :param edge_type: The type to query.
+        :return: A list of edges with the specified type.
         """
         return [edge for edge in self.edges if edge.get_edge_type() == edge_type]
+
+    def _get_edges_excluding_type(self, edge_type: EdgeType) -> List[Edge]:
+        """
+        Get a list of edges that do not match the provided type, e.g. `->`.
+
+        :param edge_type: The type of edge to exclude.
+        :return: A list of edges that do not match the specified type.
+        """
+        return [edge for edge in self.edges if edge.get_edge_type() != edge_type]
 
     def edge_exists(self, /, source: NodeLike, destination: NodeLike, *, edge_type: Optional[EdgeType] = None) -> bool:
         """Returns True if the edge exists. If edge_type is None (default), this ignores edge types."""
