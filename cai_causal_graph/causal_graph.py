@@ -1173,6 +1173,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         Get a list of edges that have the provided type, e.g. `->`.
 
         :param edge_type: The type to query.
+        :return: A list of edges with the specified type.
         """
         return [edge for edge in self.edges if edge.get_edge_type() == edge_type]
 
@@ -1180,7 +1181,8 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """
         Get a list of edges that do not match the provided type, e.g. `->`.
 
-        :param edge_type: The type to query.
+        :param edge_type: The type of edge to exclude.
+        :return: A list of edges that do not match the specified type.
         """
         return [edge for edge in self.edges if edge.get_edge_type() != edge_type]
 
