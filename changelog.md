@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.5.8
 
 - Added the `cai_causal_graph.causal_graph.CausalGraph.get_nondirected_edges` method, which returns all edges that are
   not explicitly directed, i.e. not of type `EdgeType.DIRECTED_EDGE`.
