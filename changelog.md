@@ -67,10 +67,10 @@
 
 ## 0.5.0
 
-> **_NOTE:_**  **Backwards compatibility warning!** Global metadata to `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`
+> **_NOTE:_** **Backwards compatibility warning!** Global metadata to `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph`
 > and `cai_causal_graph.causal_graph.CausalGraph`, which means their serialized state has changed.
 
-> **_NOTE:_**  **Backwards compatibility warning!** The default value of the `include_all_parents` argument to `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_graph`
+> **_NOTE:_** **Backwards compatibility warning!** The default value of the `include_all_parents` argument to `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_graph`
 > has been changed to `True` (from `False`).
 
 - The default value of the `include_all_parents` argument to `cai_causal_graph.time_series_causal_graph.TimeSeriesCausalGraph.extend_graph`
@@ -336,7 +336,7 @@
 
 ## 0.3.0
 
-> **_NOTE:_**  **Backwards compatibility warning!** The definition of the
+> **_NOTE:_** **Backwards compatibility warning!** The definition of the
 > `cai_causal_graph.type_definitions.EdgeConstraint` enumeration has changed.
 
 - Updated the `cai_causal_graph.type_definitions.EdgeConstraint` enumeration to simplify the enumeration members and
