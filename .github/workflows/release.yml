@@ -142,13 +142,14 @@ jobs:
         # this package.
         if: success()
         env:
-          ARTIFACTORY_URL: https://causalens.jfrog.io/artifactory
-          ARTIFACTORY_USERNAME: ${{ secrets.JF_USERNAME }}
-          ARTIFACTORY_PASSWORD: ${{ secrets.JF_PASSWORD }}
-          ARTIFACTORY_REPOSITORY: documentation
-          BUILD_REFERENCE: true
+          PROJECT: causalens-internal
+          LOCATION: us-central1
+          REPOSITORY: documentation
           PACKAGE: cai-causal-graph
-          PACKAGE_PATHS: cai_causal_graph
+          GAR_USERNAME: _json_key
+          GAR_KEY_JSON: '${{ secrets.GAR_KEY_JSON }}'
+          POETRY_HTTP_BASIC_CAUSALENS_USERNAME: _json_key
+          POETRY_HTTP_BASIC_CAUSALENS_PASSWORD: '${{ secrets.GAR_KEY_JSON }}'
           VERSION: ${{ steps.extract_tag.outputs.new_version }}
         run: make package-and-publish-docs
       - name: Trigger post-release workflow
