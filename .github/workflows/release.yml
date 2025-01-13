@@ -145,6 +145,7 @@ jobs:
           PROJECT: causalens-internal
           LOCATION: us-central1
           REPOSITORY: documentation
+          BUILD_REFERENCE: true
           PACKAGE: cai-causal-graph
           GAR_USERNAME: _json_key
           GAR_KEY_JSON: '${{ secrets.GAR_KEY_JSON }}'
