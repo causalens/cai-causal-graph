@@ -11,7 +11,7 @@ jobs:
       fail-fast: true  # The PR checks should fail fast not to waste GitHub minutes
       matrix:
         # For reproducibility, we define ubuntu-20.04 rather than ubuntu-latest. PR-CHECKS should only test default.
-        os: [ ubuntu-20.04 ]
+        os: [ ubuntu-24.04 ]
         # PR-CHECKS should only test default python distribution.
         python-version: [ '3.11' ]
     steps:

@@ -17,7 +17,7 @@ jobs:
       fail-fast: true  # The MAIN checks should also fail fast not to waste GitHub minutes
       matrix:
         # For reproducibility, we define ubuntu-20.04 rather than ubuntu-latest. There is no need for macos tests.
-        os: [ ubuntu-20.04 ]
+        os: [ ubuntu-24.04 ]
         # MAIN-CHECKS do not have to check for all supported python distributions, as DEPENDENCIES-CHECK should.
         python-version: [ '3.11' ]   # This should be the default supported python distribution.
     steps:
