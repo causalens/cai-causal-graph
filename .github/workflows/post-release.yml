@@ -17,7 +17,7 @@ jobs:
       max-parallel: 1  # Force series execution to ensure we get response from PyPI
       matrix:
         # It is again enough to only test on linux, as mac osx is only used by developers.
-        os: [ ubuntu-20.04 ]
+        os: [ ubuntu-24.04 ]
         # All the python versions the package should be tested for clean pip installation from bdist or sdist (based on availability)
         python-version: [ '3.9', '3.10', '3.11', '3.12' ]   # Order here does not matter if we do not fail-fast above.
     steps:

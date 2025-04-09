@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         # It is again enough to only test on linux, as mac osx is only used by developers, and they can build from sdist.
-        os: [ ubuntu-20.04 ]  # Best to use reversed order (the most risky first)
+        os: [ ubuntu-24.04 ]  # Best to use reversed order (the most risky first)
         # Should only build wheels for default python distribution at the moment.
         python-version: [ '3.11' ]
     steps:
