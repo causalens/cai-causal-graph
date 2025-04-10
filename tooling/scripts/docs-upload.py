@@ -37,7 +37,7 @@ gar_key = os.environ['GAR_KEY_JSON']
 
 # Build reference docs
 if os.environ.get('BUILD_REFERENCE') == 'true':
-    package_paths = os.environ.get('PACKAGE_PATHS', '').strip().split('\n')
+    package_paths = os.environ.get('PACKAGE_PATHS', package).strip().split('\n')
     build(
         packages=package_paths,
         package_name=package,
