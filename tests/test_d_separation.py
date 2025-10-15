@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 import unittest
 
 from cai_causal_graph import CausalGraph
@@ -58,7 +59,6 @@ class TestDSeparation(unittest.TestCase):
         self.assertSetEqual({'D'}, z_min)
 
     def test_case_2(self):
-
         g = CausalGraph()
         g.add_edge('A', 'B')
         g.add_edge('B', 'C')

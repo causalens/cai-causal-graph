@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 import copy
 import json
 import unittest
@@ -195,7 +196,7 @@ class TestCausalGraph(unittest.TestCase):
         self.assertEqual(CausalGraph.from_dict(graph_as_dict_withmeta), newg)
         self.assertNotEqual(
             CausalGraph.from_dict(graph_as_dict_withmeta).meta['foo'], o
-        )   # should not be equal because deepcopied
+        )  # should not be equal because deepcopied
         self.assertTrue(CausalGraph.from_dict(graph_as_dict_withmeta).__eq__(newg, deep=True))
 
         graph_as_dict_nometa = newg.to_dict(include_meta=False)

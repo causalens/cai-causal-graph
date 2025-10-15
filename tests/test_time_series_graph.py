@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 import json
 import unittest
 from copy import copy, deepcopy
@@ -368,7 +369,6 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         )
 
     def test_cg_to_tscg_serialization(self):
-
         # create a non-DAG graph
         cg = CausalGraph()
         cg.add_edge('X1', 'X2', edge_type=EdgeType.UNDIRECTED_EDGE)
@@ -1301,7 +1301,6 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         self.assertEqual(tsgraph, ground_truth_graph)
 
     def test_is_stationary(self):
-
         tscg = TimeSeriesCausalGraph()
         tscg.add_edge('X1 lag(n=2)', 'X1 lag(n=1)')
         tscg.add_edge('X2 lag(n=2)', 'X2 lag(n=1)')
@@ -1327,7 +1326,6 @@ class TestTimeSeriesCausalGraph(unittest.TestCase):
         self.assertTrue(cg.is_stationary_graph())
 
     def test_make_stationary(self):
-
         tscg = TimeSeriesCausalGraph()
         tscg.add_edge('X1 lag(n=2)', 'X1 lag(n=1)')
         tscg.add_edge('X2 lag(n=2)', 'X2 lag(n=1)')

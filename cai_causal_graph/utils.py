@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 import re
 from itertools import tee
 from typing import Dict, Iterable, List, Tuple, TypeVar
@@ -63,7 +64,6 @@ def get_variable_name_and_lag(node_name: NodeLike) -> Tuple[str, int]:
     )
 
     if is_match:
-
         if num_matches > 1:
             raise ValueError(f'Invalid node name: {node_name}. Multiple lag or future lags detected.')
 

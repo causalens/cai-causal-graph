@@ -63,8 +63,8 @@ class TimeSeriesCausalGraph(CausalGraph):
     from_networkx: Callable[[Arg(networkx.Graph, 'g')], TimeSeriesCausalGraph]  # type: ignore
     from_gml_string: Callable[[Arg(str, 'gml')], TimeSeriesCausalGraph]  # type: ignore
 
-    nodes: List[TimeSeriesNode]   # type: ignore
-    edges: List[TimeSeriesEdge]   # type: ignore
+    nodes: List[TimeSeriesNode]  # type: ignore
+    edges: List[TimeSeriesEdge]  # type: ignore
     get_nodes: Callable[  # type: ignore
         [DefaultArg(Optional[Union[NodeLike, List[NodeLike]]], 'identifier')], List[TimeSeriesNode]
     ]
@@ -312,7 +312,8 @@ class TimeSeriesCausalGraph(CausalGraph):
                 assert self.is_dag(), 'The graph is not a DAG. The topological order is not valid.'
                 return list(
                     networkx.lexicographical_topological_sort(
-                        self.to_networkx(), key=lambda x: self.get_node(x).time_lag  # type: ignore
+                        self.to_networkx(),
+                        key=lambda x: self.get_node(x).time_lag,  # type: ignore
                     )
                 )
 
@@ -364,13 +365,13 @@ class TimeSeriesCausalGraph(CausalGraph):
             source_variable_name = source_node.variable_name
             destination_variable_name = destination_node.variable_name
 
-            assert (
-                source_variable_name is not None
-            ), 'Source variable name is None, cannot create summary graph. The edge is: {}'.format(edge)
+            assert source_variable_name is not None, (
+                'Source variable name is None, cannot create summary graph. The edge is: {}'.format(edge)
+            )
 
-            assert (
-                destination_variable_name is not None
-            ), 'Destination variable name is None, cannot create summary graph. The edge is: {}'.format(edge)
+            assert destination_variable_name is not None, (
+                'Destination variable name is None, cannot create summary graph. The edge is: {}'.format(edge)
+            )
 
             if source_variable_name != destination_variable_name and not summary_graph.is_edge_by_pair(
                 (source_variable_name, destination_variable_name)
@@ -670,9 +671,9 @@ class TimeSeriesCausalGraph(CausalGraph):
         # either new_node_id or (time_lag and variable_name) must be provided, but not both
         if new_node_id is not None:
             # If new node id is provided, then it must set variable name and time lag, hence these must be None
-            assert (
-                time_lag is None and variable_name is None
-            ), f'Cannot provide both a new_node_id and (time_lag and variable_name).'
+            assert time_lag is None and variable_name is None, (
+                f'Cannot provide both a new_node_id and (time_lag and variable_name).'
+            )
         elif time_lag is not None or variable_name is not None:
             # if new_node_id is not provided, but variable name or time lag is, then construct a new node id
             # if one of variable name or time lag is not provided, infer it from existing node id. This enables
@@ -893,9 +894,9 @@ class TimeSeriesCausalGraph(CausalGraph):
 
         # Confirm shape of all adjacency matrices are the same.
         shapes = [adj.shape for adj in adjacency_matrices.values()]
-        assert (
-            len(set(shapes)) == 1
-        ), f'The shape of all the adjacency matrices must be the same. Got the following shapes: {list(set(shapes))}.'
+        assert len(set(shapes)) == 1, (
+            f'The shape of all the adjacency matrices must be the same. Got the following shapes: {list(set(shapes))}.'
+        )
         shape = shapes[0]
 
         # if 0 in adjacency_matrices keys, then we need to add the contemporaneous nodes
