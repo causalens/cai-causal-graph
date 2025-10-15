@@ -1,5 +1,10 @@
 # Changelog
 
+## NEXT
+
+- Dropped support for `python` `3.9` as it is approaching end of life.
+- Added support for `python` `3.13` and `3.14`.
+
 ## 0.5.8
 
 - Added the `cai_causal_graph.causal_graph.CausalGraph.get_nondirected_edges` method, which returns all edges that are
