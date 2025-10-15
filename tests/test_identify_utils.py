@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 import unittest
 from itertools import combinations
 
@@ -180,7 +181,7 @@ class TestIdentifyConfounders(unittest.TestCase):
         for i in range(1, 50):
             cg.add_edge(f'uc{i - 1}', f'uc{i}')
             cg.add_edge(f'zc{i - 1}', f'zc{i}')
-            cg.add_edge(f'xc{i-1}', f'xc{i}')
+            cg.add_edge(f'xc{i - 1}', f'xc{i}')
             cg.add_edge(f'm1c{i - 1}', f'm1c{i}')
             cg.add_edge(f'm2c{i - 1}', f'm2c{i}')
             cg.add_edge(f'm3c{i - 1}', f'm3c{i}')

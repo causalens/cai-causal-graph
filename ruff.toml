@@ -1,0 +1,15 @@
+line-length = 120
+exclude = ["*.ipynb"]
+
+# target our minimum supported python version
+target-version = "py310"
+
+[format]
+quote-style = "single"
+exclude = ["*.ipynb"]
+
+[lint.isort]
+section-order = ["future", "standard-library", "third-party", "causalens", "first-party", "local-folder"]
+sections = { causalens = ["cl*", "cai*", "dara*"] }
+
+

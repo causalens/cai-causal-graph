@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 from __future__ import annotations
 
 import logging
@@ -42,9 +43,9 @@ class Node(HasIdentifier, HasMetadata, CanDictSerialize):
         :param variable_type: The variable type that the node represents. The choices are available through the
             `cai_causal_graph.type_definitions.NodeVariableType` enum. Default is `NodeVariableType.UNSPECIFIED`.
         """
-        assert isinstance(
-            identifier, str
-        ), f'Node identifiers must be strings. Got {identifier} which is of type {type(identifier)}.'
+        assert isinstance(identifier, str), (
+            f'Node identifiers must be strings. Got {identifier} which is of type {type(identifier)}.'
+        )
         self._identifier = identifier
 
         self.variable_type: NodeVariableType = variable_type
@@ -280,9 +281,9 @@ class TimeSeriesNode(Node):
             )
             identifier = get_name_with_lag(variable_name, time_lag)
         elif identifier is not None:
-            assert (
-                time_lag is None and variable_name is None
-            ), 'If `identifier` is provided, `time_lag` and `variable_name` must be `None`.'
+            assert time_lag is None and variable_name is None, (
+                'If `identifier` is provided, `time_lag` and `variable_name` must be `None`.'
+            )
             identifier = Node.identifier_from(identifier)
             variable_name, time_lag = get_variable_name_and_lag(identifier)
         else:
@@ -556,8 +557,8 @@ class Edge(HasIdentifier, HasMetadata, CanDictSerialize):
 
         SourceNodeCls = cls._NodeClassDict[source_node_class]
         DestinationNodeCls = cls._NodeClassDict[destination_node_class]
-        assert issubclass(SourceNodeCls, Node)   # for linting
-        assert issubclass(DestinationNodeCls, Node)   # for linting
+        assert issubclass(SourceNodeCls, Node)  # for linting
+        assert issubclass(DestinationNodeCls, Node)  # for linting
 
         source = SourceNodeCls.from_dict(edge_dict['source'])
         destination = DestinationNodeCls.from_dict(edge_dict['destination'])
@@ -627,12 +628,12 @@ class TimeSeriesEdge(Edge):
         if not isinstance(source, TimeSeriesNode):
             source = TimeSeriesNode.from_dict(source.to_dict(include_meta=True))
 
-        assert isinstance(source, TimeSeriesNode)   # for lint
+        assert isinstance(source, TimeSeriesNode)  # for lint
 
         if not isinstance(destination, TimeSeriesNode):
             destination = TimeSeriesNode.from_dict(destination.to_dict(include_meta=True))
 
-        assert isinstance(destination, TimeSeriesNode)   # for lint
+        assert isinstance(destination, TimeSeriesNode)  # for lint
 
         # If edge type is not directed, swap source and destination to respect time
         if edge_type != EdgeType.DIRECTED_EDGE and source.time_lag > destination.time_lag:

@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 from __future__ import annotations
 
 import itertools
@@ -169,9 +170,9 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
         # Also check (destination, source) as order does not matter as all edges are undirected.
         matching_edges = [edge for edge in self.edges if edge.get_edge_pair() in [edge_pair, (destination, source)]]
         assert len(matching_edges) > 0, f'No edge found matching edge pair {edge_pair}.'
-        assert (
-            len(matching_edges) < 2
-        ), f'Found more than one matching edge for edge pair {edge_pair}: {matching_edges}!'
+        assert len(matching_edges) < 2, (
+            f'Found more than one matching edge for edge pair {edge_pair}: {matching_edges}!'
+        )
         return matching_edges[0]
 
     def edge_exists(
@@ -248,9 +249,9 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
         :return: A new `cai_causal_graph.causal_graph.Skeleton` based on the provided adjacency matrix.
         """
         if graph_class is not None:
-            assert issubclass(
-                graph_class, CausalGraph
-            ), f'The provided graph_class is not a subclass of CausalGraph. Got type {type(graph_class)}.'
+            assert issubclass(graph_class, CausalGraph), (
+                f'The provided graph_class is not a subclass of CausalGraph. Got type {type(graph_class)}.'
+            )
         else:
             graph_class = CausalGraph
         graph: CausalGraph = graph_class.from_adjacency_matrix(
@@ -321,9 +322,9 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
         :return: A new `cai_causal_graph.causal_graph.Skeleton` based on the provided dictionary.
         """
         if graph_class is not None:
-            assert issubclass(
-                graph_class, CausalGraph
-            ), f'The provided graph_class is not a subclass of CausalGraph. Got type {type(graph_class)}.'
+            assert issubclass(graph_class, CausalGraph), (
+                f'The provided graph_class is not a subclass of CausalGraph. Got type {type(graph_class)}.'
+            )
         else:
             graph_class = CausalGraph
         return cls(graph=graph_class.from_dict(d))
@@ -343,9 +344,9 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
         :return: A new `cai_causal_graph.causal_graph.Skeleton` based on the `networkx.Graph`.
         """
         if graph_class is not None:
-            assert issubclass(
-                graph_class, CausalGraph
-            ), f'The provided graph_class is not a subclass of CausalGraph. Got type {type(graph_class)}.'
+            assert issubclass(graph_class, CausalGraph), (
+                f'The provided graph_class is not a subclass of CausalGraph. Got type {type(graph_class)}.'
+            )
         else:
             graph_class = CausalGraph
         # Convert node names to strings.
@@ -390,7 +391,7 @@ class Skeleton(CanDictSerialize, CanDictDeserialize):
         """Return a detailed string description of the `cai_causal_graph.causal_graph.Skeleton` instance."""
         node_details = '\t' + '\n\t'.join([n.details().replace('\n', '\n\t') for n in self.nodes])
         edge_details = '\t' + '\n\t'.join([e.details().replace('\n', '\n\t') for e in self.edges])
-        return f'{self.__repr__()}\n' f'Node Details:\n{node_details}\nEdge Details:\n{edge_details}'
+        return f'{self.__repr__()}\nNode Details:\n{node_details}\nEdge Details:\n{edge_details}'
 
     def __hash__(self) -> int:
         """Return a hash representation of the `cai_causal_graph.causal_graph.Skeleton` instance."""
@@ -737,8 +738,9 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
 
     def _set_edge(self, edge: Edge, validate: bool = True):
         """Set the edge in the graph."""
-        source, destination = self._NodeCls.identifier_from(edge.source), self._NodeCls.identifier_from(
-            edge.destination
+        source, destination = (
+            self._NodeCls.identifier_from(edge.source),
+            self._NodeCls.identifier_from(edge.destination),
         )
 
         # raise an error if reverse edge from destination to source has already been defined
@@ -914,9 +916,9 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         :return: The created node.
         """
         if node is not None:
-            assert (
-                identifier is None and variable_type == NodeVariableType.UNSPECIFIED and meta is None
-            ), 'If specifying `node` argument, all other arguments should not be specified.'
+            assert identifier is None and variable_type == NodeVariableType.UNSPECIFIED and meta is None, (
+                'If specifying `node` argument, all other arguments should not be specified.'
+            )
             identifier = node.identifier
             variable_type = node.variable_type
             meta = deepcopy(node.meta)
@@ -1264,9 +1266,9 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         :return: The created edge object.
         """
         if edge is not None:
-            assert (
-                source is None and destination is None and edge_type == EdgeType.DIRECTED_EDGE and meta is None
-            ), 'If specifying `edge` argument, all other arguments should not be specified.'
+            assert source is None and destination is None and edge_type == EdgeType.DIRECTED_EDGE and meta is None, (
+                'If specifying `edge` argument, all other arguments should not be specified.'
+            )
             source, destination = edge.source, edge.destination
 
             edge_type = edge.get_edge_type()
@@ -1826,13 +1828,13 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         node_1 = self._NodeCls.identifier_from(node_1)
         node_2 = self._NodeCls.identifier_from(node_2)
 
-        assert all(
-            node in self.get_node_names() for node in [node_1, node_2]
-        ), f'All nodes must be present in the graph. Got nodes "{node_1, node_2}".'
+        assert all(node in self.get_node_names() for node in [node_1, node_2]), (
+            f'All nodes must be present in the graph. Got nodes "{node_1, node_2}".'
+        )
 
-        assert not self.edge_exists(
-            node_1, node_2
-        ), 'Cannot identify a d-separation set between two nodes if an edge exists between them.'
+        assert not self.edge_exists(node_1, node_2), (
+            'Cannot identify a d-separation set between two nodes if an edge exists between them.'
+        )
 
         networkx_digraph = self.to_networkx()
         assert isinstance(networkx_digraph, networkx.DiGraph)  # Will be the case if graph is a DAG. Needed for linting.
@@ -1879,9 +1881,9 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         nodes_2 = set(self._NodeCls.identifier_from(node) for node in nodes_2)
         separation_set = set(self._NodeCls.identifier_from(node) for node in separation_set)
 
-        assert all(
-            node in self.get_node_names() for node in [*nodes_1, *nodes_2, *separation_set]
-        ), 'All nodes must be present in the graph.'
+        assert all(node in self.get_node_names() for node in [*nodes_1, *nodes_2, *separation_set]), (
+            'All nodes must be present in the graph.'
+        )
 
         return networkx.d_separated(self.to_networkx(), nodes_1, nodes_2, separation_set)
 
@@ -1907,9 +1909,9 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         node_2_id = self._NodeCls.identifier_from(node_2)
         separation_set_id = set(self._NodeCls.identifier_from(node) for node in separation_set)
 
-        assert all(
-            node in self.get_node_names() for node in [node_1_id, node_2_id, *separation_set_id]
-        ), 'All nodes must be present in the graph.'
+        assert all(node in self.get_node_names() for node in [node_1_id, node_2_id, *separation_set_id]), (
+            'All nodes must be present in the graph.'
+        )
 
         networkx_digraph = self.to_networkx()
         assert isinstance(networkx_digraph, networkx.DiGraph)  # Will be the case if graph is a DAG. Needed for linting.
@@ -1918,7 +1920,9 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         return networkx.is_minimal_d_separator(
             networkx_digraph, node_1_id, node_2_id, separation_set_id
         ) and self.is_d_separated(
-            node_1_id, node_2_id, separation_set_id  # type: ignore
+            node_1_id,
+            node_2_id,
+            separation_set_id,  # type: ignore
         )
 
     def get_topological_order(self, return_all: bool = False) -> Union[List[str], List[List[str]]]:
@@ -2320,7 +2324,7 @@ class CausalGraph(HasIdentifier, HasMetadata, CanDictSerialize, CanDictDeseriali
         """Return a detailed string description of the `cai_causal_graph.causal_graph.CausalGraph` instance."""
         node_details = '\t' + '\n\t'.join([n.details().replace('\n', '\n\t') for n in self.nodes])
         edge_details = '\t' + '\n\t'.join([e.details().replace('\n', '\n\t') for e in self.edges])
-        return f'{self.__repr__()}\n' f'Node Details:\n{node_details}\nEdge Details:\n{edge_details}'
+        return f'{self.__repr__()}\nNode Details:\n{node_details}\nEdge Details:\n{edge_details}'
 
     def __hash__(self) -> int:
         """Return a hash representation of the `cai_causal_graph.causal_graph.CausalGraph` instance."""

@@ -2,9 +2,6 @@
 build-backend = "poetry.core.masonry.api"
 requires = ["poetry-core>=1.0.0", "setuptools>=45", "setuptools_scm[toml]>=6.2", "wheel>=0.34.0, <1.0.0"]
 
-[tool.blue]
-line-length = 120
-
 [tool.interrogate]
 color = true
 exclude = ["setup.py", "docs", "build", "tests"]
@@ -26,11 +23,6 @@ omit-covered-files = true
 quiet = false
 verbose = 2
 whitelist-regex = []
-
-[tool.isort]
-line_length = 120
-profile = "black"
-sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
 
 [tool.mypy]
 plugins = "numpy.typing.mypy_plugin"
@@ -56,18 +48,14 @@ packages = [{include = "cai_causal_graph"}]
 mypy-extensions = "^1.0.0"
 # networkx 3.3 broke how get_all_simple_paths works so want to bound for now.
 networkx = ">=3.0.0, <3.3.0"
-numpy = [
-    {version = ">=1.18.0, <3.0.0", python = ">=3.10"},
-    {version = ">=1.18.0, <2.0.0", python = "<3.10"}
-]
+numpy = ">=1.18.0, <3.0.0"
 pandas = ">=1.0.0, <3.0.0"
-python = ">=3.9.0, <3.13.0"
+python = ">=3.10.0, <3.15.0"
 
 [tool.poetry.dev-dependencies]
+ruff = ">=0.12.2"
 bandit = "^1.7.5"
-blue = ">=0.9.1, <1.0.0"
 interrogate = ">=1.5.0, <2.0.0"
-isort = ">=5.10.1, <6.0.0"
 markdown = ">=3.4.0, <4.0.0"
 mdformat-gfm = ">=0.3.5, <1.0.0"
 mypy = "^1.8.0"

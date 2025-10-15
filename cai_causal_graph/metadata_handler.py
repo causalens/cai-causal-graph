@@ -1,6 +1,7 @@
 """
 Copyright (c) 2024 by Impulse Innovations Ltd. Private and confidential. Part of the causaLens product.
 """
+
 from dataclasses import dataclass
 from typing import Any, Optional
 

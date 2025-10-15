@@ -29,26 +29,17 @@ install-build-deps:
 	python -m pip install -U pip wheel setuptools
 
 # Run formatting on the package
-format: isort blue markdown
+format: ruff markdown
 
 # Run formatting checks on the package
-format-check: isort-check blue-check markdown-check
+format-check: ruff-check markdown-check
 
-# Run isort formatting on the package
-isort:
-	poetry run isort ./
+# Run ruff formatting on the package
+ruff:
+	poetry run ruff check --select I --fix --unsafe-fixes . && poetry run ruff format .
 
-# Run isort formatting check on the package
-isort-check:
-	poetry run isort --check ./
-
-# Run blue formatting on the package
-blue:
-	poetry run blue ./
-
-# Run blue formatting check on the package
-blue-check:
-	poetry run blue --check ./
+ruff-check:
+	poetry run ruff check --select I . && poetry run ruff format --check .
 
 # Run markdown formatting on the changelog.md
 markdown:

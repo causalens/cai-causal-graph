@@ -157,7 +157,6 @@ class TestGraphComponents(unittest.TestCase):
         self.assertFalse(edge_reversed.__eq__(edge_different_direction, deep=True))
 
     def test_is_source_node(self):
-
         cg = CausalGraph()
         cg.add_edge('a', 'b')
         cg.add_edge('b', 'c')
@@ -167,7 +166,6 @@ class TestGraphComponents(unittest.TestCase):
         self.assertFalse(cg.get_node('c').is_source_node())
 
     def test_is_sink_node(self):
-
         cg = CausalGraph()
         cg.add_edge('a', 'b')
         cg.add_edge('b', 'c')

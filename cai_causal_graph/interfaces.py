@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 from __future__ import annotations
 
 import abc
@@ -123,9 +124,9 @@ class HasMetadata:
             an empty dictionary is created.
         """
         self.meta = meta.copy() if meta is not None else dict()
-        assert isinstance(self.meta, dict) and all(
-            isinstance(k, str) for k in self.meta
-        ), 'Metadata must be provided as a dictionary with strings as keys.'
+        assert isinstance(self.meta, dict) and all(isinstance(k, str) for k in self.meta), (
+            'Metadata must be provided as a dictionary with strings as keys.'
+        )
 
     @property
     def metadata(self) -> Optional[dict]:
