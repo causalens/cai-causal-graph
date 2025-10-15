@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.5.12
 
 - Dropped support for `python` `3.9` as it is approaching end of life.
 - Added support for `python` `3.13` and `3.14`.
