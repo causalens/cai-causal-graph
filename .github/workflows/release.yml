@@ -147,6 +147,7 @@ jobs:
           REPOSITORY: documentation
           BUILD_REFERENCE: true
           PACKAGE: cai-causal-graph
+          PACKAGE_PATHS: cai_causal_graph
           GAR_USERNAME: _json_key
           GAR_KEY_JSON: '${{ secrets.GAR_KEY_JSON }}'
           POETRY_HTTP_BASIC_CAUSALENS_USERNAME: _json_key
