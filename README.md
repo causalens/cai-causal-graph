@@ -18,6 +18,10 @@ Documentation, including a quickstart and code reference docs, can be found [her
 [![SECURITY: bandit](https://img.shields.io/badge/Security-bandit-informational.svg)](https://github.com/PyCQA/bandit)
 ![INTERROGATE](https://github.com/causalens/cai-causal-graph/blob/main/interrogate_badge.svg?raw=true)
 
+
+> **Agent Skill**: This package has an [Agent Skill](https://agentskills.io) for AI-assisted development.
+> See [`skills/cai-causal-graph/SKILL.md`](skills/cai-causal-graph/SKILL.md) for assumptions, gotchas, and usage guidance.
+
 > **Note**  
 > The current development cycle of this branch is `v0.5.x` (stable).
  
