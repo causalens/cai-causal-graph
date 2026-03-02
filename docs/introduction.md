@@ -1,6 +1,6 @@
 # Introduction
 
-> **Agent Skill**: An [Agent Skill](../skills/cai-causal-graph/SKILL.md) is available for this package. It provides AI agents with usage guidance, assumptions, limitations, and gotchas.
+> **Agent Skill**: An [Agent Skill](https://agentskills.io) `cai-causal-graph` is available for this package for AI-assisted development.
 
 
 [Causal graphs](https://youtu.be/gxA2YxkrKDg) represent the flow of information in the underlying data generating process 
