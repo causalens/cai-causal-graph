@@ -1,5 +1,8 @@
 # Introduction
 
+> **Agent Skill**: An [Agent Skill](../skills/cai-causal-graph/SKILL.md) is available for this package. It provides AI agents with usage guidance, assumptions, limitations, and gotchas.
+
+
 [Causal graphs](https://youtu.be/gxA2YxkrKDg) represent the flow of information in the underlying data generating process 
 of a given data set. They comprise a collection of causal relationships between variables in the data set, which dictate 
 how a given variable causally affects other variables. It is important to note that the causal graph does not define how 
