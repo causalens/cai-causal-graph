@@ -242,9 +242,3 @@ try:
 except CausalGraphErrors.NodeDoesNotExistError:
     ...
 ```
-
-## Cross-References
-
-- For scoring / evaluating causal graphs against ground truth → see `cai-metrics` skill.
-- For discovering causal graphs from data → see `cai-causal-discovery` skill.
-- For causal modeling and inference using graphs → see `cai-modeling` skill.
