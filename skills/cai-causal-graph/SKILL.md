@@ -13,7 +13,6 @@ metadata:
   version: "0.5.14"
   sdk_schema_version: "0.1.0"
   sdk_dependencies: "cai-causal-graph>=0.5.0"
-allowed-tools: Bash(python:*) Read Write Edit
 ---
 
 # CAI Causal Graph
