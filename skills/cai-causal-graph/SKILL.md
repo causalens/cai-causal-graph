@@ -139,7 +139,7 @@ print(edge.descriptor)        # '(x -> y)'
 ### Serialization
 
 ```python
-# dict round-trip (deepcopies metadata)
+# dict round-trip (`from_dict` deepcopies metadata; `to_dict` does not deep-copy nested meta)
 d = cg.to_dict()
 cg2 = CausalGraph.from_dict(d)
 
@@ -198,6 +198,8 @@ EdgeConstraint.FORBIDDEN_EDGE        # forbid the edge
 - `add_edge` raises `CyclicConnectionError` if directed edges would form a cycle; the graph is rolled back.
 - `to_numpy()` / `from_adjacency_matrix()` only support `DIRECTED_EDGE` and `UNDIRECTED_EDGE` — bidirected or
   unknown edge types raise `TypeError`.
+- `from_adjacency_matrix()` expects a `numpy.ndarray` input. Passing plain Python lists can raise `AttributeError`
+  before adjacency validation.
 - `to_networkx()` only produces `DiGraph` (all directed) or `Graph` (all undirected) — mixed edge types raise
   `GraphConversionError`.
 - Node and edge metadata is shallow-copied when passed to constructors; `from_dict` deepcopies.
@@ -208,8 +210,8 @@ EdgeConstraint.FORBIDDEN_EDGE        # forbid the edge
 
 - `--` (undirected) in a CPDAG means orientation is unknown and can be resolved either way. The same symbol in a
   MAG implies selection bias — a completely different semantic.
-- Deleting a node invalidates the `Node` object — any subsequent property access on that object raises
-  `NodeDoesNotExistError`.
+- Deleting a node invalidates graph-backed node queries — methods like `get_inbound_edges()` and
+  `get_outbound_edges()` raise `NodeDoesNotExistError` after deletion.
 - `node.variable_type` is mutable; changing it after creation is intentional and supported.
 - `Edge.__eq__` treats `UNDIRECTED_EDGE`, `BIDIRECTED_EDGE`, and `UNKNOWN_EDGE` as directionless — `(a -- b)` and
   `(b -- a)` are equal.
@@ -230,7 +232,7 @@ All errors are nested inside `CausalGraphErrors`:
 | `EdgeExistsError` | Adding an edge that already exists |
 | `ReverseEdgeExistsError` | Adding edge when reverse already exists |
 | `GraphConversionError` | `to_networkx()` / `to_gml_string()` with mixed edges |
-| `InvalidAdjacencyMatrixError` | Non-square or non-binary matrix in `from_adjacency_matrix()` |
+| `InvalidAdjacencyMatrixError` | Non-square or non-binary `numpy.ndarray` in `from_adjacency_matrix()` |
 
 ```python
 from cai_causal_graph.exceptions import CausalGraphErrors
