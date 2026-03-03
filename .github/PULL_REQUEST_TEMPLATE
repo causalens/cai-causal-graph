@@ -36,4 +36,6 @@
 - [ ] If this PR breaks reproducibility, have I added a note in the changelog explaining the break in reproducibility
       and its extent?
 
+- [ ] If this PR changes public API or behavior, has the agent skill in `skills/` been updated?
+
 ## Screenshots (if appropriate):
