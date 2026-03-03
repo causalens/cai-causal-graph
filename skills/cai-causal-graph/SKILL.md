@@ -96,8 +96,7 @@ node = cg.get_node('x')
 node.variable_type = NodeVariableType.BINARY  # mutable
 ```
 
-`UNSPECIFIED` is dangerous — downstream tools in `cai-metrics` or `cai-modeling` may silently treat it as
-continuous.
+`UNSPECIFIED` is dangerous — downstream tools may silently treat it as continuous.
 
 ## Core Usage
 
