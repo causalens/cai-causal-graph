@@ -34,7 +34,7 @@ cache_dir = '/dev/null'
 
 [tool.poetry]
 name = "cai-causal-graph"
-version = "0.5.14"
+version = "0.5.15"
 description = "A Causal AI package for causal graphs."
 license = "Apache-2.0"
 authors = ["causaLens <opensource@causalens.com>"]
@@ -48,8 +48,8 @@ packages = [{include = "cai_causal_graph"}]
 mypy-extensions = "^1.0.0"
 # networkx 3.3 broke how get_all_simple_paths works so want to bound for now.
 networkx = ">=3.0.0, <3.3.0"
-numpy = ">=1.18.0, <3.0.0"
-pandas = ">=1.0.0, <3.0.0"
+numpy = ">=2.0.0, <3.0.0"
+pandas = ">=2.2.2, <3.0.0"
 python = ">=3.10.0, <3.15.0"
 
 [tool.poetry.dev-dependencies]
