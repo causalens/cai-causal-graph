@@ -214,9 +214,7 @@ exist with that type (note that it may exist with a different type), then an
 from cai_causal_graph import EdgeType
 
 # query for the edge knowing that it is undirected
-edge_object: Edge = causal_graph.get_edge(
-    source='node_1', destination='node_2', edge_type=EdgeType.UNDIRECTED_EDGE
-)
+edge_object: Edge = causal_graph.get_edge(source='node_1', destination='node_2', edge_type=EdgeType.UNDIRECTED_EDGE)
 ```
 
 Lastly, while the `cai_causal_graph.causal_graph.CausalGraph.get_edges` method returns all edges no matter the type, 

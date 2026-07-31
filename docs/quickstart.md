@@ -69,8 +69,12 @@ from cai_causal_graph import TimeSeriesCausalGraph
 ts_causal_graph = TimeSeriesCausalGraph()
 
 # Add edges to the causal graph; this will also add the nodes if they are not present in the graph yet.
-ts_causal_graph.add_edge('X1 lag(n=1)', 'X2')  # this adds a directed edge (i.e., an edge from X1 lag(n=1) to X2) by default
-ts_causal_graph.add_edge('X2 lag(n=1)', 'X2')  # this adds a directed edge (i.e., an edge from X2 lag(n=1) to X2) by default
+ts_causal_graph.add_edge(
+    'X1 lag(n=1)', 'X2'
+)  # this adds a directed edge (i.e., an edge from X1 lag(n=1) to X2) by default
+ts_causal_graph.add_edge(
+    'X2 lag(n=1)', 'X2'
+)  # this adds a directed edge (i.e., an edge from X2 lag(n=1) to X2) by default
 ```
 
 This is equivalent to the following:
