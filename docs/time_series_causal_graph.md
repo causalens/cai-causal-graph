@@ -125,7 +125,9 @@ adjacency_matrices = {
 ts_cg = TimeSeriesCausalGraph.from_adjacency_matrices(adjacency_matrices=adjacency_matrices)
 
 # Also specifying the variable names
-ts_cg = TimeSeriesCausalGraph.from_adjacency_matrices(adjacency_matrices=adjacency_matrices, variable_names=['X', 'Y', 'Z'])
+ts_cg = TimeSeriesCausalGraph.from_adjacency_matrices(
+    adjacency_matrices=adjacency_matrices, variable_names=['X', 'Y', 'Z']
+)
 ```
 
 ## Query the nodes and the variables
@@ -199,7 +201,9 @@ ts_cg.add_edge_by_pair(pair=('X lag(n=2)', 'Y lag(n=2)'), edge_type=EdgeType.DIR
 ts_cg.add_edges_from(pairs=[('X lag(n=2)', 'Y lag(n=2)'), ('X lag(n=3)', 'Y lag(n=3)')])
 
 # Via time edge
-ts_cg.add_time_edge(source_variable='X', source_time=-2, destination_variable='Y', destination_time=-2, edge_type=EdgeType.DIRECTED_EDGE)
+ts_cg.add_time_edge(
+    source_variable='X', source_time=-2, destination_variable='Y', destination_time=-2, edge_type=EdgeType.DIRECTED_EDGE
+)
 ```
 
 ## Replace nodes
@@ -331,7 +335,9 @@ forward_steps = 3
 extended_graph = ts_cg.extend_graph(backward_steps=backward_steps, forward_steps=forward_steps)
 
 # Without all parents
-extended_graph = ts_cg.extend_graph(backward_steps=backward_steps, forward_steps=forward_steps, include_all_parents=False)
+extended_graph = ts_cg.extend_graph(
+    backward_steps=backward_steps, forward_steps=forward_steps, include_all_parents=False
+)
 ```
 
 ## Other methods

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.15
+
+- Updated dependency constraints and compatibility for the NumPy 2/Pydantic 2 migration.
+
 ## 0.5.12
 
 - Dropped support for `python` `3.9` as it is approaching end of life.

@@ -108,15 +108,15 @@ from cai_causal_graph import CausalGraph, EdgeType, NodeVariableType
 cg = CausalGraph()
 
 # Nodes are auto-created when adding edges
-cg.add_edge('x', 'y')                                          # default: DIRECTED_EDGE
+cg.add_edge('x', 'y')  # default: DIRECTED_EDGE
 cg.add_edge('z', 'y', edge_type=EdgeType.DIRECTED_EDGE)
-cg.add_edge('a', 'b', edge_type=EdgeType.UNDIRECTED_EDGE)      # CPDAG undirected
+cg.add_edge('a', 'b', edge_type=EdgeType.UNDIRECTED_EDGE)  # CPDAG undirected
 
 # Or add nodes explicitly first
 cg.add_node('w', variable_type=NodeVariableType.BINARY)
 cg.add_edges_from([('w', 'x'), ('w', 'z')])
 
-print(cg.is_dag())           # True if all edges are directed and acyclic
+print(cg.is_dag())  # True if all edges are directed and acyclic
 print(cg.get_node_names())
 print(cg.get_edge_pairs())
 ```
@@ -131,8 +131,8 @@ print(node.get_inbound_edges(), node.get_outbound_edges())
 
 edge = cg.get_edge('x', 'y')
 print(edge.source.identifier, edge.destination.identifier)
-print(edge.get_edge_type())   # EdgeType.DIRECTED_EDGE
-print(edge.descriptor)        # '(x -> y)'
+print(edge.get_edge_type())  # EdgeType.DIRECTED_EDGE
+print(edge.descriptor)  # '(x -> y)'
 ```
 
 ### Serialization
@@ -154,10 +154,10 @@ cg4 = CausalGraph.from_adjacency_matrix(adj, node_names=node_names)
 ### Skeleton
 
 ```python
-skeleton = cg.skeleton          # property; returns Skeleton instance
-print(skeleton.nodes)           # nodes without edge direction info
-print(skeleton.edges)           # all edges as UNDIRECTED_EDGE
-adj = skeleton.adjacency_matrix # symmetric binary matrix
+skeleton = cg.skeleton  # property; returns Skeleton instance
+print(skeleton.nodes)  # nodes without edge direction info
+print(skeleton.edges)  # all edges as UNDIRECTED_EDGE
+adj = skeleton.adjacency_matrix  # symmetric binary matrix
 ```
 
 ### Time series graph
@@ -170,11 +170,11 @@ ts.add_edge('X1 lag(n=1)', 'X1', edge_type=EdgeType.DIRECTED_EDGE)
 ts.add_edge('X2 lag(n=1)', 'X2', edge_type=EdgeType.DIRECTED_EDGE)
 
 node = ts.get_node('X1 lag(n=1)')
-print(node.variable_name)   # 'X1'
-print(node.time_lag)        # -1
+print(node.variable_name)  # 'X1'
+print(node.time_lag)  # -1
 
-summary = ts.get_summary_graph()    # CausalGraph collapsing lags
-minimal = ts.get_minimal_graph()    # TimeSeriesCausalGraph with minimum lag structure
+summary = ts.get_summary_graph()  # CausalGraph collapsing lags
+minimal = ts.get_minimal_graph()  # TimeSeriesCausalGraph with minimum lag structure
 lag_0_nodes = ts.get_nodes_at_lag(0)
 ```
 
@@ -184,10 +184,10 @@ lag_0_nodes = ts.get_nodes_at_lag(0)
 from cai_causal_graph.type_definitions import EdgeConstraint
 
 # EdgeConstraint is used by discovery algorithms, not enforced by CausalGraph itself
-EdgeConstraint.HARD_DIRECTED_EDGE    # force edge direction
+EdgeConstraint.HARD_DIRECTED_EDGE  # force edge direction
 EdgeConstraint.HARD_UNDIRECTED_EDGE  # force undirected
-EdgeConstraint.SOFT_DIRECTED_EDGE    # prefer direction
-EdgeConstraint.FORBIDDEN_EDGE        # forbid the edge
+EdgeConstraint.SOFT_DIRECTED_EDGE  # prefer direction
+EdgeConstraint.FORBIDDEN_EDGE  # forbid the edge
 ```
 
 ## Assumptions and Limitations
