@@ -140,24 +140,6 @@ jobs:
           git add poetry.lock -f
           git commit -m "Version Bump"
           git push origin $(echo "HEAD:$BRANCH" | tr -d '[:space:]')
-      - name: Package and Publish Docs
-        # We run this step after the package build and version bump commit as this modifies the virtual environment and
-        # poetry.lock to add the docs-upload dependency. This is not publicly available so cannot be a dependency for
-        # this package.
-        if: success()
-        env:
-          PROJECT: causalens-internal
-          LOCATION: us-central1
-          REPOSITORY: documentation
-          BUILD_REFERENCE: true
-          PACKAGE: cai-causal-graph
-          PACKAGE_PATHS: cai_causal_graph
-          GAR_USERNAME: _json_key
-          GAR_KEY_JSON: '${{ secrets.GAR_KEY_JSON }}'
-          POETRY_HTTP_BASIC_CAUSALENS_USERNAME: _json_key
-          POETRY_HTTP_BASIC_CAUSALENS_PASSWORD: '${{ secrets.GAR_KEY_JSON }}'
-          VERSION: ${{ steps.extract_tag.outputs.new_version }}
-        run: make package-and-publish-docs
       - name: Trigger post-release workflow
         # This will check if newly published packages can be pip installed in clean environments
         if: success()
@@ -167,66 +149,3 @@ jobs:
           repository: ${{ github.repository }}
           event-type: post-release
           client-payload: '{"version": "${{ steps.extract_tag.outputs.new_version }}"}'
-      - name: Publish message to Causal AI Dev Slack channel - only for development tags
-        uses: 8398a7/action-slack@v3
-        env:
-          SLACK_WEBHOOK_URL: '${{ secrets.SLACK_CAI_DEV_CHANNEL_WEBHOOK }}'
-        # Post a message to the Causal AI Dev Slack channel
-        if: ( success() && contains(steps.check_devel.outputs.is_not_devel, 'false') )
-        with:
-          status: custom
-          custom_payload: |
-            {
-              username: 'action-slack',
-              blocks: [
-                {
-                  "type": "header",
-                  "text": {
-                    "type": "plain_text",
-                    "text": "${{ github.event.repository.name }} development tag ${{ steps.extract_tag.outputs.new_version }} has been released :wrench:"
-                  }
-                }
-              ]
-            }
-      - name: Publish message to Causal AI Dev Slack channel - only for stable tags (i.e., non-development ones)
-        uses: 8398a7/action-slack@v3
-        env:
-          SLACK_WEBHOOK_URL: '${{ secrets.SLACK_CAI_DEV_CHANNEL_WEBHOOK }}'
-          # Post a message to the Causal AI Dev Slack channel
-        if: ( success() && contains(steps.check_devel.outputs.is_not_devel, 'true') )
-        with:
-          status: custom
-          custom_payload: |
-            {
-              username: 'action-slack',
-              blocks: [
-                {
-                  "type": "header",
-                  "text": {
-                    "type": "plain_text",
-                    "text": "${{ github.event.repository.name }} tag ${{ steps.extract_tag.outputs.new_version }} has been released :tada:"
-                  }
-                }
-              ]
-            }
-      - name: Publish message to Tech Team Slack channel - only for stable tags (i.e., non-development ones)
-        uses: 8398a7/action-slack@v3
-        env:
-          SLACK_WEBHOOK_URL: '${{ secrets.SLACK_TECH_TEAM_CHANNEL_WEBHOOK }}'
-        # Post a message to the Tech Team Slack channel
-        if: ( success() && contains(steps.check_devel.outputs.is_not_devel, 'true') )
-        with:
-          status: custom
-          custom_payload: |
-            {
-              username: 'action-slack',
-              blocks: [
-                {
-                  "type": "header",
-                  "text": {
-                    "type": "plain_text",
-                    "text": "${{ github.event.repository.name }} tag ${{ steps.extract_tag.outputs.new_version }} has been released :tada:"
-                  }
-                }
-              ]
-            }
