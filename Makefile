@@ -96,7 +96,7 @@ remove-generic-wheel:
 
 # Package and publish the docs to causaLens' artifactory
 package-and-publish-docs:
-	poetry source add --priority=supplemental causalens https://us-central1-python.pkg.dev/causalens-internal/python-internal/simple
+	poetry source add --priority=supplemental causalens https://python-artifact-registry-auth.services-gcp.causalens.com/causalens-internal/python-internal/simple
 	poetry add --source=causalens docs-builder@~0.2.8
 	poetry run python ./tooling/scripts/docs-upload.py
 
