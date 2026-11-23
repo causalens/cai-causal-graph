@@ -5,7 +5,4 @@
 * @causalens/product-team
 
 # Modules and directories owners
-/cai_causal_graph/ @causalens/product-team
-/docs/ @causalens/product-team
-/tests/ @causalens/product-team
 /tooling/ @causalens/platform-team
