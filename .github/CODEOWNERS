@@ -2,10 +2,10 @@
 # ones
 
 # Global owners if a specific one is not specified
-* @causalens/causal-ai-management
+* @causalens/product-team
 
 # Modules and directories owners
-/cai_causal_graph/ @causalens/causal-ai-team @causalens/mle
-/docs/ @causalens/causal-ai-team @causalens/mle
-/tests/ @causalens/causal-ai-team @causalens/mle
+/cai_causal_graph/ @causalens/product-team
+/docs/ @causalens/product-team
+/tests/ @causalens/product-team
 /tooling/ @causalens/platform-team
