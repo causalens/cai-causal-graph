@@ -1,5 +1,9 @@
 # Changelog
 
+## NEXT
+
+- Bundle the cai-causal-graph agent skill in the Python distribution.
+
 ## 0.5.15
 
 - Updated dependency constraints and compatibility for the NumPy 2/Pydantic 2 migration.

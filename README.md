@@ -19,8 +19,10 @@ Documentation, including a quickstart and code reference docs, can be found [her
 ![INTERROGATE](https://github.com/causalens/cai-causal-graph/blob/main/interrogate_badge.svg?raw=true)
 
 
-> **Agent Skill**: This package has an [Agent Skill](https://agentskills.io) for AI-assisted development.
-> See [`skills/cai-causal-graph/SKILL.md`](skills/cai-causal-graph/SKILL.md) for assumptions, gotchas, and usage guidance.
+> **Agent Skill** — The cai-causal-graph wheel includes the [cai-causal-graph skill](cai_causal_graph/skills/cai-causal-graph/SKILL.md).
+> With cai-causal-graph installed in your project environment and cl-cli 0.8.0 or later available, run
+> `cli skill sync` in the project directory to index the skill in `AGENTS.md`, then run
+> `cli skill load 'cai-causal-graph#cai-causal-graph'` to read the skill for your installed version.
 
 > **Note**  
 > The current development cycle of this branch is `v0.5.x` (stable).
