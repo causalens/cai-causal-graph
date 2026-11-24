@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## 0.5.16
 
 - Bundle the cai-causal-graph agent skill in the Python distribution.
 
